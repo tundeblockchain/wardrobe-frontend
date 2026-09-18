@@ -10,6 +10,8 @@ describe("getPublicAppEnv", () => {
     expect(env.playStoreUrl).toBeUndefined();
     expect(env.gaMeasurementId).toBeUndefined();
     expect(env.metaPixelId).toBeUndefined();
+    expect(env.legalContactEmail).toBeUndefined();
+    expect(env.legalContactUrl).toBeUndefined();
   });
 
   it("treats blank placeholders as unset", () => {
@@ -18,12 +20,16 @@ describe("getPublicAppEnv", () => {
       VITE_PLAY_STORE_URL: "",
       VITE_GA_MEASUREMENT_ID: " \n",
       VITE_META_PIXEL_ID: "  ",
+      VITE_LEGAL_CONTACT_EMAIL: "   ",
+      VITE_LEGAL_CONTACT_URL: " ",
     });
 
     expect(env.appStoreUrl).toBeUndefined();
     expect(env.playStoreUrl).toBeUndefined();
     expect(env.gaMeasurementId).toBeUndefined();
     expect(env.metaPixelId).toBeUndefined();
+    expect(env.legalContactEmail).toBeUndefined();
+    expect(env.legalContactUrl).toBeUndefined();
   });
 
   it("trims configured public identifiers", () => {
@@ -33,6 +39,8 @@ describe("getPublicAppEnv", () => {
       VITE_PLAY_STORE_URL: " https://play.google.com/store/apps/details?id=com.example.wardrobe ",
       VITE_GA_MEASUREMENT_ID: " G-XXXXXXXXXX ",
       VITE_META_PIXEL_ID: " 000000000000000 ",
+      VITE_LEGAL_CONTACT_EMAIL: " legal@example.com ",
+      VITE_LEGAL_CONTACT_URL: " https://example.com/contact ",
     });
 
     expect(env.appName).toBe("Wardrobe");
@@ -42,5 +50,7 @@ describe("getPublicAppEnv", () => {
     );
     expect(env.gaMeasurementId).toBe("G-XXXXXXXXXX");
     expect(env.metaPixelId).toBe("000000000000000");
+    expect(env.legalContactEmail).toBe("legal@example.com");
+    expect(env.legalContactUrl).toBe("https://example.com/contact");
   });
 });
