@@ -5,7 +5,6 @@ import {
   Style,
 } from "@mui/icons-material";
 import { Box, Container, Paper, Stack, Typography } from "@mui/material";
-import { alpha } from "@mui/material/styles";
 import {
   featureItems,
   type FeatureIconId,
@@ -29,6 +28,7 @@ export const FeatureSection = () => {
       aria-labelledby="features-heading"
       sx={{
         py: { xs: 8, md: 10 },
+        bgcolor: "background.paper",
         scrollMarginTop: 88,
         outline: "none",
       }}
@@ -68,7 +68,7 @@ export const FeatureSection = () => {
                   height: "100%",
                   border: 1,
                   borderColor: "divider",
-                  bgcolor: "background.paper",
+                  bgcolor: "background.default",
                 }}
               >
                 <Stack spacing={1.5}>
@@ -80,8 +80,8 @@ export const FeatureSection = () => {
                       borderRadius: 2,
                       display: "grid",
                       placeItems: "center",
-                      bgcolor: (theme) => alpha(theme.palette.primary.main, 0.12),
-                      color: "primary.main",
+                      bgcolor: "primary.main",
+                      color: "primary.contrastText",
                     }}
                   >
                     <Icon />

@@ -1,40 +1,47 @@
 import { describe, expect, it } from "vitest";
-import { appTheme, wardrobeBlushStops, wardrobePalette } from "./appTheme";
+import { appTheme, wardrobePalette, wardrobeSurfaceStops } from "./appTheme";
 import { wardrobeGradients } from "./wardrobeGradients";
 import {
   contrastRatio,
   isBurgundyPlumHue,
   isSoftBlush,
-  relativeLuminance,
 } from "./colorContrast";
 
 describe("wardrobePalette", () => {
-  it("keeps burgundy and plum hues on airy blush surfaces", () => {
+  it("restores the pre-109 burgundy–plum tokens", () => {
+    expect(wardrobePalette).toMatchObject({
+      primaryMain: "#6B1D3A",
+      primaryDark: "#4A1228",
+      primaryLight: "#8E3A58",
+      primaryContrast: "#FBF6F8",
+      secondaryMain: "#7A4A6B",
+      secondaryDark: "#563344",
+      secondaryLight: "#A67C96",
+      secondaryContrast: "#FBF6F8",
+      backgroundDefault: "#F8F3F5",
+      backgroundPaper: "#FFFCFD",
+      textPrimary: "#2A121C",
+      textSecondary: "#6A4A58",
+      divider: "#E6D6DC",
+      deviceFrame: "#1A0A12",
+      themeColor: "#6B1D3A",
+    });
     expect(isBurgundyPlumHue(wardrobePalette.primaryMain)).toBe(true);
     expect(isBurgundyPlumHue(wardrobePalette.secondaryMain)).toBe(true);
-    expect(relativeLuminance(wardrobePalette.backgroundDefault)).toBeGreaterThan(
-      0.93,
-    );
-    expect(relativeLuminance(wardrobePalette.backgroundPaper)).toBeGreaterThan(
-      relativeLuminance(wardrobePalette.backgroundDefault),
-    );
-    expect(wardrobePalette.themeColor).toBe(wardrobePalette.backgroundDefault);
-    expect(wardrobePalette.backgroundDefault).toBe(wardrobePalette.blushCanvas);
-    expect(wardrobePalette.backgroundPaper).toBe(wardrobePalette.blushPetal);
+    expect(wardrobePalette.themeColor).toBe(wardrobePalette.primaryMain);
+    expect(wardrobeSurfaceStops).toEqual([
+      wardrobePalette.backgroundDefault,
+      wardrobePalette.backgroundPaper,
+    ]);
   });
 
-  it("uses soft pink blush stops that stay airy rather than neon or dark", () => {
-    expect(wardrobeBlushStops).toEqual([
-      wardrobePalette.blushPetal,
-      wardrobePalette.blushCanvas,
-      wardrobePalette.blushWash,
-      wardrobePalette.blushMist,
-    ]);
-
-    for (const blushStop of wardrobeBlushStops) {
-      expect(isSoftBlush(blushStop)).toBe(true);
-      expect(relativeLuminance(blushStop)).toBeGreaterThan(0.85);
-    }
+  it("does not use the 109/110 flat-white or pink blush surfaces", () => {
+    expect(wardrobePalette.backgroundPaper).not.toBe("#FFFFFF");
+    expect(wardrobePalette.backgroundDefault).not.toBe("#FBF8F9");
+    expect(wardrobePalette.backgroundDefault).not.toBe("#FEF7FA");
+    expect(wardrobePalette.backgroundPaper).not.toBe("#FFF8FB");
+    expect(wardrobePalette.primaryMain).not.toBe("#8A3554");
+    expect(isSoftBlush(wardrobePalette.backgroundPaper)).toBe(false);
   });
 
   it("meets WCAG AA contrast for body text and accent controls", () => {
@@ -68,23 +75,11 @@ describe("wardrobePalette", () => {
         wardrobePalette.primaryMain,
       ),
     ).toBeGreaterThanOrEqual(4.5);
-
-    for (const blushStop of wardrobeBlushStops) {
-      expect(
-        contrastRatio(wardrobePalette.textPrimary, blushStop),
-      ).toBeGreaterThanOrEqual(7);
-      expect(
-        contrastRatio(wardrobePalette.textSecondary, blushStop),
-      ).toBeGreaterThanOrEqual(4.5);
-      expect(
-        contrastRatio(wardrobePalette.primaryMain, blushStop),
-      ).toBeGreaterThanOrEqual(4.5);
-    }
   });
 });
 
 describe("appTheme", () => {
-  it("exposes the light palette tokens on the MUI theme", () => {
+  it("exposes the original light palette tokens on the MUI theme", () => {
     expect(appTheme.palette.mode).toBe("light");
     expect(appTheme.palette.background.default).toBe(
       wardrobePalette.backgroundDefault,
@@ -97,23 +92,27 @@ describe("appTheme", () => {
     expect(appTheme.palette.text.primary).toBe(wardrobePalette.textPrimary);
   });
 
-  it("wires blush gradients onto the theme, page chrome, and header", () => {
+  it("keeps named surface slots without blush page or header washes", () => {
     expect(appTheme.gradients).toEqual(wardrobeGradients);
 
     const cssBaseline = appTheme.components?.MuiCssBaseline?.styleOverrides;
     expect(cssBaseline).toMatchObject({
       html: {
-        backgroundImage: wardrobeGradients.page,
+        backgroundColor: wardrobePalette.backgroundDefault,
+        backgroundImage: "none",
       },
       body: {
-        backgroundImage: wardrobeGradients.page,
+        backgroundColor: wardrobePalette.backgroundDefault,
+        backgroundImage: "none",
       },
     });
 
     const appBar = appTheme.components?.MuiAppBar?.styleOverrides;
     expect(appBar).toMatchObject({
       root: {
-        backgroundImage: wardrobeGradients.header,
+        backgroundColor: wardrobePalette.primaryMain,
+        backgroundImage: "none",
+        color: wardrobePalette.primaryContrast,
       },
     });
   });

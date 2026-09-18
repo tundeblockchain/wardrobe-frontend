@@ -1,35 +1,27 @@
 import { describe, expect, it } from "vitest";
-import {
-  hexColorsInCss,
-  isSoftBlush,
-  relativeLuminance,
-} from "./colorContrast";
+import { hexColorsInCss, isSoftBlush } from "./colorContrast";
 import { wardrobeGradients } from "./wardrobeGradients";
-import { wardrobeBlushStops } from "./wardrobePalette";
 
 describe("wardrobeGradients", () => {
-  it("uses layered radial and linear blush washes", () => {
-    expect(wardrobeGradients.page).toContain("radial-gradient");
-    expect(wardrobeGradients.page).toContain("linear-gradient");
-    expect(wardrobeGradients.hero).toContain("radial-gradient");
-    expect(wardrobeGradients.hero).toContain("linear-gradient");
-    expect(wardrobeGradients.blush).toContain("linear-gradient");
-    expect(wardrobeGradients.mist).toContain("linear-gradient");
-    expect(wardrobeGradients.header).toContain("linear-gradient");
+  it("does not paint pink blush washes on named surfaces", () => {
+    for (const gradient of Object.values(wardrobeGradients)) {
+      expect(gradient).toBe("none");
+      expect(gradient).not.toContain("radial-gradient");
+      expect(gradient).not.toContain("linear-gradient");
+      expect(hexColorsInCss(gradient)).toEqual([]);
+    }
   });
 
-  it("only samples soft pink blush stops", () => {
-    const allowedStops = new Set<string>(wardrobeBlushStops);
+  it("rejects the retired 110 blush stops", () => {
+    const retiredBlushStops = ["#FFF8FB", "#FEF7FA", "#FCEFF4", "#FBEAF1"];
 
-    for (const gradient of Object.values(wardrobeGradients)) {
-      const stops = hexColorsInCss(gradient);
-      expect(stops.length).toBeGreaterThan(0);
+    for (const blushStop of retiredBlushStops) {
+      expect(isSoftBlush(blushStop)).toBe(true);
+    }
 
-      for (const stop of stops) {
-        expect(allowedStops.has(stop)).toBe(true);
-        expect(isSoftBlush(stop)).toBe(true);
-        expect(relativeLuminance(stop)).toBeGreaterThan(0.85);
-      }
+    const serialized = Object.values(wardrobeGradients).join(" ");
+    for (const blushStop of retiredBlushStops) {
+      expect(serialized).not.toContain(blushStop);
     }
   });
 });

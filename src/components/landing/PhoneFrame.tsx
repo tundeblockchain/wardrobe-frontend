@@ -19,7 +19,7 @@ export const PhoneFrame = ({ src, alt, maxWidth = 280 }: PhoneFrameProps) => {
         border: "10px solid",
         borderColor: wardrobePalette.deviceFrame,
         bgcolor: wardrobePalette.deviceFrame,
-        boxShadow: 4,
+        boxShadow: 8,
         aspectRatio: "9 / 19.5",
       }}
     >
