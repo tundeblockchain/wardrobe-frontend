@@ -13,6 +13,9 @@ describe("ScreenshotShowcase", () => {
       screen.getByRole("heading", { name: "See the app" }),
     ).toBeInTheDocument();
     expect(
+      screen.getByRole("heading", { name: "See the app" }).closest("[data-surface]"),
+    ).toHaveAttribute("data-surface", "mist");
+    expect(
       screen.getByRole("tab", { name: "Home screenshot" }),
     ).toHaveAttribute("aria-selected", "true");
     expect(

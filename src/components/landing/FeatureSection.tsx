@@ -10,6 +10,7 @@ import {
   featureItems,
   type FeatureIconId,
 } from "../../content/featureItems";
+import { SectionSurface } from "../surfaces/SectionSurface";
 
 const featureIcons: Record<FeatureIconId, typeof Checkroom> = {
   catalog: Checkroom,
@@ -20,14 +21,14 @@ const featureIcons: Record<FeatureIconId, typeof Checkroom> = {
 
 export const FeatureSection = () => {
   return (
-    <Box
+    <SectionSurface
       component="section"
+      variant="blush"
       id="features"
       tabIndex={-1}
       aria-labelledby="features-heading"
       sx={{
         py: { xs: 8, md: 10 },
-        bgcolor: "background.paper",
         scrollMarginTop: 88,
         outline: "none",
       }}
@@ -67,7 +68,7 @@ export const FeatureSection = () => {
                   height: "100%",
                   border: 1,
                   borderColor: "divider",
-                  bgcolor: "background.default",
+                  bgcolor: "background.paper",
                 }}
               >
                 <Stack spacing={1.5}>
@@ -97,6 +98,6 @@ export const FeatureSection = () => {
           })}
         </Box>
       </Container>
-    </Box>
+    </SectionSurface>
   );
 };

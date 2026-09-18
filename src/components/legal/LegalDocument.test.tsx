@@ -25,6 +25,11 @@ describe("LegalDocument", () => {
       screen.getByRole("heading", { level: 1, name: "Terms of Service" }),
     ).toBeInTheDocument();
     expect(
+      screen
+        .getByRole("heading", { level: 1, name: "Terms of Service" })
+        .closest("[data-surface]"),
+    ).toHaveAttribute("data-surface", "mist");
+    expect(
       screen.getByRole("link", { name: "Jump to Acceptable use" }),
     ).toHaveAttribute("href", "#acceptable-use");
     expect(

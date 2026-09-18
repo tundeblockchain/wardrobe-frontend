@@ -22,5 +22,9 @@ describe("FeatureSection", () => {
     expect(
       screen.getByRole("heading", { name: "Keep item details" }),
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Made for getting dressed" })
+        .closest("[data-surface]"),
+    ).toHaveAttribute("data-surface", "blush");
   });
 });

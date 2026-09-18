@@ -5,6 +5,7 @@ import {
   screenshotSlots,
   type ScreenshotSlotId,
 } from "../../content/screenshotSlots";
+import { SectionSurface } from "../surfaces/SectionSurface";
 import { PhoneFrame } from "./PhoneFrame";
 import { ScreenshotGallery } from "./ScreenshotGallery";
 
@@ -55,14 +56,14 @@ export const ScreenshotShowcase = () => {
   };
 
   return (
-    <Box
+    <SectionSurface
       component="section"
+      variant="mist"
       id="screenshots"
       tabIndex={-1}
       aria-labelledby="screenshots-heading"
       sx={{
         py: { xs: 8, md: 10 },
-        bgcolor: "background.default",
         color: "text.primary",
         scrollMarginTop: 88,
         outline: "none",
@@ -150,6 +151,6 @@ export const ScreenshotShowcase = () => {
           />
         </Box>
       </Container>
-    </Box>
+    </SectionSurface>
   );
 };

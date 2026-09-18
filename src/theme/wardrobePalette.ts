@@ -1,6 +1,6 @@
 /**
- * Digital Wardrobe color tokens: light, airy surfaces with softer
- * burgundy / plum accents. Browser chrome (`themeColor`) matches the page.
+ * Digital Wardrobe color tokens: airy light surfaces with soft pink blush
+ * stops for gradients. Browser chrome (`themeColor`) matches the page canvas.
  */
 export const wardrobePalette = {
   primaryMain: "#8A3554",
@@ -11,13 +11,24 @@ export const wardrobePalette = {
   secondaryDark: "#6A3F58",
   secondaryLight: "#D2B3C3",
   secondaryContrast: "#FFF9FB",
-  backgroundDefault: "#FBF8F9",
-  backgroundPaper: "#FFFFFF",
+  blushPetal: "#FFF8FB",
+  blushCanvas: "#FEF7FA",
+  blushWash: "#FCEFF4",
+  blushMist: "#FBEAF1",
+  backgroundDefault: "#FEF7FA",
+  backgroundPaper: "#FFF8FB",
   textPrimary: "#2C1820",
   textSecondary: "#6B5460",
   divider: "#EDE3E8",
   deviceFrame: "#3A2430",
-  themeColor: "#FBF8F9",
+  themeColor: "#FEF7FA",
 } as const;
 
 export type WardrobePalette = typeof wardrobePalette;
+
+export const wardrobeBlushStops = [
+  wardrobePalette.blushPetal,
+  wardrobePalette.blushCanvas,
+  wardrobePalette.blushWash,
+  wardrobePalette.blushMist,
+] as const;

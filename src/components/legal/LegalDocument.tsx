@@ -15,6 +15,7 @@ import {
   type LegalDocumentContent,
   type LegalRelatedLink,
 } from "../../content/legal/legalDocument";
+import { SectionSurface } from "../surfaces/SectionSurface";
 
 export type LegalDocumentProps = {
   appName: string;
@@ -43,12 +44,12 @@ export const LegalDocument = ({
   ];
 
   return (
-    <Box
+    <SectionSurface
       component="article"
+      variant="mist"
       aria-labelledby={headingId}
       sx={{
         py: { xs: 6, md: 8 },
-        bgcolor: "background.default",
       }}
     >
       <Container maxWidth="md">
@@ -226,6 +227,6 @@ export const LegalDocument = ({
           </Stack>
         </Paper>
       </Container>
-    </Box>
+    </SectionSurface>
   );
 };

@@ -28,5 +28,11 @@ describe("LandingHero", () => {
     expect(
       screen.getByRole("button", { name: "App Store — coming soon" }),
     ).toBeDisabled();
+    expect(
+      screen.getByRole("heading", {
+        level: 1,
+        name: "Your closet, beautifully organized",
+      }).closest("[data-surface]"),
+    ).toHaveAttribute("data-surface", "hero");
   });
 });

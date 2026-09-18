@@ -1,5 +1,6 @@
 import { Box, Container, Stack, Typography } from "@mui/material";
 import { areStoreLinksPublished } from "../../config/storeCtas";
+import { SectionSurface } from "../surfaces/SectionSurface";
 import { StoreCtaButtons } from "./StoreCtaButtons";
 
 export type StoreCtaSectionProps = {
@@ -19,14 +20,14 @@ export const StoreCtaSection = ({
   });
 
   return (
-    <Box
+    <SectionSurface
       component="section"
+      variant="blush"
       id="download"
       tabIndex={-1}
       aria-labelledby="download-heading"
       sx={{
         py: { xs: 8, md: 10 },
-        bgcolor: "background.paper",
         color: "text.primary",
         scrollMarginTop: 88,
         outline: "none",
@@ -74,6 +75,6 @@ export const StoreCtaSection = ({
           )}
         </Stack>
       </Container>
-    </Box>
+    </SectionSurface>
   );
 };

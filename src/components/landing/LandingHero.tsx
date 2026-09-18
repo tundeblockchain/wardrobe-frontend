@@ -1,5 +1,6 @@
 import { Box, Button, Container, Stack, Typography } from "@mui/material";
 import { screenshotSlots } from "../../content/screenshotSlots";
+import { SectionSurface } from "../surfaces/SectionSurface";
 import { PhoneFrame } from "./PhoneFrame";
 import { StoreCtaButtons } from "./StoreCtaButtons";
 
@@ -20,13 +21,12 @@ export const LandingHero = ({
   }
 
   return (
-    <Box
+    <SectionSurface
       component="section"
+      variant="hero"
       aria-labelledby="landing-hero-heading"
       sx={{
-        position: "relative",
         overflow: "hidden",
-        bgcolor: "background.default",
         py: { xs: 6, md: 10 },
       }}
     >
@@ -95,6 +95,6 @@ export const LandingHero = ({
           </Box>
         </Stack>
       </Container>
-    </Box>
+    </SectionSurface>
   );
 };

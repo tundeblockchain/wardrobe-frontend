@@ -53,13 +53,34 @@ export const hueDegrees = (hex: string): number => {
   return ((red - green) / delta + 4) * 60;
 };
 
-export const isBurgundyPlumHue = (hex: string): boolean => {
+export const srgbChroma = (hex: string): number => {
   const [red, green, blue] = hexToSrgb(hex);
-  const chroma = Math.max(red, green, blue) - Math.min(red, green, blue);
-  if (chroma < 0.08) {
+  return Math.max(red, green, blue) - Math.min(red, green, blue);
+};
+
+export const isBurgundyPlumHue = (hex: string): boolean => {
+  if (srgbChroma(hex) < 0.08) {
     return false;
   }
 
   const hue = hueDegrees(hex);
   return hue >= 320 || hue <= 20;
+};
+
+export const isSoftBlush = (hex: string): boolean => {
+  const chroma = srgbChroma(hex);
+  if (chroma < 0.015 || chroma > 0.14) {
+    return false;
+  }
+
+  if (relativeLuminance(hex) < 0.85) {
+    return false;
+  }
+
+  const hue = hueDegrees(hex);
+  return hue >= 310 || hue <= 20;
+};
+
+export const hexColorsInCss = (css: string): string[] => {
+  return css.match(/#[0-9A-Fa-f]{6}\b/g) ?? [];
 };

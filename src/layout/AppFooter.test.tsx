@@ -21,5 +21,6 @@ describe("AppFooter", () => {
     expect(
       within(legalNav).getByRole("link", { name: "Privacy Policy" }),
     ).toHaveAttribute("href", appPaths.privacy);
+    expect(footer).toHaveAttribute("data-surface", "mist");
   });
 });
