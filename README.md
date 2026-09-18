@@ -6,7 +6,7 @@ The public landing page includes a hero, feature sections, a labeled screenshot 
 
 Terms of Service (`/terms`) and Privacy Policy (`/privacy`) are linked from the header and footer. Operator contact on those pages is env-driven (`VITE_LEGAL_CONTACT_EMAIL`, optional `VITE_LEGAL_CONTACT_URL`). Copy refers to the operator only — no personal names.
 
-Analytics pixels are intentionally out of scope here (follow-on ticket).
+The landing and legal pages ship semantic markup, Open Graph / Twitter tags, and JSON-LD (`SoftwareApplication` / `WebPage`). Optional Google Analytics (`VITE_GA_MEASUREMENT_ID`) and Meta Pixel (`VITE_META_PIXEL_ID`) inject only when those public IDs are set.
 
 ## Scripts
 
@@ -31,6 +31,8 @@ Analytics pixels are intentionally out of scope here (follow-on ticket).
 Required and optional public env vars (store URLs, legal contact, GA, Meta Pixel IDs) are listed in [docs/environment.md](docs/environment.md) and `.env.example`. Values must use the `VITE_` prefix. Never put private keys in this repo.
 
 Landing CTAs read `VITE_APP_STORE_URL` and `VITE_PLAY_STORE_URL`. Leave them blank to render disabled “coming soon” buttons.
+
+Set `VITE_PUBLIC_SITE_URL` to the public origin (for example `https://example.com`) so canonical and social URLs are absolute. Leave `VITE_GA_MEASUREMENT_ID` and `VITE_META_PIXEL_ID` blank to ship no analytics or advertising scripts.
 
 ## Screenshot placeholders
 

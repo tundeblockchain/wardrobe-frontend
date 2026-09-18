@@ -1,0 +1,17 @@
+# Digital Wardrobe
+
+> A wardrobe companion for iOS and Android. Photograph pieces, catalog a closet, compose outfits, and preview looks with try-on.
+
+Digital Wardrobe is a software product with a public marketing website. This site describes the app; it is not a store, marketplace, or review aggregator.
+
+## Pages
+
+- [Home](/): Product landing page with features, screenshot placeholders, and store download calls to action
+- [Terms of Service](/terms): Terms for the websites, iOS and Android apps, and related services
+- [Privacy Policy](/privacy): How the operator handles wardrobe photos, try-on previews, accounts, and optional website analytics
+
+## Notes
+
+- App Store and Play Store buttons stay disabled until public store URLs are configured for a deployment
+- Optional Google Analytics and Meta Pixel load only when public environment identifiers are set
+- Structured data describes a SoftwareApplication. It does not include ratings, reviews, or other unverified claims
