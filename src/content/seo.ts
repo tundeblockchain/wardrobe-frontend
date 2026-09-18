@@ -1,5 +1,6 @@
 import type { PublicAppEnv } from "../config/env";
 import { appPaths } from "../routes/paths";
+import { wardrobePalette } from "../theme/wardrobePalette";
 import { featureItems } from "./featureItems";
 import { LEGAL_LAST_UPDATED_ISO } from "./legal/legalDocument";
 
@@ -323,7 +324,7 @@ export const getDocumentMetaTags = (pageSeo: PageSeo): DocumentMetaTag[] => {
     {
       key: "theme-color",
       name: "theme-color",
-      content: "#6B1D3A",
+      content: wardrobePalette.themeColor,
     },
     {
       key: "og:title",

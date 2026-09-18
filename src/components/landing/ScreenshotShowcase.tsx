@@ -62,8 +62,8 @@ export const ScreenshotShowcase = () => {
       aria-labelledby="screenshots-heading"
       sx={{
         py: { xs: 8, md: 10 },
-        bgcolor: "primary.dark",
-        color: "primary.contrastText",
+        bgcolor: "background.default",
+        color: "text.primary",
         scrollMarginTop: 88,
         outline: "none",
       }}
@@ -84,7 +84,7 @@ export const ScreenshotShowcase = () => {
               >
                 See the app
               </Typography>
-              <Typography variant="body1" sx={{ color: "secondary.light" }}>
+              <Typography variant="body1" color="text.secondary">
                 Labeled placeholders for Home, Wardrobe detail, Item detail,
                 Outfits, Try-on, and Account. Real marketing PNGs drop in later
                 without changing layout.
@@ -118,11 +118,9 @@ export const ScreenshotShowcase = () => {
                     size="small"
                     aria-label={`${slot.label} screenshot`}
                     sx={{
-                      color: isSelected ? "secondary.contrastText" : "primary.contrastText",
-                      borderColor: "secondary.light",
                       "&:focus-visible": {
                         outline: "2px solid",
-                        outlineColor: "secondary.light",
+                        outlineColor: "primary.main",
                         outlineOffset: 2,
                       },
                     }}
@@ -132,7 +130,7 @@ export const ScreenshotShowcase = () => {
                 );
               })}
             </Box>
-            <Typography variant="body2" sx={{ color: "primary.contrastText" }}>
+            <Typography variant="body2" color="text.secondary">
               {selectedSlot.description}
             </Typography>
           </Stack>

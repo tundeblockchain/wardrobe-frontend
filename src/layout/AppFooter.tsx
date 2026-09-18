@@ -13,8 +13,10 @@ export const AppFooter = () => {
       sx={{
         px: 2,
         py: 4,
-        bgcolor: "primary.dark",
-        color: "primary.contrastText",
+        bgcolor: "background.default",
+        color: "text.secondary",
+        borderTop: 1,
+        borderColor: "divider",
       }}
     >
       <Stack spacing={2} sx={{ alignItems: "center" }}>
@@ -28,7 +30,7 @@ export const AppFooter = () => {
           links={legalNavLinks}
           justifyContent="center"
         />
-        <Typography variant="body2" align="center" sx={{ opacity: 0.85 }}>
+        <Typography variant="body2" align="center" color="text.secondary">
           © {currentYear} {appName}
         </Typography>
       </Stack>

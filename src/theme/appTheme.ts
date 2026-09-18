@@ -1,29 +1,32 @@
-import { createTheme } from "@mui/material/styles";
+import { alpha, createTheme } from "@mui/material/styles";
+import { wardrobePalette } from "./wardrobePalette";
+
+export { wardrobePalette } from "./wardrobePalette";
 
 export const appTheme = createTheme({
   palette: {
     mode: "light",
     primary: {
-      main: "#6B1D3A",
-      dark: "#4A1228",
-      light: "#8E3A58",
-      contrastText: "#FBF6F8",
+      main: wardrobePalette.primaryMain,
+      dark: wardrobePalette.primaryDark,
+      light: wardrobePalette.primaryLight,
+      contrastText: wardrobePalette.primaryContrast,
     },
     secondary: {
-      main: "#7A4A6B",
-      dark: "#563344",
-      light: "#A67C96",
-      contrastText: "#FBF6F8",
+      main: wardrobePalette.secondaryMain,
+      dark: wardrobePalette.secondaryDark,
+      light: wardrobePalette.secondaryLight,
+      contrastText: wardrobePalette.secondaryContrast,
     },
     background: {
-      default: "#F8F3F5",
-      paper: "#FFFCFD",
+      default: wardrobePalette.backgroundDefault,
+      paper: wardrobePalette.backgroundPaper,
     },
     text: {
-      primary: "#2A121C",
-      secondary: "#6A4A58",
+      primary: wardrobePalette.textPrimary,
+      secondary: wardrobePalette.textSecondary,
     },
-    divider: "#E6D6DC",
+    divider: wardrobePalette.divider,
   },
   typography: {
     fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
@@ -47,11 +50,35 @@ export const appTheme = createTheme({
     borderRadius: 12,
   },
   components: {
+    MuiCssBaseline: {
+      styleOverrides: {
+        body: {
+          backgroundColor: wardrobePalette.backgroundDefault,
+        },
+        "::selection": {
+          backgroundColor: alpha(wardrobePalette.primaryMain, 0.16),
+        },
+      },
+    },
     MuiButton: {
       styleOverrides: {
         root: {
           textTransform: "none",
           fontWeight: 600,
+        },
+      },
+    },
+    MuiAppBar: {
+      defaultProps: {
+        color: "inherit",
+        elevation: 0,
+      },
+      styleOverrides: {
+        root: {
+          backgroundColor: wardrobePalette.backgroundPaper,
+          backgroundImage: "none",
+          color: wardrobePalette.primaryMain,
+          borderBottom: `1px solid ${wardrobePalette.divider}`,
         },
       },
     },
