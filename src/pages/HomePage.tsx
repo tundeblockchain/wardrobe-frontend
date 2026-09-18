@@ -1,25 +1,26 @@
-import { Container, Stack, Typography } from "@mui/material";
-import { StatusCard } from "../components/StatusCard";
+import { LandingHero } from "../components/landing/LandingHero";
+import { FeatureSection } from "../components/landing/FeatureSection";
+import { ScreenshotShowcase } from "../components/landing/ScreenshotShowcase";
+import { StoreCtaSection } from "../components/landing/StoreCtaSection";
 import { getPublicAppEnv } from "../config/env";
 
 export const HomePage = () => {
-  const { appName } = getPublicAppEnv();
+  const { appName, appStoreUrl, playStoreUrl } = getPublicAppEnv();
 
   return (
-    <Container maxWidth="md" sx={{ py: { xs: 4, md: 8 } }}>
-      <Stack spacing={3}>
-        <Typography variant="h1" component="h1">
-          {appName}
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          The public site scaffold is in place. Marketing content, legal pages,
-          and analytics land in follow-on work.
-        </Typography>
-        <StatusCard
-          title="Ready for the next tickets"
-          description="Reusable layout, lint, tests, CI, and Netlify config are available. Store URLs and analytics IDs are env placeholders only."
-        />
-      </Stack>
-    </Container>
+    <>
+      <LandingHero
+        appName={appName}
+        appStoreUrl={appStoreUrl}
+        playStoreUrl={playStoreUrl}
+      />
+      <FeatureSection />
+      <ScreenshotShowcase />
+      <StoreCtaSection
+        appName={appName}
+        appStoreUrl={appStoreUrl}
+        playStoreUrl={playStoreUrl}
+      />
+    </>
   );
 };
