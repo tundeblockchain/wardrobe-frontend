@@ -4,10 +4,14 @@ import {
   DEFAULT_LANDING_DESCRIPTION,
   DEFAULT_LANDING_TITLE,
 } from "./seo";
+import { wardrobePalette } from "../theme/wardrobePalette";
 
 describe("static SEO fallback", () => {
   it("includes landing meta, Open Graph, Twitter, and JSON-LD without ratings or pixels", () => {
     expect(indexHtml).toContain(`<title>${DEFAULT_LANDING_TITLE}</title>`);
+    expect(indexHtml).toContain(
+      `name="theme-color" content="${wardrobePalette.themeColor}"`,
+    );
     expect(indexHtml).toContain(DEFAULT_LANDING_DESCRIPTION);
     expect(indexHtml).toContain('property="og:title"');
     expect(indexHtml).toContain('property="og:image"');

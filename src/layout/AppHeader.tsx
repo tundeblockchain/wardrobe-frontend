@@ -9,7 +9,7 @@ export const AppHeader = () => {
   const { appName } = getPublicAppEnv();
 
   return (
-    <AppBar position="sticky" color="primary" component="header">
+    <AppBar position="sticky" color="inherit" component="header">
       <Toolbar
         sx={{
           gap: 2,

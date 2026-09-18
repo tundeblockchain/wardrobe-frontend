@@ -38,7 +38,7 @@ export const LandingHero = ({
           height: 420,
           borderRadius: "50%",
           bgcolor: "secondary.light",
-          opacity: 0.22,
+          opacity: 0.16,
           top: { xs: -140, md: -80 },
           right: { xs: -160, md: -40 },
         }}

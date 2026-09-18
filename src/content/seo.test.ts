@@ -8,6 +8,7 @@ import {
   upsertJsonLdScript,
 } from "./seo";
 import { featureItems } from "./featureItems";
+import { wardrobePalette } from "../theme/wardrobePalette";
 
 const exampleEnv = getPublicAppEnv({
   VITE_APP_NAME: "Digital Wardrobe",
@@ -91,6 +92,7 @@ describe("getDocumentMetaTags", () => {
     const byKey = Object.fromEntries(tags.map((tag) => [tag.key, tag.content]));
 
     expect(byKey.description).toBe(DEFAULT_LANDING_DESCRIPTION);
+    expect(byKey["theme-color"]).toBe(wardrobePalette.themeColor);
     expect(byKey["og:title"]).toBe(DEFAULT_LANDING_TITLE);
     expect(byKey["og:type"]).toBe("website");
     expect(byKey["og:url"]).toBe("https://example.com/");

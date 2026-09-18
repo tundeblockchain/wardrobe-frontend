@@ -1,4 +1,5 @@
 import { Box } from "@mui/material";
+import { wardrobePalette } from "../../theme/wardrobePalette";
 
 export type PhoneFrameProps = {
   src: string;
@@ -16,9 +17,9 @@ export const PhoneFrame = ({ src, alt, maxWidth = 280 }: PhoneFrameProps) => {
         borderRadius: "32px",
         overflow: "hidden",
         border: "10px solid",
-        borderColor: "#1A0A12",
-        bgcolor: "#1A0A12",
-        boxShadow: 8,
+        borderColor: wardrobePalette.deviceFrame,
+        bgcolor: wardrobePalette.deviceFrame,
+        boxShadow: 4,
         aspectRatio: "9 / 19.5",
       }}
     >

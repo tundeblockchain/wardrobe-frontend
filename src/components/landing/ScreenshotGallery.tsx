@@ -53,10 +53,10 @@ export const ScreenshotGallery = ({
                 textAlign: "center",
                 color: "inherit",
                 border: 2,
-                borderColor: isSelected ? "secondary.light" : "transparent",
+                borderColor: isSelected ? "primary.main" : "transparent",
                 "&:focus-visible": {
                   outline: "2px solid",
-                  outlineColor: "secondary.light",
+                  outlineColor: "primary.main",
                   outlineOffset: 2,
                 },
               }}
@@ -66,7 +66,7 @@ export const ScreenshotGallery = ({
                 <Typography
                   component="span"
                   variant="caption"
-                  sx={{ color: "primary.contrastText", fontWeight: 600 }}
+                  sx={{ color: "text.secondary", fontWeight: 600 }}
                 >
                   {slot.label}
                 </Typography>

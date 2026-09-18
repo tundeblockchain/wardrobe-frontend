@@ -5,6 +5,7 @@ import {
   Style,
 } from "@mui/icons-material";
 import { Box, Container, Paper, Stack, Typography } from "@mui/material";
+import { alpha } from "@mui/material/styles";
 import {
   featureItems,
   type FeatureIconId,
@@ -78,8 +79,8 @@ export const FeatureSection = () => {
                       borderRadius: 2,
                       display: "grid",
                       placeItems: "center",
-                      bgcolor: "primary.main",
-                      color: "primary.contrastText",
+                      bgcolor: (theme) => alpha(theme.palette.primary.main, 0.12),
+                      color: "primary.main",
                     }}
                   >
                     <Icon />
