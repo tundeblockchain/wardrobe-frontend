@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="390" height="844" viewBox="0 0 390 844" role="img" aria-label="Placeholder for the Item detail screen">
+  <rect width="390" height="844" rx="44" fill="#2A121C"/>
+  <rect x="10" y="10" width="370" height="824" rx="36" fill="#F8F3F5"/>
+  <rect x="10" y="10" width="370" height="72" rx="36" fill="#6B1D3A"/>
+  <rect x="10" y="46" width="370" height="36" fill="#6B1D3A"/>
+  <circle cx="195" cy="26" r="6" fill="#FBF6F8" opacity="0.35"/>
+  <text x="195" y="70" text-anchor="middle" fill="#FBF6F8" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="700">Item detail</text>
+  
+  <rect x="36" y="112" width="318" height="280" rx="24" fill="#8E3A58"/>
+  <text x="195" y="260" text-anchor="middle" fill="#FBF6F8" font-size="14" font-family="Arial, Helvetica, sans-serif">Item photo</text>
+  <text x="36" y="430" fill="#2A121C" font-size="22" font-weight="700" font-family="Arial, Helvetica, sans-serif">Plum wool coat</text>
+  <text x="36" y="458" fill="#6A4A58" font-size="13" font-family="Arial, Helvetica, sans-serif">Outerwear · winter</text>
+  <rect x="36" y="488" width="318" height="14" rx="7" fill="#E6D6DC"/>
+  <rect x="36" y="516" width="260" height="14" rx="7" fill="#E6D6DC"/>
+  <rect x="36" y="560" width="318" height="72" rx="16" fill="#FFFCFD" stroke="#E6D6DC"/>
+  <text x="56" y="602" fill="#6B1D3A" font-size="14" font-weight="700" font-family="Arial, Helvetica, sans-serif">Notes, size, and care</text>
+
+  <rect x="118" y="788" width="154" height="22" rx="11" fill="#2A121C" opacity="0.12"/>
+  <text x="195" y="804" text-anchor="middle" fill="#6B1D3A" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700">PLACEHOLDER</text>
+</svg>
