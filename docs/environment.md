@@ -15,8 +15,12 @@ Never commit secrets, tokens, or private keys.
 | `VITE_PLAY_STORE_URL` | No | Public Play Store URL for landing download CTAs. Empty values render a disabled button. | `https://play.google.com/store/apps/details?id=com.example.wardrobe` |
 | `VITE_GA_MEASUREMENT_ID` | No | Google Analytics 4 measurement ID. Pixel wiring is a follow-on ticket. | `G-XXXXXXXXXX` |
 | `VITE_META_PIXEL_ID` | No | Meta Pixel ID. Pixel wiring is a follow-on ticket. | `000000000000000` |
+| `VITE_LEGAL_CONTACT_EMAIL` | No | Public operator contact email shown on Terms of Service and Privacy Policy. Empty values show a store-listing contact fallback. | `legal@example.com` |
+| `VITE_LEGAL_CONTACT_URL` | No | Optional public operator contact page shown on Terms of Service and Privacy Policy. | `https://example.com/contact` |
 
 Empty or whitespace-only values are treated as unset by `getPublicAppEnv()`.
+
+Legal pages always refer to **the operator** (no personal names). Set `VITE_LEGAL_CONTACT_EMAIL` in Netlify so store reviewers have a visible contact address.
 
 ## Netlify notes
 

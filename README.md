@@ -2,9 +2,11 @@
 
 Public web app for the Digital Wardrobe product. React + TypeScript + Vite + Material UI, with lint, unit tests, GitHub Actions CI, and Netlify deploy config.
 
-The public landing page (WARDROBE-106) includes a hero, feature sections, a labeled screenshot showcase, and App Store / Play Store CTAs. Store URLs are env-driven and stay disabled until set.
+The public landing page includes a hero, feature sections, a labeled screenshot showcase, and App Store / Play Store CTAs. Store URLs are env-driven and stay disabled until set.
 
-Legal pages and analytics pixels are intentionally out of scope here (follow-on tickets).
+Terms of Service (`/terms`) and Privacy Policy (`/privacy`) are linked from the header and footer. Operator contact on those pages is env-driven (`VITE_LEGAL_CONTACT_EMAIL`, optional `VITE_LEGAL_CONTACT_URL`). Copy refers to the operator only — no personal names.
+
+Analytics pixels are intentionally out of scope here (follow-on ticket).
 
 ## Scripts
 
@@ -26,7 +28,7 @@ Legal pages and analytics pixels are intentionally out of scope here (follow-on 
 
 ## Environment variables
 
-Required and optional public env vars (store URLs, GA, Meta Pixel IDs) are listed in [docs/environment.md](docs/environment.md) and `.env.example`. Values must use the `VITE_` prefix. Never put private keys in this repo.
+Required and optional public env vars (store URLs, legal contact, GA, Meta Pixel IDs) are listed in [docs/environment.md](docs/environment.md) and `.env.example`. Values must use the `VITE_` prefix. Never put private keys in this repo.
 
 Landing CTAs read `VITE_APP_STORE_URL` and `VITE_PLAY_STORE_URL`. Leave them blank to render disabled “coming soon” buttons.
 

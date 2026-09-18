@@ -4,6 +4,8 @@ export type PublicAppEnv = {
   playStoreUrl: string | undefined;
   gaMeasurementId: string | undefined;
   metaPixelId: string | undefined;
+  legalContactEmail: string | undefined;
+  legalContactUrl: string | undefined;
 };
 
 export type EnvSource = {
@@ -12,6 +14,8 @@ export type EnvSource = {
   VITE_PLAY_STORE_URL?: string;
   VITE_GA_MEASUREMENT_ID?: string;
   VITE_META_PIXEL_ID?: string;
+  VITE_LEGAL_CONTACT_EMAIL?: string;
+  VITE_LEGAL_CONTACT_URL?: string;
 };
 
 const DEFAULT_APP_NAME = "Digital Wardrobe";
@@ -38,5 +42,7 @@ export const getPublicAppEnv = (
     playStoreUrl: readOptionalEnv(source.VITE_PLAY_STORE_URL),
     gaMeasurementId: readOptionalEnv(source.VITE_GA_MEASUREMENT_ID),
     metaPixelId: readOptionalEnv(source.VITE_META_PIXEL_ID),
+    legalContactEmail: readOptionalEnv(source.VITE_LEGAL_CONTACT_EMAIL),
+    legalContactUrl: readOptionalEnv(source.VITE_LEGAL_CONTACT_URL),
   };
 };

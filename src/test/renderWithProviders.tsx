@@ -4,11 +4,20 @@ import { render } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { appTheme } from "../theme/appTheme";
 
-export const renderWithProviders = (ui: ReactElement) => {
+type RenderWithProvidersOptions = {
+  route?: string;
+};
+
+export const renderWithProviders = (
+  ui: ReactElement,
+  options: RenderWithProvidersOptions = {},
+) => {
+  const { route = "/" } = options;
+
   return render(
     <ThemeProvider theme={appTheme}>
       <CssBaseline />
-      <MemoryRouter>{ui}</MemoryRouter>
+      <MemoryRouter initialEntries={[route]}>{ui}</MemoryRouter>
     </ThemeProvider>,
   );
 };

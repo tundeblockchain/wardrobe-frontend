@@ -6,6 +6,8 @@ interface ImportMetaEnv {
   readonly VITE_PLAY_STORE_URL?: string;
   readonly VITE_GA_MEASUREMENT_ID?: string;
   readonly VITE_META_PIXEL_ID?: string;
+  readonly VITE_LEGAL_CONTACT_EMAIL?: string;
+  readonly VITE_LEGAL_CONTACT_URL?: string;
 }
 
 interface ImportMeta {
