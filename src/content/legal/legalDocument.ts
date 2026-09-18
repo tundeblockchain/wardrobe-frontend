@@ -26,6 +26,7 @@ export type LegalContactCopy = {
 };
 
 export const LEGAL_LAST_UPDATED = "18 September 2026";
+export const LEGAL_LAST_UPDATED_ISO = "2026-09-18";
 
 export const getLegalContactCopy = ({
   appName,

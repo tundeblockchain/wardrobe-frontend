@@ -39,8 +39,16 @@ describe("legal content", () => {
         "How information is shared",
         "Children’s privacy",
         "Your choices and rights",
+        "Cookies and similar technologies",
       ]),
     );
+
+    const cookies = content.sections.find(
+      (section) => section.id === "cookies",
+    );
+    const cookiesCopy = cookies?.paragraphs.join(" ") ?? "";
+    expect(cookiesCopy).toMatch(/load only when the operator has set public environment identifiers/);
+    expect(cookiesCopy).not.toMatch(/not wired in this MVP/);
   });
 
   it("describes operator contact without requiring a configured email", () => {

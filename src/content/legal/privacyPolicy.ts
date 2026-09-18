@@ -36,7 +36,7 @@ export const getPrivacyPolicyContent = (
           "Try-on images and related previews you choose to generate",
           "Support messages you send to the operator",
           "Technical information such as app version, device type, language, diagnostic or crash logs, and approximate region derived from IP address",
-          "Website usage data if analytics or advertising pixels are later enabled on this marketing site (those tools are configured separately and are not required to use the core wardrobe features)",
+          "Website usage data when analytics or advertising pixels are enabled for a deployment of this marketing site (those tools are optional, configured through public environment identifiers, and are not required to use the core wardrobe features)",
         ],
       },
       {
@@ -119,7 +119,7 @@ export const getPrivacyPolicyContent = (
         id: "cookies",
         title: "Cookies and similar technologies",
         paragraphs: [
-          "The marketing website may use strictly necessary cookies to operate the site. Optional analytics or advertising pixels (for example Google Analytics or Meta Pixel) are configured through public environment variables and are not wired in this MVP unless a later release enables them.",
+          "The marketing website may use strictly necessary cookies to operate the site. Optional analytics or advertising pixels (for example Google Analytics or Meta Pixel) load only when the operator has set public environment identifiers for those tools. They are not required to use the core wardrobe features. Some tracking can also be controlled through browser, device, and store settings.",
           "Mobile apps may use on-device identifiers and diagnostic software development kits to keep the product reliable. You can control some tracking through device and store settings.",
         ],
       },
