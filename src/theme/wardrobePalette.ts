@@ -1,34 +1,28 @@
 /**
- * Digital Wardrobe color tokens: airy light surfaces with soft pink blush
- * stops for gradients. Browser chrome (`themeColor`) matches the page canvas.
+ * Digital Wardrobe color tokens: original burgundy–plum landing theme.
+ * Browser chrome (`themeColor`) matches the primary burgundy.
  */
 export const wardrobePalette = {
-  primaryMain: "#8A3554",
-  primaryDark: "#5C1C36",
-  primaryLight: "#C47A94",
-  primaryContrast: "#FFF9FB",
-  secondaryMain: "#8D5C76",
-  secondaryDark: "#6A3F58",
-  secondaryLight: "#D2B3C3",
-  secondaryContrast: "#FFF9FB",
-  blushPetal: "#FFF8FB",
-  blushCanvas: "#FEF7FA",
-  blushWash: "#FCEFF4",
-  blushMist: "#FBEAF1",
-  backgroundDefault: "#FEF7FA",
-  backgroundPaper: "#FFF8FB",
-  textPrimary: "#2C1820",
-  textSecondary: "#6B5460",
-  divider: "#EDE3E8",
-  deviceFrame: "#3A2430",
-  themeColor: "#FEF7FA",
+  primaryMain: "#6B1D3A",
+  primaryDark: "#4A1228",
+  primaryLight: "#8E3A58",
+  primaryContrast: "#FBF6F8",
+  secondaryMain: "#7A4A6B",
+  secondaryDark: "#563344",
+  secondaryLight: "#A67C96",
+  secondaryContrast: "#FBF6F8",
+  backgroundDefault: "#F8F3F5",
+  backgroundPaper: "#FFFCFD",
+  textPrimary: "#2A121C",
+  textSecondary: "#6A4A58",
+  divider: "#E6D6DC",
+  deviceFrame: "#1A0A12",
+  themeColor: "#6B1D3A",
 } as const;
 
 export type WardrobePalette = typeof wardrobePalette;
 
-export const wardrobeBlushStops = [
-  wardrobePalette.blushPetal,
-  wardrobePalette.blushCanvas,
-  wardrobePalette.blushWash,
-  wardrobePalette.blushMist,
+export const wardrobeSurfaceStops = [
+  wardrobePalette.backgroundDefault,
+  wardrobePalette.backgroundPaper,
 ] as const;

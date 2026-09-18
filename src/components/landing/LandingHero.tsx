@@ -27,6 +27,7 @@ export const LandingHero = ({
       aria-labelledby="landing-hero-heading"
       sx={{
         overflow: "hidden",
+        bgcolor: "background.default",
         py: { xs: 6, md: 10 },
       }}
     >
@@ -38,7 +39,7 @@ export const LandingHero = ({
           height: 420,
           borderRadius: "50%",
           bgcolor: "secondary.light",
-          opacity: 0.16,
+          opacity: 0.22,
           top: { xs: -140, md: -80 },
           right: { xs: -160, md: -40 },
         }}

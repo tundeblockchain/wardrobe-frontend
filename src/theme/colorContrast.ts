@@ -64,7 +64,7 @@ export const isBurgundyPlumHue = (hex: string): boolean => {
   }
 
   const hue = hueDegrees(hex);
-  return hue >= 320 || hue <= 20;
+  return hue >= 315 || hue <= 20;
 };
 
 export const isSoftBlush = (hex: string): boolean => {

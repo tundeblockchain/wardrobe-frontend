@@ -28,7 +28,8 @@ export const StoreCtaSection = ({
       aria-labelledby="download-heading"
       sx={{
         py: { xs: 8, md: 10 },
-        color: "text.primary",
+        bgcolor: "primary.main",
+        color: "primary.contrastText",
         scrollMarginTop: 88,
         outline: "none",
       }}
@@ -46,8 +47,9 @@ export const StoreCtaSection = ({
           </Typography>
           <Typography
             variant="body1"
-            color="text.secondary"
             sx={{
+              color: "primary.contrastText",
+              opacity: 0.9,
               maxWidth: 560,
               textAlign: { xs: "left", sm: "center" },
             }}
@@ -55,7 +57,31 @@ export const StoreCtaSection = ({
             Download on the App Store or Google Play. Buttons stay disabled until
             store URLs are set in the environment.
           </Typography>
-          <Box>
+          <Box
+            sx={{
+              "& .MuiButton-outlined": {
+                color: "primary.contrastText",
+                borderColor: "primary.contrastText",
+                "&.Mui-disabled": {
+                  color: "primary.contrastText",
+                  borderColor: "primary.contrastText",
+                  opacity: 0.5,
+                },
+              },
+              "& .MuiButton-contained": {
+                bgcolor: "background.paper",
+                color: "primary.main",
+                "&:hover": {
+                  bgcolor: "background.default",
+                },
+                "&.Mui-disabled": {
+                  bgcolor: "background.paper",
+                  color: "primary.main",
+                  opacity: 0.5,
+                },
+              },
+            }}
+          >
             <StoreCtaButtons
               appStoreUrl={appStoreUrl}
               playStoreUrl={playStoreUrl}
@@ -64,8 +90,9 @@ export const StoreCtaSection = ({
           {storeLinksPublished ? null : (
             <Typography
               variant="body2"
-              color="text.secondary"
               sx={{
+                color: "primary.contrastText",
+                opacity: 0.8,
                 textAlign: { xs: "left", sm: "center" },
               }}
             >

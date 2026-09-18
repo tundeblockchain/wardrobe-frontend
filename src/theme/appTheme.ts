@@ -3,7 +3,7 @@ import { wardrobeGradients } from "./wardrobeGradients";
 import { wardrobePalette } from "./wardrobePalette";
 
 export { wardrobeGradients } from "./wardrobeGradients";
-export { wardrobeBlushStops, wardrobePalette } from "./wardrobePalette";
+export { wardrobePalette, wardrobeSurfaceStops } from "./wardrobePalette";
 
 export const appTheme = createTheme({
   palette: {
@@ -57,13 +57,11 @@ export const appTheme = createTheme({
       styleOverrides: {
         html: {
           backgroundColor: wardrobePalette.backgroundDefault,
-          backgroundImage: wardrobeGradients.page,
+          backgroundImage: "none",
         },
         body: {
           backgroundColor: wardrobePalette.backgroundDefault,
-          backgroundImage: wardrobeGradients.page,
-          backgroundRepeat: "no-repeat",
-          backgroundSize: "cover",
+          backgroundImage: "none",
           minHeight: "100%",
         },
         "::selection": {
@@ -81,15 +79,14 @@ export const appTheme = createTheme({
     },
     MuiAppBar: {
       defaultProps: {
-        color: "inherit",
+        color: "primary",
         elevation: 0,
       },
       styleOverrides: {
         root: {
-          backgroundColor: wardrobePalette.blushPetal,
-          backgroundImage: wardrobeGradients.header,
-          color: wardrobePalette.primaryMain,
-          borderBottom: `1px solid ${wardrobePalette.divider}`,
+          backgroundColor: wardrobePalette.primaryMain,
+          backgroundImage: "none",
+          color: wardrobePalette.primaryContrast,
         },
       },
     },
