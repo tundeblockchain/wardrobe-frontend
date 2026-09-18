@@ -72,7 +72,7 @@ export const ScreenshotShowcase = () => {
         <Stack
           direction={{ xs: "column", md: "row" }}
           spacing={{ xs: 5, md: 8 }}
-          sx={{ alignItems: { xs: "stretch", md: "center" } }}
+          sx={{ alignItems: { xs: "stretch", md: "flex-start" } }}
         >
           <Stack spacing={3} sx={{ flex: 1 }}>
             <Stack spacing={1}>

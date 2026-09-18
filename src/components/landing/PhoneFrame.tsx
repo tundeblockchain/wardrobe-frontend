@@ -16,8 +16,8 @@ export const PhoneFrame = ({ src, alt, maxWidth = 280 }: PhoneFrameProps) => {
         borderRadius: "32px",
         overflow: "hidden",
         border: "10px solid",
-        borderColor: "primary.dark",
-        bgcolor: "primary.dark",
+        borderColor: "#1A0A12",
+        bgcolor: "#1A0A12",
         boxShadow: 8,
         aspectRatio: "9 / 19.5",
       }}

@@ -60,12 +60,22 @@ export const StoreCtaSection = ({
               "& .MuiButton-outlined": {
                 color: "primary.contrastText",
                 borderColor: "primary.contrastText",
+                "&.Mui-disabled": {
+                  color: "primary.contrastText",
+                  borderColor: "primary.contrastText",
+                  opacity: 0.5,
+                },
               },
               "& .MuiButton-contained": {
                 bgcolor: "background.paper",
                 color: "primary.main",
                 "&:hover": {
                   bgcolor: "background.default",
+                },
+                "&.Mui-disabled": {
+                  bgcolor: "background.paper",
+                  color: "primary.main",
+                  opacity: 0.5,
                 },
               },
             }}
