@@ -2,7 +2,7 @@
 
 This app is a Vite SPA. Only variables prefixed with `VITE_` are available in the client bundle. Treat every `VITE_*` value as **public**.
 
-Set values locally in `.env.local` (gitignored). For production, set the same keys in the **Netlify UI** (Site settings → Environment variables). Tunde owns Netlify project setup; this repo only documents the names.
+Set values locally in `.env.local` (gitignored). For production, set the same keys in the **Netlify UI** (Site settings → Environment variables). The Netlify project owner configures the site; this repo only documents the names.
 
 Never commit secrets, tokens, or private keys.
 

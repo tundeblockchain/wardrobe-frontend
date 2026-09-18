@@ -32,4 +32,4 @@ Pull requests run GitHub Actions jobs named **lint**, **build**, and **test** (s
 
 ## Netlify
 
-`netlify.toml` is SPA-ready (`npm run build`, publish `dist`, redirect `/*` → `/index.html`). Tunde owns Netlify project setup; set env vars in the Netlify UI using the names in [docs/environment.md](docs/environment.md).
+`netlify.toml` is SPA-ready (`npm run build`, publish `dist`, redirect `/*` → `/index.html`). The Netlify project owner configures the site; set env vars in the Netlify UI using the names in [docs/environment.md](docs/environment.md).
