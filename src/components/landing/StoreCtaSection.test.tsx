@@ -17,6 +17,11 @@ describe("StoreCtaSection", () => {
       screen.getByRole("heading", { name: "Get Digital Wardrobe" }),
     ).toBeInTheDocument();
     expect(
+      screen
+        .getByRole("heading", { name: "Get Digital Wardrobe" })
+        .closest("[data-surface]"),
+    ).toHaveAttribute("data-surface", "blush");
+    expect(
       screen.getByText(/store listings are not published yet/i),
     ).toBeInTheDocument();
     expect(

@@ -1,4 +1,5 @@
-import { Box, Stack, Typography } from "@mui/material";
+import { Stack, Typography } from "@mui/material";
+import { SectionSurface } from "../components/surfaces/SectionSurface";
 import { getPublicAppEnv } from "../config/env";
 import { AppNavLinks } from "./AppNavLinks";
 import { landingNavLinks, legalNavLinks } from "./landingNav";
@@ -8,12 +9,12 @@ export const AppFooter = () => {
   const currentYear = new Date().getFullYear();
 
   return (
-    <Box
+    <SectionSurface
       component="footer"
+      variant="mist"
       sx={{
         px: 2,
         py: 4,
-        bgcolor: "background.default",
         color: "text.secondary",
         borderTop: 1,
         borderColor: "divider",
@@ -34,6 +35,6 @@ export const AppFooter = () => {
           © {currentYear} {appName}
         </Typography>
       </Stack>
-    </Box>
+    </SectionSurface>
   );
 };

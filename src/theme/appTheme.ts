@@ -1,7 +1,9 @@
 import { alpha, createTheme } from "@mui/material/styles";
+import { wardrobeGradients } from "./wardrobeGradients";
 import { wardrobePalette } from "./wardrobePalette";
 
-export { wardrobePalette } from "./wardrobePalette";
+export { wardrobeGradients } from "./wardrobeGradients";
+export { wardrobeBlushStops, wardrobePalette } from "./wardrobePalette";
 
 export const appTheme = createTheme({
   palette: {
@@ -28,6 +30,7 @@ export const appTheme = createTheme({
     },
     divider: wardrobePalette.divider,
   },
+  gradients: wardrobeGradients,
   typography: {
     fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
     h1: {
@@ -52,8 +55,16 @@ export const appTheme = createTheme({
   components: {
     MuiCssBaseline: {
       styleOverrides: {
+        html: {
+          backgroundColor: wardrobePalette.backgroundDefault,
+          backgroundImage: wardrobeGradients.page,
+        },
         body: {
           backgroundColor: wardrobePalette.backgroundDefault,
+          backgroundImage: wardrobeGradients.page,
+          backgroundRepeat: "no-repeat",
+          backgroundSize: "cover",
+          minHeight: "100%",
         },
         "::selection": {
           backgroundColor: alpha(wardrobePalette.primaryMain, 0.16),
@@ -75,8 +86,8 @@ export const appTheme = createTheme({
       },
       styleOverrides: {
         root: {
-          backgroundColor: wardrobePalette.backgroundPaper,
-          backgroundImage: "none",
+          backgroundColor: wardrobePalette.blushPetal,
+          backgroundImage: wardrobeGradients.header,
           color: wardrobePalette.primaryMain,
           borderBottom: `1px solid ${wardrobePalette.divider}`,
         },

@@ -14,6 +14,10 @@ export const AppShell = ({ children }: AppShellProps) => {
         minHeight: "100vh",
         display: "flex",
         flexDirection: "column",
+        bgcolor: "background.default",
+        backgroundImage: (theme) => theme.gradients.page,
+        backgroundRepeat: "no-repeat",
+        backgroundSize: "cover",
       }}
     >
       <SkipLink targetId="main-content" />
