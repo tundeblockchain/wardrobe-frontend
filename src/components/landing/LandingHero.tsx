@@ -1,4 +1,5 @@
 import { Box, Button, Container, Stack, Typography } from "@mui/material";
+import type { TrackingIds } from "../../config/tracking";
 import { screenshotSlots } from "../../content/screenshotSlots";
 import { SectionSurface } from "../surfaces/SectionSurface";
 import { PhoneFrame } from "./PhoneFrame";
@@ -8,12 +9,14 @@ export type LandingHeroProps = {
   appName: string;
   appStoreUrl: string | undefined;
   playStoreUrl: string | undefined;
+  trackingIds?: TrackingIds;
 };
 
 export const LandingHero = ({
   appName,
   appStoreUrl,
   playStoreUrl,
+  trackingIds,
 }: LandingHeroProps) => {
   const homeScreenshot = screenshotSlots[0];
   if (!homeScreenshot) {
@@ -73,6 +76,8 @@ export const LandingHero = ({
             <StoreCtaButtons
               appStoreUrl={appStoreUrl}
               playStoreUrl={playStoreUrl}
+              placement="hero"
+              trackingIds={trackingIds}
             />
             <Box>
               <Button

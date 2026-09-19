@@ -6,7 +6,7 @@ The public landing page includes a hero, feature sections, a labeled screenshot 
 
 Terms of Service (`/terms`) and Privacy Policy (`/privacy`) are linked from the header and footer. Operator contact on those pages is env-driven (`VITE_LEGAL_CONTACT_EMAIL`, optional `VITE_LEGAL_CONTACT_URL`). Copy refers to the operator only — no personal names.
 
-The landing and legal pages ship semantic markup, Open Graph / Twitter tags, and JSON-LD (`SoftwareApplication` / `WebPage`). Optional Google Analytics (`VITE_GA_MEASUREMENT_ID`) and Meta Pixel (`VITE_META_PIXEL_ID`) inject only when those public IDs are set.
+The landing and legal pages ship semantic markup, Open Graph / Twitter tags, and JSON-LD (`SoftwareApplication` / `WebPage`). Optional Google Analytics (`VITE_GA_MEASUREMENT_ID`) and Meta Pixel (`VITE_META_PIXEL_ID`) inject only when those public IDs are set. Store CTA clicks then send `store_cta_click` (GA) and `StoreCtaClick` (Meta custom event); see [docs/environment.md](docs/environment.md).
 
 ## Scripts
 

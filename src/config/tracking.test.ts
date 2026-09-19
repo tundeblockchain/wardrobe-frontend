@@ -1,6 +1,8 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { getPublicAppEnv } from "./env";
 import {
+  canTrackGoogleAnalytics,
+  canTrackMetaPixel,
   GA_SCRIPT_HOST,
   getTrackingSnippets,
   installPublicTracking,
@@ -8,6 +10,9 @@ import {
   isMetaPixelId,
   META_PIXEL_NOSCRIPT_HOST,
   META_PIXEL_SCRIPT_SRC,
+  STORE_CTA_GA_EVENT,
+  STORE_CTA_META_EVENT,
+  trackStoreCtaClick,
 } from "./tracking";
 
 const serializeSnippets = (snippets: ReturnType<typeof getTrackingSnippets>) => {
@@ -159,5 +164,135 @@ describe("installPublicTracking", () => {
     expect(html).not.toContain(GA_SCRIPT_HOST);
     expect(html).not.toContain("G-XXXXXXXXXX");
     expect(html).not.toContain("gtag");
+  });
+});
+
+describe("store CTA click helpers", () => {
+  afterEach(() => {
+    delete window.gtag;
+    delete window.fbq;
+  });
+
+  it("does not treat empty or invalid IDs as trackable", () => {
+    expect(canTrackGoogleAnalytics(undefined)).toBe(false);
+    expect(canTrackGoogleAnalytics("")).toBe(false);
+    expect(canTrackGoogleAnalytics("not-a-ga-id")).toBe(false);
+    expect(canTrackMetaPixel(undefined)).toBe(false);
+    expect(canTrackMetaPixel("")).toBe(false);
+    expect(canTrackMetaPixel("pixel")).toBe(false);
+  });
+
+  it("does not fire click events when IDs are empty", () => {
+    window.gtag = vi.fn();
+    window.fbq = vi.fn();
+
+    const result = trackStoreCtaClick(
+      { store: "appStore", placement: "hero" },
+      getPublicAppEnv({}),
+    );
+
+    expect(result).toEqual({ googleAnalytics: false, metaPixel: false });
+    expect(window.gtag).not.toHaveBeenCalled();
+    expect(window.fbq).not.toHaveBeenCalled();
+  });
+
+  it("does not fire click events when IDs are blank or malformed", () => {
+    window.gtag = vi.fn();
+    window.fbq = vi.fn();
+
+    const blankResult = trackStoreCtaClick(
+      { store: "playStore", placement: "download" },
+      getPublicAppEnv({
+        VITE_GA_MEASUREMENT_ID: "   ",
+        VITE_META_PIXEL_ID: "",
+      }),
+    );
+    const invalidResult = trackStoreCtaClick(
+      { store: "playStore", placement: "download" },
+      { gaMeasurementId: "UA-123456-1", metaPixelId: "abc" },
+    );
+
+    expect(blankResult).toEqual({ googleAnalytics: false, metaPixel: false });
+    expect(invalidResult).toEqual({ googleAnalytics: false, metaPixel: false });
+    expect(window.gtag).not.toHaveBeenCalled();
+    expect(window.fbq).not.toHaveBeenCalled();
+  });
+
+  it("does not fire click events when IDs are valid but vendor functions are missing", () => {
+    const result = trackStoreCtaClick(
+      { store: "appStore", placement: "hero" },
+      { gaMeasurementId: "G-XXXXXXXXXX", metaPixelId: "000000000000000" },
+    );
+
+    expect(result).toEqual({ googleAnalytics: false, metaPixel: false });
+    expect(window.gtag).toBeUndefined();
+    expect(window.fbq).toBeUndefined();
+  });
+
+  it("fires only the Google Analytics store CTA event when a valid GA ID is set", () => {
+    window.gtag = vi.fn();
+    window.fbq = vi.fn();
+
+    const result = trackStoreCtaClick(
+      { store: "appStore", placement: "hero" },
+      { gaMeasurementId: "G-XXXXXXXXXX", metaPixelId: undefined },
+    );
+
+    expect(result).toEqual({ googleAnalytics: true, metaPixel: false });
+    expect(window.gtag).toHaveBeenCalledTimes(1);
+    expect(window.gtag).toHaveBeenCalledWith("event", STORE_CTA_GA_EVENT, {
+      store: "appStore",
+      placement: "hero",
+    });
+    expect(window.fbq).not.toHaveBeenCalled();
+  });
+
+  it("fires only the Meta Pixel store CTA event when a valid pixel ID is set", () => {
+    window.gtag = vi.fn();
+    window.fbq = vi.fn();
+
+    const result = trackStoreCtaClick(
+      { store: "playStore", placement: "download" },
+      { gaMeasurementId: undefined, metaPixelId: "000000000000000" },
+    );
+
+    expect(result).toEqual({ googleAnalytics: false, metaPixel: true });
+    expect(window.fbq).toHaveBeenCalledTimes(1);
+    expect(window.fbq).toHaveBeenCalledWith(
+      "trackCustom",
+      STORE_CTA_META_EVENT,
+      {
+        store: "playStore",
+        placement: "download",
+      },
+    );
+    expect(window.gtag).not.toHaveBeenCalled();
+  });
+
+  it("never sends page_view or PageView from a store CTA click", () => {
+    window.gtag = vi.fn();
+    window.fbq = vi.fn();
+
+    trackStoreCtaClick(
+      { store: "appStore", placement: "download" },
+      { gaMeasurementId: "G-XXXXXXXXXX", metaPixelId: "000000000000000" },
+    );
+
+    expect(window.gtag).toHaveBeenCalledWith(
+      "event",
+      STORE_CTA_GA_EVENT,
+      expect.any(Object),
+    );
+    expect(window.fbq).toHaveBeenCalledWith(
+      "trackCustom",
+      STORE_CTA_META_EVENT,
+      expect.any(Object),
+    );
+    expect(window.gtag).not.toHaveBeenCalledWith(
+      "event",
+      "page_view",
+      expect.anything(),
+    );
+    expect(window.fbq).not.toHaveBeenCalledWith("track", "PageView");
   });
 });
