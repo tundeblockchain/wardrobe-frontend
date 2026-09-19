@@ -3,6 +3,7 @@ export type PublicAppEnv = {
   appStoreUrl: string | undefined;
   playStoreUrl: string | undefined;
   publicSiteUrl: string | undefined;
+  apiBaseUrl: string | undefined;
   gaMeasurementId: string | undefined;
   metaPixelId: string | undefined;
   legalContactEmail: string | undefined;
@@ -14,6 +15,7 @@ export type EnvSource = {
   VITE_APP_STORE_URL?: string;
   VITE_PLAY_STORE_URL?: string;
   VITE_PUBLIC_SITE_URL?: string;
+  VITE_API_BASE_URL?: string;
   VITE_GA_MEASUREMENT_ID?: string;
   VITE_META_PIXEL_ID?: string;
   VITE_LEGAL_CONTACT_EMAIL?: string;
@@ -52,6 +54,7 @@ export const getPublicAppEnv = (
     appStoreUrl: readOptionalEnv(source.VITE_APP_STORE_URL),
     playStoreUrl: readOptionalEnv(source.VITE_PLAY_STORE_URL),
     publicSiteUrl: readOptionalOrigin(source.VITE_PUBLIC_SITE_URL),
+    apiBaseUrl: readOptionalOrigin(source.VITE_API_BASE_URL),
     gaMeasurementId: readOptionalEnv(source.VITE_GA_MEASUREMENT_ID),
     metaPixelId: readOptionalEnv(source.VITE_META_PIXEL_ID),
     legalContactEmail: readOptionalEnv(source.VITE_LEGAL_CONTACT_EMAIL),

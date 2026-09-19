@@ -4,6 +4,8 @@ Public web app for the Digital Wardrobe product. React + TypeScript + Vite + Mat
 
 The public landing page includes a hero, feature sections, a labeled screenshot showcase, and App Store / Play Store CTAs. Store URLs are env-driven and stay disabled until set.
 
+Public share links use `/share/:token`. That page is read-only: it loads a title, optional image, and ITEM/OUTFIT type from `GET {VITE_API_BASE_URL}/public/shares/{token}` (no auth), then shows the same store CTAs. Missing, expired, or failed previews have clear empty states.
+
 Terms of Service (`/terms`) and Privacy Policy (`/privacy`) are linked from the header and footer. Operator contact on those pages is env-driven (`VITE_LEGAL_CONTACT_EMAIL`, optional `VITE_LEGAL_CONTACT_URL`). Copy refers to the operator only — no personal names.
 
 The landing and legal pages ship semantic markup, Open Graph / Twitter tags, and JSON-LD (`SoftwareApplication` / `WebPage`). Optional Google Analytics (`VITE_GA_MEASUREMENT_ID`) and Meta Pixel (`VITE_META_PIXEL_ID`) inject only when those public IDs are set. Store CTA clicks then send `store_cta_click` (GA) and `StoreCtaClick` (Meta custom event); see [docs/environment.md](docs/environment.md).
@@ -28,9 +30,11 @@ The landing and legal pages ship semantic markup, Open Graph / Twitter tags, and
 
 ## Environment variables
 
-Required and optional public env vars (store URLs, legal contact, GA, Meta Pixel IDs) are listed in [docs/environment.md](docs/environment.md) and `.env.example`. Values must use the `VITE_` prefix. Never put private keys in this repo.
+Required and optional public env vars (store URLs, backend API origin, legal contact, GA, Meta Pixel IDs) are listed in [docs/environment.md](docs/environment.md) and `.env.example`. Values must use the `VITE_` prefix. Never put private keys in this repo.
 
-Landing CTAs read `VITE_APP_STORE_URL` and `VITE_PLAY_STORE_URL`. Leave them blank to render disabled “coming soon” buttons.
+Landing and share-preview CTAs read `VITE_APP_STORE_URL` and `VITE_PLAY_STORE_URL`. Leave them blank to render disabled “coming soon” buttons.
+
+Set `VITE_API_BASE_URL` to the public backend origin (for example `https://api.example.com`, no trailing slash) so `/share/:token` can fetch `GET /public/shares/{token}`. Leave it blank to show a clear “couldn't load” state.
 
 Set `VITE_PUBLIC_SITE_URL` to the public origin (for example `https://example.com`) so canonical and social URLs are absolute. Leave `VITE_GA_MEASUREMENT_ID` and `VITE_META_PIXEL_ID` blank to ship no analytics or advertising scripts.
 

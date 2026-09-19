@@ -9,6 +9,7 @@ describe("getPublicAppEnv", () => {
     expect(env.appStoreUrl).toBeUndefined();
     expect(env.playStoreUrl).toBeUndefined();
     expect(env.publicSiteUrl).toBeUndefined();
+    expect(env.apiBaseUrl).toBeUndefined();
     expect(env.gaMeasurementId).toBeUndefined();
     expect(env.metaPixelId).toBeUndefined();
     expect(env.legalContactEmail).toBeUndefined();
@@ -20,6 +21,7 @@ describe("getPublicAppEnv", () => {
       VITE_APP_STORE_URL: "   ",
       VITE_PLAY_STORE_URL: "",
       VITE_PUBLIC_SITE_URL: "  ",
+      VITE_API_BASE_URL: " ",
       VITE_GA_MEASUREMENT_ID: " \n",
       VITE_META_PIXEL_ID: "  ",
       VITE_LEGAL_CONTACT_EMAIL: "   ",
@@ -29,6 +31,7 @@ describe("getPublicAppEnv", () => {
     expect(env.appStoreUrl).toBeUndefined();
     expect(env.playStoreUrl).toBeUndefined();
     expect(env.publicSiteUrl).toBeUndefined();
+    expect(env.apiBaseUrl).toBeUndefined();
     expect(env.gaMeasurementId).toBeUndefined();
     expect(env.metaPixelId).toBeUndefined();
     expect(env.legalContactEmail).toBeUndefined();
@@ -41,6 +44,7 @@ describe("getPublicAppEnv", () => {
       VITE_APP_STORE_URL: " https://apps.apple.com/app/id000000000 ",
       VITE_PLAY_STORE_URL: " https://play.google.com/store/apps/details?id=com.example.wardrobe ",
       VITE_PUBLIC_SITE_URL: " https://example.com/ ",
+      VITE_API_BASE_URL: " https://api.example.com/ ",
       VITE_GA_MEASUREMENT_ID: " G-XXXXXXXXXX ",
       VITE_META_PIXEL_ID: " 000000000000000 ",
       VITE_LEGAL_CONTACT_EMAIL: " legal@example.com ",
@@ -53,6 +57,7 @@ describe("getPublicAppEnv", () => {
       "https://play.google.com/store/apps/details?id=com.example.wardrobe",
     );
     expect(env.publicSiteUrl).toBe("https://example.com");
+    expect(env.apiBaseUrl).toBe("https://api.example.com");
     expect(env.gaMeasurementId).toBe("G-XXXXXXXXXX");
     expect(env.metaPixelId).toBe("000000000000000");
     expect(env.legalContactEmail).toBe("legal@example.com");
