@@ -3,9 +3,14 @@ import { Paper, Typography } from "@mui/material";
 export type StatusCardProps = {
   title: string;
   description: string;
+  headingComponent?: "h1" | "h2";
 };
 
-export const StatusCard = ({ title, description }: StatusCardProps) => {
+export const StatusCard = ({
+  title,
+  description,
+  headingComponent = "h2",
+}: StatusCardProps) => {
   if (!title) {
     return null;
   }
@@ -21,7 +26,7 @@ export const StatusCard = ({ title, description }: StatusCardProps) => {
         borderColor: "divider",
       }}
     >
-      <Typography variant="h2" component="h2" gutterBottom>
+      <Typography variant="h2" component={headingComponent} gutterBottom>
         {title}
       </Typography>
       <Typography variant="body1" color="text.secondary">

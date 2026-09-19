@@ -1,8 +1,11 @@
+import type { SharePreview, SharePreviewErrorKind } from "../api/sharePreview";
+import { getShareResourceTypeLabel } from "../api/sharePreview";
 import type { PublicAppEnv } from "../config/env";
-import { appPaths } from "../routes/paths";
+import { appPaths, parseShareTokenFromPath } from "../routes/paths";
 import { wardrobePalette } from "../theme/wardrobePalette";
 import { featureItems } from "./featureItems";
 import { LEGAL_LAST_UPDATED_ISO } from "./legal/legalDocument";
+import { getSharePreviewStatusCopy } from "./sharePreviewCopy";
 
 export const OG_IMAGE_PATH = "/og-image.png";
 export const JSON_LD_SCRIPT_ID = "wardrobe-json-ld";
@@ -38,6 +41,8 @@ export type PageSeoInput = {
   pathname: string;
   env: PublicAppEnv;
   siteOrigin?: string;
+  sharePreview?: SharePreview;
+  shareErrorKind?: SharePreviewErrorKind;
 };
 
 const stripTrailingSlash = (value: string): string => {
@@ -97,6 +102,36 @@ export const getPrivacyTitle = (appName: string): string => {
 
 export const getPrivacyDescription = (appName: string): string => {
   return `Privacy Policy for ${appName}, covering wardrobe photos, try-on previews, accounts, and optional website analytics.`;
+};
+
+export const getShareFallbackTitle = (appName: string): string => {
+  return `Shared look — ${appName}`;
+};
+
+export const getShareFallbackDescription = (appName: string): string => {
+  return `A shared wardrobe look from ${appName}. Open the app to save items, compose outfits, and try looks on.`;
+};
+
+export const getSharePreviewTitle = (
+  preview: SharePreview,
+  appName: string,
+): string => {
+  return `${preview.title} — ${appName}`;
+};
+
+export const getSharePreviewDescription = (
+  preview: SharePreview,
+  appName: string,
+): string => {
+  const typeLabel = getShareResourceTypeLabel(preview.resourceType).toLowerCase();
+  return `A shared ${typeLabel} from ${appName}: ${preview.title}. Download the app to build your own wardrobe.`;
+};
+
+export const getShareErrorTitle = (
+  errorKind: SharePreviewErrorKind,
+  appName: string,
+): string => {
+  return `${getSharePreviewStatusCopy(errorKind).title} — ${appName}`;
 };
 
 const getSoftwareApplicationJsonLd = ({
@@ -226,16 +261,145 @@ const getLegalPageJsonLd = ({
   return jsonLd;
 };
 
+const getSharePageJsonLd = ({
+  name,
+  description,
+  url,
+  siteName,
+  siteUrl,
+  imageUrl,
+}: {
+  name: string;
+  description: string;
+  url: string | undefined;
+  siteName: string;
+  siteUrl: string | undefined;
+  imageUrl: string | undefined;
+}): JsonLd => {
+  const jsonLd: JsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name,
+    description,
+    inLanguage: "en",
+  };
+
+  if (url) {
+    jsonLd.url = url;
+  }
+
+  if (imageUrl) {
+    jsonLd.primaryImageOfPage = {
+      "@type": "ImageObject",
+      url: imageUrl,
+    };
+  }
+
+  const isPartOf: JsonLd = {
+    "@type": "WebSite",
+    name: siteName,
+  };
+  if (siteUrl) {
+    isPartOf.url = `${siteUrl}/`;
+  }
+  jsonLd.isPartOf = isPartOf;
+
+  return jsonLd;
+};
+
 export const getPageSeo = ({
   pathname,
   env,
   siteOrigin,
+  sharePreview,
+  shareErrorKind,
 }: PageSeoInput): PageSeo => {
   const siteUrl = resolvePublicSiteUrl(env.publicSiteUrl, siteOrigin);
   const path = pathname.startsWith("/") ? pathname : `/${pathname}`;
   const canonicalUrl = toAbsoluteUrl(siteUrl, path);
-  const ogImageUrl = toAbsoluteUrl(siteUrl, OG_IMAGE_PATH);
+  const defaultOgImageUrl = toAbsoluteUrl(siteUrl, OG_IMAGE_PATH);
+  const ogImageUrl = defaultOgImageUrl;
   const ogImageAlt = `${env.appName} — organize, outfit, and try on your closet`;
+
+  const shareToken = parseShareTokenFromPath(path);
+  if (shareToken) {
+    const sharePath = path;
+    const shareCanonicalUrl = toAbsoluteUrl(siteUrl, sharePath);
+
+    if (sharePreview) {
+      const title = getSharePreviewTitle(sharePreview, env.appName);
+      const description = getSharePreviewDescription(sharePreview, env.appName);
+      const previewImageUrl = sharePreview.imageUrl ?? defaultOgImageUrl;
+
+      return {
+        title,
+        description,
+        path: sharePath,
+        siteName: env.appName,
+        canonicalUrl: shareCanonicalUrl,
+        ogType: "website",
+        ogImageUrl: previewImageUrl,
+        ogImageAlt: sharePreview.title,
+        robots: "index,follow",
+        jsonLd: getSharePageJsonLd({
+          name: title,
+          description,
+          url: shareCanonicalUrl,
+          siteName: env.appName,
+          siteUrl,
+          imageUrl: previewImageUrl,
+        }),
+      };
+    }
+
+    if (shareErrorKind) {
+      const statusCopy = getSharePreviewStatusCopy(shareErrorKind);
+      const title = getShareErrorTitle(shareErrorKind, env.appName);
+
+      return {
+        title,
+        description: statusCopy.description,
+        path: sharePath,
+        siteName: env.appName,
+        canonicalUrl: shareCanonicalUrl,
+        ogType: "website",
+        ogImageUrl: defaultOgImageUrl,
+        ogImageAlt,
+        robots: "noindex,follow",
+        jsonLd: getSharePageJsonLd({
+          name: title,
+          description: statusCopy.description,
+          url: shareCanonicalUrl,
+          siteName: env.appName,
+          siteUrl,
+          imageUrl: defaultOgImageUrl,
+        }),
+      };
+    }
+
+    const title = getShareFallbackTitle(env.appName);
+    const description = getShareFallbackDescription(env.appName);
+
+    return {
+      title,
+      description,
+      path: sharePath,
+      siteName: env.appName,
+      canonicalUrl: shareCanonicalUrl,
+      ogType: "website",
+      ogImageUrl: defaultOgImageUrl,
+      ogImageAlt,
+      robots: "noindex,follow",
+      jsonLd: getSharePageJsonLd({
+        name: title,
+        description,
+        url: shareCanonicalUrl,
+        siteName: env.appName,
+        siteUrl,
+        imageUrl: defaultOgImageUrl,
+      }),
+    };
+  }
 
   if (path === appPaths.terms) {
     const title = getTermsTitle(env.appName);

@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { AppShell } from "../layout/AppShell";
 import { renderWithProviders } from "../test/renderWithProviders";
 import { AppRoutes } from "./AppRoutes";
-import { appPaths } from "./paths";
+import { appPaths, getSharePath } from "./paths";
 
 describe("AppRoutes", () => {
   it("renders Terms of Service at /terms", () => {
@@ -73,6 +73,27 @@ describe("AppRoutes", () => {
 
     expect(
       screen.getByRole("heading", { level: 1, name: "Privacy Policy" }),
+    ).toBeInTheDocument();
+  });
+
+  it("renders the public share preview route", async () => {
+    renderWithProviders(
+      <AppShell>
+        <AppRoutes />
+      </AppShell>,
+      { route: getSharePath("shr_abcdefghijklmnopqrstu") },
+    );
+
+    expect(
+      await screen.findByRole("heading", {
+        name: "Open this look in Digital Wardrobe",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Couldn't load this share" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Back to Digital Wardrobe" }),
     ).toBeInTheDocument();
   });
 });

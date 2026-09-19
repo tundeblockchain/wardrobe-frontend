@@ -80,6 +80,51 @@ describe("getPageSeo", () => {
     expect(jsonLdText(termsSeo.jsonLd)).not.toContain("SoftwareApplication");
     expect(jsonLdText(termsSeo.jsonLd)).not.toMatch(/aggregateRating|ratingValue/);
   });
+
+  it("uses share-friendly title and OG image when a preview is loaded", () => {
+    const pageSeo = getPageSeo({
+      pathname: "/share/shr_abcdefghijklmnopqrstu",
+      env: exampleEnv,
+      sharePreview: {
+        resourceType: "ITEM",
+        title: "Black T-Shirt",
+        imageUrl: "https://cdn.example.com/item.jpg",
+        expiresAt: "2026-10-19T12:00:00.000Z",
+      },
+    });
+    const tags = getDocumentMetaTags(pageSeo);
+    const byKey = Object.fromEntries(tags.map((tag) => [tag.key, tag.content]));
+
+    expect(pageSeo.title).toBe("Black T-Shirt — Digital Wardrobe");
+    expect(pageSeo.canonicalUrl).toBe(
+      "https://example.com/share/shr_abcdefghijklmnopqrstu",
+    );
+    expect(pageSeo.robots).toBe("index,follow");
+    expect(byKey["og:title"]).toBe("Black T-Shirt — Digital Wardrobe");
+    expect(byKey["og:image"]).toBe("https://cdn.example.com/item.jpg");
+    expect(jsonLdText(pageSeo.jsonLd)).toContain("WebPage");
+    expect(jsonLdText(pageSeo.jsonLd)).toContain("ImageObject");
+    expect(jsonLdText(pageSeo.jsonLd)).toContain("Black T-Shirt");
+  });
+
+  it("marks missing or expired share previews as noindex", () => {
+    const missingSeo = getPageSeo({
+      pathname: "/share/shr_missingtoken0000001",
+      env: exampleEnv,
+      shareErrorKind: "not_found",
+    });
+    const goneSeo = getPageSeo({
+      pathname: "/share/shr_expiredtoken00000001",
+      env: exampleEnv,
+      shareErrorKind: "gone",
+    });
+
+    expect(missingSeo.title).toContain("isn't available");
+    expect(missingSeo.robots).toBe("noindex,follow");
+    expect(goneSeo.title).toContain("expired");
+    expect(goneSeo.robots).toBe("noindex,follow");
+    expect(goneSeo.ogImageUrl).toBe("https://example.com/og-image.png");
+  });
 });
 
 describe("getDocumentMetaTags", () => {

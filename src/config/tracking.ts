@@ -30,7 +30,7 @@ export type TrackingInstallResult = {
 export const STORE_CTA_GA_EVENT = "store_cta_click";
 export const STORE_CTA_META_EVENT = "StoreCtaClick";
 
-export type StoreCtaPlacement = "hero" | "download";
+export type StoreCtaPlacement = "hero" | "download" | "share";
 
 export type StoreCtaClickPayload = {
   store: StoreKind;

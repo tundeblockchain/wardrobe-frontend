@@ -269,6 +269,30 @@ describe("store CTA click helpers", () => {
     expect(window.gtag).not.toHaveBeenCalled();
   });
 
+  it("accepts share placement on store CTA click events", () => {
+    window.gtag = vi.fn();
+    window.fbq = vi.fn();
+
+    const result = trackStoreCtaClick(
+      { store: "appStore", placement: "share" },
+      { gaMeasurementId: "G-XXXXXXXXXX", metaPixelId: "000000000000000" },
+    );
+
+    expect(result).toEqual({ googleAnalytics: true, metaPixel: true });
+    expect(window.gtag).toHaveBeenCalledWith("event", STORE_CTA_GA_EVENT, {
+      store: "appStore",
+      placement: "share",
+    });
+    expect(window.fbq).toHaveBeenCalledWith(
+      "trackCustom",
+      STORE_CTA_META_EVENT,
+      {
+        store: "appStore",
+        placement: "share",
+      },
+    );
+  });
+
   it("never sends page_view or PageView from a store CTA click", () => {
     window.gtag = vi.fn();
     window.fbq = vi.fn();
