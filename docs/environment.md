@@ -23,6 +23,17 @@ Empty or whitespace-only values are treated as unset by `getPublicAppEnv()`.
 
 Google Analytics and Meta Pixel snippets are omitted entirely when their IDs are missing, blank, or not a valid public identifier. Do not put real measurement IDs in the repository.
 
+## Store CTA click events
+
+Enabled App Store and Google Play buttons (hero and download band) send click events only. They do not send `page_view` / `PageView`.
+
+| Vendor | Event name | How it is sent | Parameters |
+| --- | --- | --- | --- |
+| Google Analytics 4 | `store_cta_click` | `gtag('event', ...)` | `store`: `appStore` or `playStore`; `placement`: `hero` or `download` |
+| Meta Pixel | `StoreCtaClick` | `fbq('trackCustom', ...)` | `store`: `appStore` or `playStore`; `placement`: `hero` or `download` |
+
+A vendor is called only when its env ID is a valid public identifier **and** that vendor’s function (`gtag` or `fbq`) is present. Empty, blank, or malformed IDs are a no-op. Disabled “coming soon” buttons do not send events.
+
 Legal pages always refer to **the operator** (no personal names). Set `VITE_LEGAL_CONTACT_EMAIL` in Netlify so store reviewers have a visible contact address.
 
 ## Netlify notes

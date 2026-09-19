@@ -1,5 +1,6 @@
 import { Box, Container, Stack, Typography } from "@mui/material";
 import { areStoreLinksPublished } from "../../config/storeCtas";
+import type { TrackingIds } from "../../config/tracking";
 import { SectionSurface } from "../surfaces/SectionSurface";
 import { StoreCtaButtons } from "./StoreCtaButtons";
 
@@ -7,12 +8,14 @@ export type StoreCtaSectionProps = {
   appName: string;
   appStoreUrl: string | undefined;
   playStoreUrl: string | undefined;
+  trackingIds?: TrackingIds;
 };
 
 export const StoreCtaSection = ({
   appName,
   appStoreUrl,
   playStoreUrl,
+  trackingIds,
 }: StoreCtaSectionProps) => {
   const storeLinksPublished = areStoreLinksPublished({
     appStoreUrl,
@@ -85,6 +88,8 @@ export const StoreCtaSection = ({
             <StoreCtaButtons
               appStoreUrl={appStoreUrl}
               playStoreUrl={playStoreUrl}
+              placement="download"
+              trackingIds={trackingIds}
             />
           </Box>
           {storeLinksPublished ? null : (

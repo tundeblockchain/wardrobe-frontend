@@ -1,3 +1,4 @@
+import type { KeyboardEvent } from "react";
 import { Apple, Shop } from "@mui/icons-material";
 import { Button, Stack } from "@mui/material";
 import {
@@ -5,10 +6,17 @@ import {
   isStoreCtaAvailable,
   type StoreKind,
 } from "../../config/storeCtas";
+import {
+  trackStoreCtaClick,
+  type StoreCtaPlacement,
+  type TrackingIds,
+} from "../../config/tracking";
 
 export type StoreCtaButtonsProps = {
   appStoreUrl: string | undefined;
   playStoreUrl: string | undefined;
+  placement: StoreCtaPlacement;
+  trackingIds?: TrackingIds;
 };
 
 const storeIcons: Record<StoreKind, typeof Apple> = {
@@ -19,6 +27,8 @@ const storeIcons: Record<StoreKind, typeof Apple> = {
 export const StoreCtaButtons = ({
   appStoreUrl,
   playStoreUrl,
+  placement,
+  trackingIds,
 }: StoreCtaButtonsProps) => {
   const storeCtas = getStoreCtas({ appStoreUrl, playStoreUrl });
 
@@ -53,6 +63,29 @@ export const StoreCtaButtons = ({
           );
         }
 
+        const handleStoreCtaClick = () => {
+          trackStoreCtaClick(
+            { store: storeCta.kind, placement },
+            trackingIds ?? {
+              gaMeasurementId: undefined,
+              metaPixelId: undefined,
+            },
+          );
+        };
+
+        const handleStoreCtaKeyDown = (
+          event: KeyboardEvent<HTMLAnchorElement>,
+        ) => {
+          if (event.key !== "Enter" && event.key !== " ") {
+            return;
+          }
+
+          if (event.key === " ") {
+            event.preventDefault();
+            event.currentTarget.click();
+          }
+        };
+
         return (
           <Button
             key={storeCta.kind}
@@ -67,6 +100,8 @@ export const StoreCtaButtons = ({
             aria-label={storeCta.label}
             title={storeCta.label}
             startIcon={<Icon aria-hidden="true" />}
+            onClick={handleStoreCtaClick}
+            onKeyDown={handleStoreCtaKeyDown}
             sx={{ px: 2.5 }}
           >
             {storeCta.label}

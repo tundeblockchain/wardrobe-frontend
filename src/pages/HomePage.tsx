@@ -5,7 +5,9 @@ import { StoreCtaSection } from "../components/landing/StoreCtaSection";
 import { getPublicAppEnv } from "../config/env";
 
 export const HomePage = () => {
-  const { appName, appStoreUrl, playStoreUrl } = getPublicAppEnv();
+  const { appName, appStoreUrl, playStoreUrl, gaMeasurementId, metaPixelId } =
+    getPublicAppEnv();
+  const trackingIds = { gaMeasurementId, metaPixelId };
 
   return (
     <>
@@ -13,6 +15,7 @@ export const HomePage = () => {
         appName={appName}
         appStoreUrl={appStoreUrl}
         playStoreUrl={playStoreUrl}
+        trackingIds={trackingIds}
       />
       <FeatureSection />
       <ScreenshotShowcase />
@@ -20,6 +23,7 @@ export const HomePage = () => {
         appName={appName}
         appStoreUrl={appStoreUrl}
         playStoreUrl={playStoreUrl}
+        trackingIds={trackingIds}
       />
     </>
   );

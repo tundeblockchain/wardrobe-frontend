@@ -1,4 +1,5 @@
 import type { PublicAppEnv } from "./env";
+import type { StoreKind } from "./storeCtas";
 
 export const GA_SCRIPT_HOST = "https://www.googletagmanager.com";
 export const META_PIXEL_SCRIPT_SRC =
@@ -25,6 +26,18 @@ export type TrackingInstallResult = {
   googleAnalytics: boolean;
   metaPixel: boolean;
 };
+
+export const STORE_CTA_GA_EVENT = "store_cta_click";
+export const STORE_CTA_META_EVENT = "StoreCtaClick";
+
+export type StoreCtaPlacement = "hero" | "download";
+
+export type StoreCtaClickPayload = {
+  store: StoreKind;
+  placement: StoreCtaPlacement;
+};
+
+export type StoreCtaClickResult = TrackingInstallResult;
 
 export type GtagFunction = (...args: unknown[]) => void;
 
@@ -238,4 +251,48 @@ export const trackSpaPageView = ({
   if (typeof window.fbq === "function") {
     window.fbq("track", "PageView");
   }
+};
+
+export const canTrackGoogleAnalytics = (
+  gaMeasurementId: string | undefined,
+): boolean => {
+  return isGaMeasurementId(gaMeasurementId);
+};
+
+export const canTrackMetaPixel = (metaPixelId: string | undefined): boolean => {
+  return isMetaPixelId(metaPixelId);
+};
+
+export const trackStoreCtaClick = (
+  payload: StoreCtaClickPayload,
+  ids: TrackingIds,
+): StoreCtaClickResult => {
+  const gaMeasurementId = sanitizeGaMeasurementId(ids.gaMeasurementId);
+  const metaPixelId = sanitizeMetaPixelId(ids.metaPixelId);
+  const result: StoreCtaClickResult = {
+    googleAnalytics: false,
+    metaPixel: false,
+  };
+
+  if (!gaMeasurementId && !metaPixelId) {
+    return result;
+  }
+
+  if (gaMeasurementId && typeof window.gtag === "function") {
+    window.gtag("event", STORE_CTA_GA_EVENT, {
+      store: payload.store,
+      placement: payload.placement,
+    });
+    result.googleAnalytics = true;
+  }
+
+  if (metaPixelId && typeof window.fbq === "function") {
+    window.fbq("trackCustom", STORE_CTA_META_EVENT, {
+      store: payload.store,
+      placement: payload.placement,
+    });
+    result.metaPixel = true;
+  }
+
+  return result;
 };
