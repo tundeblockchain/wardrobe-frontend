@@ -7,7 +7,7 @@ import { renderWithProviders } from "../test/renderWithProviders";
 import { SharePreviewPage } from "./SharePreviewPage";
 
 const exampleEnv = getPublicAppEnv({
-  VITE_APP_NAME: "Digital Wardrobe",
+  VITE_APP_NAME: "Pocket Closet",
   VITE_API_BASE_URL: "https://api.example.com",
   VITE_APP_STORE_URL: "https://apps.apple.com/app/id000000000",
   VITE_PLAY_STORE_URL:
@@ -44,7 +44,7 @@ describe("SharePreviewPage", () => {
     expect(screen.getByLabelText("Shared type: Item")).toBeInTheDocument();
     expect(
       screen.getByRole("heading", {
-        name: "Open this look in Digital Wardrobe",
+        name: "Open this look in Pocket Closet",
       }),
     ).toBeInTheDocument();
     expect(
@@ -53,7 +53,7 @@ describe("SharePreviewPage", () => {
     expect(
       screen.getByRole("link", { name: "Get it on Google Play" }),
     ).toHaveAttribute("href", exampleEnv.playStoreUrl);
-    expect(document.title).toBe("Black T-Shirt — Digital Wardrobe");
+    expect(document.title).toBe("Black T-Shirt — Pocket Closet");
     expect(requestSharePreview).toHaveBeenCalledWith({
       apiBaseUrl: "https://api.example.com",
       token: shareToken,

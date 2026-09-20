@@ -1,8 +1,8 @@
-# Digital Wardrobe
+# Pocket Closet
 
 > A wardrobe companion for iOS and Android. Photograph pieces, catalog a closet, compose outfits, and preview looks with try-on.
 
-Digital Wardrobe is a software product with a public marketing website. This site describes the app; it is not a store, marketplace, or review aggregator.
+Pocket Closet is a software product with a public marketing website. This site describes the app; it is not a store, marketplace, or review aggregator.
 
 ## Pages
 

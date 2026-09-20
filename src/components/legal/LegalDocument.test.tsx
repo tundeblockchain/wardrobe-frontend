@@ -9,8 +9,8 @@ describe("LegalDocument", () => {
   it("renders the document title, table of contents, and store-listing contact fallback", () => {
     renderWithProviders(
       <LegalDocument
-        appName="Digital Wardrobe"
-        content={getTermsOfServiceContent("Digital Wardrobe")}
+        appName="Pocket Closet"
+        content={getTermsOfServiceContent("Pocket Closet")}
         contactEmail={undefined}
         contactUrl={undefined}
         relatedLink={{
@@ -23,6 +23,9 @@ describe("LegalDocument", () => {
 
     expect(
       screen.getByRole("heading", { level: 1, name: "Terms of Service" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Pocket Closet is a wardrobe companion/),
     ).toBeInTheDocument();
     expect(
       screen
@@ -45,8 +48,8 @@ describe("LegalDocument", () => {
   it("renders the operator contact email and contact page when configured", () => {
     renderWithProviders(
       <LegalDocument
-        appName="Digital Wardrobe"
-        content={getTermsOfServiceContent("Digital Wardrobe")}
+        appName="Pocket Closet"
+        content={getTermsOfServiceContent("Pocket Closet")}
         contactEmail="legal@example.com"
         contactUrl="https://example.com/contact"
         relatedLink={{

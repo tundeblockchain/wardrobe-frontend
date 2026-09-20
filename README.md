@@ -1,6 +1,6 @@
 # wardrobe-frontend
 
-Public web app for the Digital Wardrobe product. React + TypeScript + Vite + Material UI, with lint, unit tests, GitHub Actions CI, and Netlify deploy config.
+Public web app for the Pocket Closet product. React + TypeScript + Vite + Material UI, with lint, unit tests, GitHub Actions CI, and Netlify deploy config.
 
 The public landing page includes a hero, feature sections, a labeled screenshot showcase, and App Store / Play Store CTAs. Store URLs are env-driven and stay disabled until set.
 

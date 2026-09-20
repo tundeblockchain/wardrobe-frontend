@@ -86,14 +86,14 @@ describe("AppRoutes", () => {
 
     expect(
       await screen.findByRole("heading", {
-        name: "Open this look in Digital Wardrobe",
+        name: "Open this look in Pocket Closet",
       }),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("heading", { name: "Couldn't load this share" }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: "Back to Digital Wardrobe" }),
+      screen.getByRole("link", { name: "Back to Pocket Closet" }),
     ).toBeInTheDocument();
   });
 });

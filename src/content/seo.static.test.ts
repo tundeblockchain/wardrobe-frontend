@@ -8,6 +8,9 @@ import { wardrobePalette } from "../theme/wardrobePalette";
 
 describe("static SEO fallback", () => {
   it("includes landing meta, Open Graph, Twitter, and JSON-LD without ratings or pixels", () => {
+    expect(indexHtml).toContain("Pocket Closet");
+    expect(indexHtml).not.toContain("Digital Wardrobe");
+    expect(indexHtml).not.toContain("Wende Wardrobe");
     expect(indexHtml).toContain(`<title>${DEFAULT_LANDING_TITLE}</title>`);
     expect(indexHtml).toContain(
       `name="theme-color" content="${wardrobePalette.themeColor}"`,

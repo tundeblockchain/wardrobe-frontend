@@ -23,5 +23,8 @@ describe("TermsOfServicePage", () => {
     expect(
       screen.getByRole("link", { name: "Privacy Policy" }),
     ).toHaveAttribute("href", appPaths.privacy);
+    expect(
+      screen.getByText(/Pocket Closet is a wardrobe companion/),
+    ).toBeInTheDocument();
   });
 });

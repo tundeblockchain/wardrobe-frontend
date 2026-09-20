@@ -19,7 +19,7 @@ describe("HomePage", () => {
       screen.getByRole("heading", { name: "See the app" }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: "Get Digital Wardrobe" }),
+      screen.getByRole("heading", { name: "Get Pocket Closet" }),
     ).toBeInTheDocument();
 
     expect(screen.getByRole("tab", { name: "Home screenshot" })).toBeInTheDocument();

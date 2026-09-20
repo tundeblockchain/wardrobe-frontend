@@ -11,9 +11,9 @@ export const OG_IMAGE_PATH = "/og-image.png";
 export const JSON_LD_SCRIPT_ID = "wardrobe-json-ld";
 
 export const DEFAULT_LANDING_TITLE =
-  "Digital Wardrobe — organize, outfit, and try on your closet";
+  "Pocket Closet — organize, outfit, and try on your closet";
 export const DEFAULT_LANDING_DESCRIPTION =
-  "Digital Wardrobe is a wardrobe companion for iOS and Android. Photograph pieces, catalog your closet, compose outfits, and preview looks with try-on.";
+  "Pocket Closet is a wardrobe companion for iOS and Android. Photograph pieces, catalog your closet, compose outfits, and preview looks with try-on.";
 
 export type JsonLd = Record<string, unknown>;
 

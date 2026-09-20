@@ -7,18 +7,18 @@ describe("StoreCtaSection", () => {
   it("explains that store buttons stay disabled without env URLs", () => {
     renderWithProviders(
       <StoreCtaSection
-        appName="Digital Wardrobe"
+        appName="Pocket Closet"
         appStoreUrl={undefined}
         playStoreUrl={undefined}
       />,
     );
 
     expect(
-      screen.getByRole("heading", { name: "Get Digital Wardrobe" }),
+      screen.getByRole("heading", { name: "Get Pocket Closet" }),
     ).toBeInTheDocument();
     expect(
       screen
-        .getByRole("heading", { name: "Get Digital Wardrobe" })
+        .getByRole("heading", { name: "Get Pocket Closet" })
         .closest("[data-surface]"),
     ).toHaveAttribute("data-surface", "blush");
     expect(
@@ -32,7 +32,7 @@ describe("StoreCtaSection", () => {
   it("hides the unpublished notice when a store URL is set", () => {
     renderWithProviders(
       <StoreCtaSection
-        appName="Digital Wardrobe"
+        appName="Pocket Closet"
         appStoreUrl="https://apps.apple.com/app/id000000000"
         playStoreUrl={undefined}
       />,

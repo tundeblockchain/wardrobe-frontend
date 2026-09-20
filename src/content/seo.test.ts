@@ -11,7 +11,7 @@ import { featureItems } from "./featureItems";
 import { wardrobePalette } from "../theme/wardrobePalette";
 
 const exampleEnv = getPublicAppEnv({
-  VITE_APP_NAME: "Digital Wardrobe",
+  VITE_APP_NAME: "Pocket Closet",
   VITE_PUBLIC_SITE_URL: "https://example.com",
   VITE_APP_STORE_URL: "https://apps.apple.com/app/id000000000",
   VITE_PLAY_STORE_URL:
@@ -28,8 +28,13 @@ describe("getPageSeo", () => {
     });
     const serialized = jsonLdText(pageSeo.jsonLd);
 
+    expect(DEFAULT_LANDING_TITLE).toBe(
+      "Pocket Closet — organize, outfit, and try on your closet",
+    );
+    expect(DEFAULT_LANDING_DESCRIPTION).toMatch(/^Pocket Closet /);
     expect(pageSeo.title).toBe(DEFAULT_LANDING_TITLE);
     expect(pageSeo.description).toBe(DEFAULT_LANDING_DESCRIPTION);
+    expect(pageSeo.siteName).toBe("Pocket Closet");
     expect(pageSeo.canonicalUrl).toBe("https://example.com/");
     expect(pageSeo.ogImageUrl).toBe("https://example.com/og-image.png");
     expect(serialized).toContain("SoftwareApplication");
@@ -95,12 +100,12 @@ describe("getPageSeo", () => {
     const tags = getDocumentMetaTags(pageSeo);
     const byKey = Object.fromEntries(tags.map((tag) => [tag.key, tag.content]));
 
-    expect(pageSeo.title).toBe("Black T-Shirt — Digital Wardrobe");
+    expect(pageSeo.title).toBe("Black T-Shirt — Pocket Closet");
     expect(pageSeo.canonicalUrl).toBe(
       "https://example.com/share/shr_abcdefghijklmnopqrstu",
     );
     expect(pageSeo.robots).toBe("index,follow");
-    expect(byKey["og:title"]).toBe("Black T-Shirt — Digital Wardrobe");
+    expect(byKey["og:title"]).toBe("Black T-Shirt — Pocket Closet");
     expect(byKey["og:image"]).toBe("https://cdn.example.com/item.jpg");
     expect(jsonLdText(pageSeo.jsonLd)).toContain("WebPage");
     expect(jsonLdText(pageSeo.jsonLd)).toContain("ImageObject");
