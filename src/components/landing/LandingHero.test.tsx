@@ -7,12 +7,13 @@ describe("LandingHero", () => {
   it("renders the value proposition, home placeholder, and store CTAs", () => {
     renderWithProviders(
       <LandingHero
-        appName="Digital Wardrobe"
+        appName="Pocket Closet"
         appStoreUrl={undefined}
         playStoreUrl={undefined}
       />,
     );
 
+    expect(screen.getByText("Pocket Closet")).toBeInTheDocument();
     expect(
       screen.getByRole("heading", {
         level: 1,

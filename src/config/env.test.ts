@@ -5,7 +5,7 @@ describe("getPublicAppEnv", () => {
   it("uses the default app name when the env value is missing", () => {
     const env = getPublicAppEnv({});
 
-    expect(env.appName).toBe("Digital Wardrobe");
+    expect(env.appName).toBe("Pocket Closet");
     expect(env.appStoreUrl).toBeUndefined();
     expect(env.playStoreUrl).toBeUndefined();
     expect(env.publicSiteUrl).toBeUndefined();

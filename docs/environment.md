@@ -10,7 +10,7 @@ Never commit secrets, tokens, or private keys.
 
 | Name | Required | Purpose | Example placeholder |
 | --- | --- | --- | --- |
-| `VITE_APP_NAME` | No (defaults to `Digital Wardrobe`) | Display name in site chrome | `Digital Wardrobe` |
+| `VITE_APP_NAME` | No (defaults to `Pocket Closet`) | Display name in site chrome | `Pocket Closet` |
 | `VITE_APP_STORE_URL` | No | Public App Store URL for landing download CTAs. Empty values render a disabled button. | `https://apps.apple.com/app/id000000000` |
 | `VITE_PLAY_STORE_URL` | No | Public Play Store URL for landing download CTAs. Empty values render a disabled button. | `https://play.google.com/store/apps/details?id=com.example.wardrobe` |
 | `VITE_PUBLIC_SITE_URL` | No | Public origin for canonical, Open Graph, and Twitter URLs (no trailing slash). When unset, the current origin is used in the browser. | `https://example.com` |

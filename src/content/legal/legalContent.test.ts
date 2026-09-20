@@ -7,11 +7,12 @@ const uniqueIds = (ids: string[]) => new Set(ids).size === ids.length;
 
 describe("legal content", () => {
   it("keeps Terms of Service section ids unique and covers store-review topics", () => {
-    const content = getTermsOfServiceContent("Digital Wardrobe");
+    const content = getTermsOfServiceContent("Pocket Closet");
     const ids = content.sections.map((section) => section.id);
     const titles = content.sections.map((section) => section.title);
 
     expect(uniqueIds(ids)).toBe(true);
+    expect(content.intro).toContain("Pocket Closet");
     expect(titles).toEqual(
       expect.arrayContaining([
         "Agreement",
@@ -27,11 +28,12 @@ describe("legal content", () => {
   });
 
   it("keeps Privacy Policy section ids unique and covers store-review topics", () => {
-    const content = getPrivacyPolicyContent("Digital Wardrobe");
+    const content = getPrivacyPolicyContent("Pocket Closet");
     const ids = content.sections.map((section) => section.id);
     const titles = content.sections.map((section) => section.title);
 
     expect(uniqueIds(ids)).toBe(true);
+    expect(content.intro).toContain("Pocket Closet");
     expect(titles).toEqual(
       expect.arrayContaining([
         "Information collected",
@@ -53,7 +55,7 @@ describe("legal content", () => {
 
   it("describes operator contact without requiring a configured email", () => {
     const copy = getLegalContactCopy({
-      appName: "Digital Wardrobe",
+      appName: "Pocket Closet",
       contactEmail: undefined,
       contactUrl: undefined,
     });

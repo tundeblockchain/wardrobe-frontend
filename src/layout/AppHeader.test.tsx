@@ -9,7 +9,7 @@ describe("AppHeader", () => {
     renderWithProviders(<AppHeader />);
 
     expect(
-      screen.getByRole("link", { name: "Digital Wardrobe home" }),
+      screen.getByRole("link", { name: "Pocket Closet home" }),
     ).toHaveAttribute("href", appPaths.home);
     expect(screen.getByRole("link", { name: "Jump to features" })).toHaveAttribute(
       "href",

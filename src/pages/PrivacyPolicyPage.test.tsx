@@ -23,5 +23,6 @@ describe("PrivacyPolicyPage", () => {
     expect(
       screen.getByRole("link", { name: "Terms of Service" }),
     ).toHaveAttribute("href", appPaths.terms);
+    expect(screen.getByText(/operator of Pocket Closet/)).toBeInTheDocument();
   });
 });

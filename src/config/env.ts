@@ -22,7 +22,7 @@ export type EnvSource = {
   VITE_LEGAL_CONTACT_URL?: string;
 };
 
-const DEFAULT_APP_NAME = "Digital Wardrobe";
+const DEFAULT_APP_NAME = "Pocket Closet";
 
 const readOptionalEnv = (value: string | undefined): string | undefined => {
   if (!value) {
