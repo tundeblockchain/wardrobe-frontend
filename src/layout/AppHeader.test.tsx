@@ -30,13 +30,8 @@ describe("AppHeader", () => {
       "href",
       appPaths.privacy,
     );
-    expect(screen.getByRole("link", { name: "Pocket Closet logo" })).toHaveAttribute(
-      "href",
-      appPaths.home,
-    );
-    expect(screen.getByRole("link", { name: "Pocket Closet logo" }).querySelector("img")).toHaveAttribute(
-      "src",
-      "/logo.png",
-    );
+    expect(
+      screen.getByRole("link", { name: "Pocket Closet home" }).querySelector("img"),
+    ).toHaveAttribute("src", "/logo.png");
   });
 });

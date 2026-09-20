@@ -17,59 +17,40 @@ export const AppHeader = () => {
           py: { xs: 1, sm: 0 },
         }}
       >
-        <Typography
-          variant="h6"
+        <Box
           component={RouterLink}
           to={appPaths.home}
           tabIndex={0}
           aria-label={`${appName} home`}
           sx={{
-            color: "inherit",
-            textDecoration: "none",
-            fontWeight: 600,
-          }}
-        >
-          {appName}
-        </Typography>
-        <Box
-          sx={{
             display: "flex",
             alignItems: "center",
-            gap: 2,
-            flexWrap: "wrap",
-            ml: "auto",
+            gap: 1.5,
+            color: "inherit",
+            textDecoration: "none",
+            mr: "auto",
           }}
         >
-          <AppNavLinks
-            ariaLabel="Primary"
-            links={primaryNavLinks}
-            fontSize={{ xs: "0.875rem", sm: "1rem" }}
-          />
           <Box
-            component={RouterLink}
-            to={appPaths.home}
-            tabIndex={0}
-            aria-label={`${appName} logo`}
+            component="img"
+            src="/logo.png"
+            alt=""
             sx={{
-              display: "flex",
-              alignItems: "center",
-              flexShrink: 0,
-              lineHeight: 0,
+              height: { xs: 40, sm: 48 },
+              width: "auto",
+              display: "block",
+              borderRadius: 1,
             }}
-          >
-            <Box
-              component="img"
-              src="/logo.png"
-              alt=""
-              sx={{
-                height: { xs: 40, sm: 48 },
-                width: "auto",
-                display: "block",
-                borderRadius: 1,
-              }}
-            />
-          </Box>
+          />
+          <Typography variant="h6" component="span" sx={{ fontWeight: 600 }}>
+            {appName}
+          </Typography>
         </Box>
+        <AppNavLinks
+          ariaLabel="Primary"
+          links={primaryNavLinks}
+          fontSize={{ xs: "0.875rem", sm: "1rem" }}
+        />
       </Toolbar>
     </AppBar>
   );
