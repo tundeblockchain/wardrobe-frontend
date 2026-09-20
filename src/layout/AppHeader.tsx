@@ -1,4 +1,4 @@
-import { AppBar, Toolbar, Typography } from "@mui/material";
+import { AppBar, Box, Toolbar, Typography } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 import { getPublicAppEnv } from "../config/env";
 import { AppNavLinks } from "./AppNavLinks";
@@ -27,16 +27,49 @@ export const AppHeader = () => {
             color: "inherit",
             textDecoration: "none",
             fontWeight: 600,
-            mr: "auto",
           }}
         >
           {appName}
         </Typography>
-        <AppNavLinks
-          ariaLabel="Primary"
-          links={primaryNavLinks}
-          fontSize={{ xs: "0.875rem", sm: "1rem" }}
-        />
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 2,
+            flexWrap: "wrap",
+            ml: "auto",
+          }}
+        >
+          <AppNavLinks
+            ariaLabel="Primary"
+            links={primaryNavLinks}
+            fontSize={{ xs: "0.875rem", sm: "1rem" }}
+          />
+          <Box
+            component={RouterLink}
+            to={appPaths.home}
+            tabIndex={0}
+            aria-label={`${appName} logo`}
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              flexShrink: 0,
+              lineHeight: 0,
+            }}
+          >
+            <Box
+              component="img"
+              src="/logo.png"
+              alt=""
+              sx={{
+                height: { xs: 40, sm: 48 },
+                width: "auto",
+                display: "block",
+                borderRadius: 1,
+              }}
+            />
+          </Box>
+        </Box>
       </Toolbar>
     </AppBar>
   );
