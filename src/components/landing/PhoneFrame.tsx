@@ -5,21 +5,27 @@ export type PhoneFrameProps = {
   src: string;
   alt: string;
   maxWidth?: number;
+  compact?: boolean;
 };
 
-export const PhoneFrame = ({ src, alt, maxWidth = 280 }: PhoneFrameProps) => {
+export const PhoneFrame = ({
+  src,
+  alt,
+  maxWidth = 280,
+  compact = false,
+}: PhoneFrameProps) => {
   return (
     <Box
       sx={{
         width: "100%",
         maxWidth,
         mx: "auto",
-        borderRadius: "32px",
+        borderRadius: compact ? "16px" : "32px",
         overflow: "hidden",
-        border: "10px solid",
+        border: compact ? "5px solid" : "10px solid",
         borderColor: wardrobePalette.deviceFrame,
         bgcolor: wardrobePalette.deviceFrame,
-        boxShadow: 8,
+        boxShadow: compact ? 3 : 8,
         aspectRatio: "9 / 19.5",
       }}
     >

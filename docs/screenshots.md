@@ -13,7 +13,7 @@ Marketing captures are not in the mobile app yet. This site ships **labeled SVG 
 | Try-on | `public/screenshots/try-on.svg` | `public/screenshots/try-on.png` |
 | Account | `public/screenshots/account.svg` | `public/screenshots/account.png` |
 
-The gallery reads paths from `src/content/screenshotSlots.ts`.
+The gallery and hero sample thumbs read paths from `src/content/screenshotSlots.ts`. The hero large phone uses the Home slot; smaller thumbs under the hero CTAs reuse the remaining slots.
 
 ## Drop-in path for real PNGs
 
