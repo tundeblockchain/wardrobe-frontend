@@ -3,6 +3,7 @@ import type { TrackingIds } from "../../config/tracking";
 import { screenshotSlots } from "../../content/screenshotSlots";
 import { SectionSurface } from "../surfaces/SectionSurface";
 import { PhoneFrame } from "./PhoneFrame";
+import { ScreenshotThumbs } from "./ScreenshotThumbs";
 import { StoreCtaButtons } from "./StoreCtaButtons";
 
 export type LandingHeroProps = {
@@ -18,7 +19,7 @@ export const LandingHero = ({
   playStoreUrl,
   trackingIds,
 }: LandingHeroProps) => {
-  const homeScreenshot = screenshotSlots[0];
+  const [homeScreenshot, ...sampleScreenshots] = screenshotSlots;
   if (!homeScreenshot) {
     return null;
   }
@@ -31,7 +32,8 @@ export const LandingHero = ({
       sx={{
         overflow: "hidden",
         bgcolor: "background.default",
-        py: { xs: 6, md: 10 },
+        pt: { xs: 2.5, md: 3 },
+        pb: { xs: 5, md: 6 },
       }}
     >
       <Box
@@ -50,10 +52,10 @@ export const LandingHero = ({
       <Container maxWidth="lg">
         <Stack
           direction={{ xs: "column", md: "row" }}
-          spacing={{ xs: 6, md: 8 }}
-          sx={{ alignItems: "center" }}
+          spacing={{ xs: 4, md: 6 }}
+          sx={{ alignItems: { xs: "stretch", md: "flex-start" } }}
         >
-          <Stack spacing={3} sx={{ flex: 1, position: "relative" }}>
+          <Stack spacing={2.5} sx={{ flex: 1, position: "relative", pt: 0 }}>
             <Typography
               variant="overline"
               component="p"
@@ -91,6 +93,7 @@ export const LandingHero = ({
                 See the app
               </Button>
             </Box>
+            <ScreenshotThumbs slots={sampleScreenshots} />
           </Stack>
           <Box sx={{ flex: "0 1 320px", width: "100%", position: "relative" }}>
             <PhoneFrame
