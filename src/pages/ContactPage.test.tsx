@@ -21,7 +21,7 @@ describe("ContactPage", () => {
     ).toBeInTheDocument();
     expect(
       screen.getByText(
-        /Send a message to the Pocket Closet operator/,
+        /Send a message to the Pocket Closet team/,
       ),
     ).toBeInTheDocument();
     expect(

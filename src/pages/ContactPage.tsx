@@ -49,7 +49,7 @@ export const ContactPage = ({
                 Contact us
               </Typography>
               <Typography variant="body1" color="text.secondary">
-                Send a message to the {env.appName} operator. We use this form
+                Send a message to the {env.appName} team. We use this form
                 for product questions and support requests.
               </Typography>
             </Stack>
