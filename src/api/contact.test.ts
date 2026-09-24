@@ -169,14 +169,13 @@ describe("sendContactMessage", () => {
       }),
     );
 
-    await expect(
-      sendContactMessage({
-        apiBaseUrl: "https://api.example.com",
-        fields: validFields,
-        fetchImpl,
-      }),
-    ).resolves.toEqual({ status: "success" });
-
+    const result = await sendContactMessage({
+      apiBaseUrl: "https://api.example.com",
+      fields: validFields,
+      fetchImpl,
+    });
+    expect(result).toEqual({ status: "success" });
+    expect(result).not.toHaveProperty("id");
     expect(fetchImpl).toHaveBeenCalledTimes(1);
     const [url, options] = fetchImpl.mock.calls[0] as [
       string,
@@ -194,6 +193,58 @@ describe("sendContactMessage", () => {
       "authorization",
     );
     expect(JSON.parse(String(options.body))).toEqual(expectedBody);
+  });
+
+  it("accepts an optional id on a 202 success body", async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(
+      createJsonResponse({
+        status: 202,
+        body: {
+          status: "sent",
+          kind: "contact",
+          source: "website",
+          id: "  msg_abc123  ",
+        },
+      }),
+    );
+
+    await expect(
+      sendContactMessage({
+        apiBaseUrl: "https://api.example.com",
+        fields: validFields,
+        fetchImpl,
+      }),
+    ).resolves.toEqual({ status: "success", id: "msg_abc123" });
+  });
+
+  it("ignores a missing or non-string 202 id", async () => {
+    const blankIdFetch = vi.fn().mockResolvedValue(
+      createJsonResponse({
+        status: 202,
+        body: { status: "sent", kind: "contact", source: "website", id: "  " },
+      }),
+    );
+    const numericIdFetch = vi.fn().mockResolvedValue(
+      createJsonResponse({
+        status: 202,
+        body: { status: "sent", kind: "contact", source: "website", id: 99 },
+      }),
+    );
+
+    await expect(
+      sendContactMessage({
+        apiBaseUrl: "https://api.example.com",
+        fields: validFields,
+        fetchImpl: blankIdFetch,
+      }),
+    ).resolves.toEqual({ status: "success" });
+    await expect(
+      sendContactMessage({
+        apiBaseUrl: "https://api.example.com",
+        fields: validFields,
+        fetchImpl: numericIdFetch,
+      }),
+    ).resolves.toEqual({ status: "success" });
   });
 
   it("omits subject from the body when it is blank", async () => {
@@ -245,7 +296,33 @@ describe("sendContactMessage", () => {
     });
   });
 
-  it("uses generic validation copy when the backend message has no field names", async () => {
+  it("maps 413 VALIDATION_ERROR to the same validation result", async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(
+      createJsonResponse({
+        status: 413,
+        body: {
+          error: {
+            code: "VALIDATION_ERROR",
+            message: "Request body is too large",
+          },
+        },
+      }),
+    );
+
+    await expect(
+      sendContactMessage({
+        apiBaseUrl: "https://api.example.com",
+        fields: validFields,
+        fetchImpl,
+      }),
+    ).resolves.toEqual({
+      status: "validation",
+      message: CONTACT_STATUS_MESSAGES.validation,
+      fieldErrors: {},
+    });
+  });
+
+  it("uses validation copy when a 400 VALIDATION_ERROR message has no field names", async () => {
     const fetchImpl = vi.fn().mockResolvedValue(
       createJsonResponse({
         status: 400,
@@ -266,7 +343,7 @@ describe("sendContactMessage", () => {
       }),
     ).resolves.toEqual({
       status: "validation",
-      message: CONTACT_STATUS_MESSAGES.validationGeneric,
+      message: CONTACT_STATUS_MESSAGES.validation,
       fieldErrors: {},
     });
   });
@@ -279,6 +356,31 @@ describe("sendContactMessage", () => {
           error: {
             code: "ORIGIN_NOT_ALLOWED",
             message: "Origin is not allowed",
+          },
+        },
+      }),
+    );
+
+    await expect(
+      sendContactMessage({
+        apiBaseUrl: "https://api.example.com",
+        fields: validFields,
+        fetchImpl,
+      }),
+    ).resolves.toEqual({
+      status: "error",
+      message: CONTACT_STATUS_MESSAGES.originNotAllowed,
+    });
+  });
+
+  it("does not treat a 403 as validation even if the body mentions VALIDATION_ERROR", async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(
+      createJsonResponse({
+        status: 403,
+        body: {
+          error: {
+            code: "VALIDATION_ERROR",
+            message: "should not be used",
           },
         },
       }),
@@ -343,7 +445,7 @@ describe("sendContactMessage", () => {
     });
   });
 
-  it("maps 413, 5xx, and network failures to a generic error", async () => {
+  it("maps a 413 without VALIDATION_ERROR, 5xx, and network failures to a generic error", async () => {
     const payloadTooLarge = vi.fn().mockResolvedValue(
       createJsonResponse({ status: 413 }),
     );

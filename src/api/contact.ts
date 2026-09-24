@@ -26,7 +26,7 @@ export type ContactRequestBody = {
 };
 
 export type ContactSendResult =
-  | { status: "success" }
+  | { status: "success"; id?: string }
   | { status: "validation"; message: string; fieldErrors: ContactFieldErrors }
   | { status: "rateLimited"; retryAfterSeconds?: number }
   | { status: "error"; message: string }
@@ -39,8 +39,8 @@ export type SendContactMessageInput = {
 };
 
 export const CONTACT_STATUS_MESSAGES = {
-  validation: "Please check the highlighted fields and try again.",
-  validationGeneric: "Please check your details and try again.",
+  validation:
+    "Your message is too long or a field is invalid, please check and try again.",
   originNotAllowed:
     "We couldn't send your message right now. Please try again later.",
   rateLimited: "You've sent too many messages. Please try again later.",
@@ -176,6 +176,31 @@ const parseBackendError = async (
   }
 };
 
+const parseOptionalSuccessId = async (
+  response: Response,
+): Promise<string | undefined> => {
+  try {
+    const payload: unknown = await response.json();
+    if (!payload || typeof payload !== "object") {
+      return undefined;
+    }
+
+    const id = (payload as { id?: unknown }).id;
+    if (typeof id !== "string") {
+      return undefined;
+    }
+
+    const trimmedId = id.trim();
+    if (trimmedId.length === 0) {
+      return undefined;
+    }
+
+    return trimmedId;
+  } catch {
+    return undefined;
+  }
+};
+
 const parseRetryAfterSeconds = (response: Response): number | undefined => {
   const rawValue = response.headers.get("Retry-After");
   if (!rawValue) {
@@ -211,21 +236,12 @@ export const sendContactMessage = async ({
     });
 
     if (response.status === 202) {
+      const id = await parseOptionalSuccessId(response);
+      if (id) {
+        return { status: "success", id };
+      }
+
       return { status: "success" };
-    }
-
-    if (response.status === 400) {
-      const backendError = await parseBackendError(response);
-      const fieldErrors = mapValidationFieldErrors(backendError.message);
-      const hasFieldErrors = Object.keys(fieldErrors).length > 0;
-
-      return {
-        status: "validation",
-        message: hasFieldErrors
-          ? CONTACT_STATUS_MESSAGES.validation
-          : CONTACT_STATUS_MESSAGES.validationGeneric,
-        fieldErrors,
-      };
     }
 
     if (response.status === 403) {
@@ -239,6 +255,15 @@ export const sendContactMessage = async ({
       return {
         status: "rateLimited",
         retryAfterSeconds: parseRetryAfterSeconds(response),
+      };
+    }
+
+    const backendError = await parseBackendError(response);
+    if (backendError.code === "VALIDATION_ERROR" || response.status === 400) {
+      return {
+        status: "validation",
+        message: CONTACT_STATUS_MESSAGES.validation,
+        fieldErrors: mapValidationFieldErrors(backendError.message),
       };
     }
 

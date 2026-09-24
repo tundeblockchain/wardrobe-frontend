@@ -56,7 +56,10 @@ describe("ContactForm", () => {
 
   it("shows a thank-you state after a successful submit", async () => {
     const user = userEvent.setup();
-    const sendMessage = vi.fn().mockResolvedValue({ status: "success" });
+    const sendMessage = vi.fn().mockResolvedValue({
+      status: "success",
+      id: "msg_abc123",
+    });
 
     renderWithProviders(
       <ContactForm
@@ -99,6 +102,35 @@ describe("ContactForm", () => {
       screen.getByRole("form", { name: "Contact form" }),
     ).toBeInTheDocument();
     expect(getNameField()).toHaveValue("");
+  });
+
+  it("treats a 413 VALIDATION_ERROR result as a check-fields alert", async () => {
+    const user = userEvent.setup();
+    const sendMessage = vi.fn().mockResolvedValue({
+      status: "validation",
+      message: CONTACT_STATUS_MESSAGES.validation,
+      fieldErrors: {},
+    });
+
+    renderWithProviders(
+      <ContactForm
+        appName="Pocket Closet"
+        apiBaseUrl="https://api.example.com"
+        sendMessage={sendMessage}
+      />,
+    );
+
+    await fillRequiredFields(user);
+    await user.click(
+      screen.getByRole("button", { name: "Send contact message" }),
+    );
+
+    expect(
+      await screen.findByText(CONTACT_STATUS_MESSAGES.validation),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Send contact message" }),
+    ).toBeEnabled();
   });
 
   it("maps a 400 validation result onto fields and an error alert", async () => {
