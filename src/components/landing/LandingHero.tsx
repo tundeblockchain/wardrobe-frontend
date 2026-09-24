@@ -1,8 +1,11 @@
 import { Box, Button, Container, Stack, Typography } from "@mui/material";
 import type { TrackingIds } from "../../config/tracking";
-import { screenshotSlots } from "../../content/screenshotSlots";
+import {
+  heroScreenshotSizes,
+  screenshotSlots,
+} from "../../content/screenshotSlots";
+import { IPhoneFrame } from "../device/IPhoneFrame";
 import { SectionSurface } from "../surfaces/SectionSurface";
-import { PhoneFrame } from "./PhoneFrame";
 import { ScreenshotThumbs } from "./ScreenshotThumbs";
 import { StoreCtaButtons } from "./StoreCtaButtons";
 
@@ -19,8 +22,8 @@ export const LandingHero = ({
   playStoreUrl,
   trackingIds,
 }: LandingHeroProps) => {
-  const [homeScreenshot, ...sampleScreenshots] = screenshotSlots;
-  if (!homeScreenshot) {
+  const [heroScreenshot, ...sampleScreenshots] = screenshotSlots;
+  if (!heroScreenshot) {
     return null;
   }
 
@@ -95,11 +98,22 @@ export const LandingHero = ({
             </Box>
             <ScreenshotThumbs slots={sampleScreenshots} />
           </Stack>
-          <Box sx={{ flex: "0 1 320px", width: "100%", position: "relative" }}>
-            <PhoneFrame
-              src={homeScreenshot.src}
-              alt={homeScreenshot.alt}
+          <Box
+            sx={{
+              flex: "0 1 320px",
+              width: "100%",
+              minWidth: 0,
+              position: "relative",
+            }}
+          >
+            <IPhoneFrame
+              size="hero"
+              src={heroScreenshot.src}
+              sources={heroScreenshot.sources}
+              alt={heroScreenshot.alt}
               maxWidth={300}
+              sizes={heroScreenshotSizes}
+              eager
             />
           </Box>
         </Stack>

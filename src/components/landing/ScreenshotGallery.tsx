@@ -1,9 +1,10 @@
 import { Box, Button, Stack, Typography } from "@mui/material";
 import {
+  galleryScreenshotSizes,
   screenshotSlots,
   type ScreenshotSlotId,
 } from "../../content/screenshotSlots";
-import { PhoneFrame } from "./PhoneFrame";
+import { IPhoneFrame } from "../device/IPhoneFrame";
 
 export type ScreenshotGalleryProps = {
   selectedSlotId: ScreenshotSlotId;
@@ -21,7 +22,7 @@ export const ScreenshotGallery = ({
   return (
     <Box
       component="ul"
-      aria-label="Labeled screenshot placeholders"
+      aria-label="App screenshot gallery"
       sx={{
         display: "grid",
         gap: 2,
@@ -39,11 +40,11 @@ export const ScreenshotGallery = ({
         const isSelected = slot.id === selectedSlotId;
 
         return (
-          <Box component="li" key={slot.id} sx={{ m: 0 }}>
+          <Box component="li" key={slot.id} sx={{ m: 0, minWidth: 0 }}>
             <Button
               onClick={() => handleSlotClick(slot.id)}
               tabIndex={0}
-              aria-label={`${slot.label} placeholder screenshot`}
+              aria-label={`${slot.label} screenshot`}
               aria-pressed={isSelected}
               sx={{
                 display: "block",
@@ -62,7 +63,14 @@ export const ScreenshotGallery = ({
               }}
             >
               <Stack spacing={1} sx={{ alignItems: "center" }}>
-                <PhoneFrame src={slot.src} alt="" maxWidth={160} />
+                <IPhoneFrame
+                  size="thumbnail"
+                  src={slot.src}
+                  sources={slot.sources}
+                  alt=""
+                  maxWidth={160}
+                  sizes={galleryScreenshotSizes}
+                />
                 <Typography
                   component="span"
                   variant="caption"

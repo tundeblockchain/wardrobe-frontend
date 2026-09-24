@@ -1,7 +1,10 @@
 import type { KeyboardEvent } from "react";
 import { Box, Button } from "@mui/material";
-import type { ScreenshotSlot } from "../../content/screenshotSlots";
-import { PhoneFrame } from "./PhoneFrame";
+import {
+  thumbScreenshotSizes,
+  type ScreenshotSlot,
+} from "../../content/screenshotSlots";
+import { IPhoneFrame } from "../device/IPhoneFrame";
 
 export type ScreenshotThumbsProps = {
   slots: ScreenshotSlot[];
@@ -48,7 +51,7 @@ export const ScreenshotThumbs = ({
     >
       {slots.map((slot) => {
         return (
-          <Box component="li" key={slot.id} sx={{ m: 0 }}>
+          <Box component="li" key={slot.id} sx={{ m: 0, minWidth: 0 }}>
             <Button
               component="a"
               href={href}
@@ -68,11 +71,13 @@ export const ScreenshotThumbs = ({
                 },
               }}
             >
-              <PhoneFrame
+              <IPhoneFrame
+                size="thumbnail"
                 src={slot.src}
+                sources={slot.sources}
                 alt=""
                 maxWidth={maxWidth}
-                compact
+                sizes={thumbScreenshotSizes}
               />
             </Button>
           </Box>

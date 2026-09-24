@@ -15,22 +15,22 @@ describe("ScreenshotThumbs", () => {
       screen.getByRole("list", { name: "App screenshot samples" }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: "Wardrobe detail screenshot sample" }),
+      screen.getByRole("link", { name: "Ivory maxi screenshot sample" }),
     ).toHaveAttribute("href", "/#screenshots");
+    expect(
+      screen.getByRole("link", { name: "Blue mini screenshot sample" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Home screenshot sample" }),
+    ).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: "Item detail screenshot sample" }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: "Outfits screenshot sample" }),
+      screen.getByRole("link", { name: "Add item screenshot sample" }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: "Try-on screenshot sample" }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("link", { name: "Account screenshot sample" }),
-    ).toBeInTheDocument();
-    expect(
-      screen.queryByRole("link", { name: "Home screenshot sample" }),
+      screen.queryByRole("link", { name: "Virtual Try On screenshot sample" }),
     ).not.toBeInTheDocument();
   });
 
@@ -48,7 +48,7 @@ describe("ScreenshotThumbs", () => {
     renderWithProviders(<ScreenshotThumbs slots={sampleSlots} />);
 
     const thumb = screen.getByRole("link", {
-      name: "Wardrobe detail screenshot sample",
+      name: "Ivory maxi screenshot sample",
     });
     thumb.focus();
     await user.keyboard(" ");

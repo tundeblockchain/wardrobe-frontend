@@ -3,10 +3,11 @@ import { useState } from "react";
 import { Box, Button, Container, Stack, Typography } from "@mui/material";
 import {
   screenshotSlots,
+  showcaseScreenshotSizes,
   type ScreenshotSlotId,
 } from "../../content/screenshotSlots";
+import { IPhoneFrame } from "../device/IPhoneFrame";
 import { SectionSurface } from "../surfaces/SectionSurface";
-import { PhoneFrame } from "./PhoneFrame";
 import { ScreenshotGallery } from "./ScreenshotGallery";
 
 export const ScreenshotShowcase = () => {
@@ -87,9 +88,8 @@ export const ScreenshotShowcase = () => {
                 See the app
               </Typography>
               <Typography variant="body1" sx={{ color: "secondary.light" }}>
-                Labeled placeholders for Home, Wardrobe detail, Item detail,
-                Outfits, Try-on, and Account. Real marketing PNGs drop in later
-                without changing layout.
+                Real iOS captures of Virtual Try On, Home, Item detail, and Add
+                item — each shown in an iPhone frame.
               </Typography>
             </Stack>
             <Box
@@ -144,9 +144,15 @@ export const ScreenshotShowcase = () => {
             role="tabpanel"
             id="screenshot-panel"
             aria-labelledby={`screenshot-tab-${selectedSlot.id}`}
-            sx={{ flex: "0 1 320px", width: "100%" }}
+            sx={{ flex: "0 1 320px", width: "100%", minWidth: 0 }}
           >
-            <PhoneFrame src={selectedSlot.src} alt={selectedSlot.alt} />
+            <IPhoneFrame
+              size="hero"
+              src={selectedSlot.src}
+              sources={selectedSlot.sources}
+              alt={selectedSlot.alt}
+              sizes={showcaseScreenshotSizes}
+            />
           </Box>
         </Stack>
         <Box sx={{ mt: { xs: 6, md: 8 } }}>

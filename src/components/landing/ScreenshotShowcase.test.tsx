@@ -16,21 +16,24 @@ describe("ScreenshotShowcase", () => {
       screen.getByRole("heading", { name: "See the app" }).closest("[data-surface]"),
     ).toHaveAttribute("data-surface", "mist");
     expect(
-      screen.getByRole("tab", { name: "Home screenshot" }),
+      screen.getByRole("tab", { name: "Virtual Try On screenshot" }),
     ).toHaveAttribute("aria-selected", "true");
     expect(
-      screen.getByRole("img", { name: "Placeholder for the Home screen" }),
+      screen.getByRole("img", {
+        name: "Pocket Closet Virtual Try On showing a rust floral maxi dress on the user's profile photo",
+      }),
     ).toBeInTheDocument();
 
-    await user.click(
-      screen.getByRole("tab", { name: "Try-on screenshot" }),
-    );
+    await user.click(screen.getByRole("tab", { name: "Home screenshot" }));
 
+    expect(screen.getByRole("tab", { name: "Home screenshot" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
     expect(
-      screen.getByRole("tab", { name: "Try-on screenshot" }),
-    ).toHaveAttribute("aria-selected", "true");
-    expect(
-      screen.getByRole("img", { name: "Placeholder for the Try-on screen" }),
+      screen.getByRole("img", {
+        name: "Pocket Closet home screen titled My Pocket Closet with recent dresses and the My wardrobe collection",
+      }),
     ).toBeInTheDocument();
   });
 
@@ -40,15 +43,17 @@ describe("ScreenshotShowcase", () => {
 
     await user.click(
       screen.getByRole("button", {
-        name: "Account placeholder screenshot",
+        name: "Add item screenshot",
       }),
     );
 
     expect(
-      screen.getByRole("img", { name: "Placeholder for the Account screen" }),
+      screen.getByRole("img", {
+        name: "Pocket Closet add item screen with a powder blue chiffon mini dress photo and clothing details form",
+      }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("tab", { name: "Account screenshot" }),
+      screen.getByRole("tab", { name: "Add item screenshot" }),
     ).toHaveAttribute("aria-selected", "true");
   });
 
@@ -56,16 +61,16 @@ describe("ScreenshotShowcase", () => {
     const user = userEvent.setup();
     renderWithProviders(<ScreenshotShowcase />);
 
-    const homeTab = screen.getByRole("tab", { name: "Home screenshot" });
-    homeTab.focus();
+    const heroTab = screen.getByRole("tab", { name: "Virtual Try On screenshot" });
+    heroTab.focus();
     await user.keyboard("{ArrowRight}");
 
     expect(
-      screen.getByRole("tab", { name: "Wardrobe detail screenshot" }),
+      screen.getByRole("tab", { name: "Ivory maxi screenshot" }),
     ).toHaveAttribute("aria-selected", "true");
     expect(
       screen.getByRole("img", {
-        name: "Placeholder for the Wardrobe detail screen",
+        name: "Pocket Closet Virtual Try On showing an ivory maxi dress on the user's profile photo, viewed from behind",
       }),
     ).toBeInTheDocument();
   });

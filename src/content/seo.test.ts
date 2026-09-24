@@ -36,7 +36,7 @@ describe("getPageSeo", () => {
     expect(pageSeo.description).toBe(DEFAULT_LANDING_DESCRIPTION);
     expect(pageSeo.siteName).toBe("Pocket Closet");
     expect(pageSeo.canonicalUrl).toBe("https://example.com/");
-    expect(pageSeo.ogImageUrl).toBe("https://example.com/og-image.png");
+    expect(pageSeo.ogImageUrl).toBe("https://example.com/og-image.jpg");
     expect(serialized).toContain("SoftwareApplication");
     expect(serialized).toContain("WebSite");
     expect(serialized).toContain("LifestyleApplication");
@@ -142,7 +142,7 @@ describe("getPageSeo", () => {
     expect(missingSeo.robots).toBe("noindex,follow");
     expect(goneSeo.title).toContain("expired");
     expect(goneSeo.robots).toBe("noindex,follow");
-    expect(goneSeo.ogImageUrl).toBe("https://example.com/og-image.png");
+    expect(goneSeo.ogImageUrl).toBe("https://example.com/og-image.jpg");
   });
 });
 
@@ -160,9 +160,9 @@ describe("getDocumentMetaTags", () => {
     expect(byKey["og:title"]).toBe(DEFAULT_LANDING_TITLE);
     expect(byKey["og:type"]).toBe("website");
     expect(byKey["og:url"]).toBe("https://example.com/");
-    expect(byKey["og:image"]).toBe("https://example.com/og-image.png");
+    expect(byKey["og:image"]).toBe("https://example.com/og-image.jpg");
     expect(byKey["twitter:card"]).toBe("summary_large_image");
-    expect(byKey["twitter:image"]).toBe("https://example.com/og-image.png");
+    expect(byKey["twitter:image"]).toBe("https://example.com/og-image.jpg");
   });
 
   it("omits canonical social URLs when the public site URL is unknown", () => {

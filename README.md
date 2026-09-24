@@ -22,6 +22,7 @@ The landing and legal pages ship semantic markup, Open Graph / Twitter tags, and
 | `npm run lint` | ESLint |
 | `npm test` | Vitest (single run) |
 | `npm run test:watch` | Vitest watch mode |
+| `npm run screenshots` | Resize/compress iOS captures into `public/screenshots/` (dev only; needs raw PNGs + `sharp`) |
 
 ## Local setup
 
@@ -40,9 +41,9 @@ Set `VITE_API_BASE_URL` to the public backend origin (for example `https://api.e
 
 Set `VITE_PUBLIC_SITE_URL` to the public origin (for example `https://example.com`) so canonical and social URLs are absolute. Leave `VITE_GA_MEASUREMENT_ID` and `VITE_META_PIXEL_ID` blank to ship no analytics or advertising scripts.
 
-## Screenshot placeholders
+## Screenshots
 
-The showcase ships labeled SVG placeholders (Home, Wardrobe detail, Item detail, Outfits, Try-on, Account). To drop in real PNGs later, follow [docs/screenshots.md](docs/screenshots.md).
+The landing page shows six real iOS captures inside a reusable iPhone frame (`src/components/device/IPhoneFrame.tsx`): Virtual Try On (hero), ivory maxi, blue mini, Home, Item detail, and Add item. Browsers pick AVIF / WebP / JPEG from a `srcset`. To regenerate the committed derivatives from raw captures, follow [docs/screenshots.md](docs/screenshots.md). Do not commit the original multi-megabyte PNGs.
 
 ## CI
 
