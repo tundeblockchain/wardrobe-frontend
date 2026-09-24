@@ -22,21 +22,21 @@ describe("HomePage", () => {
       screen.getByRole("heading", { name: "Get Pocket Closet" }),
     ).toBeInTheDocument();
 
-    expect(screen.getByRole("tab", { name: "Home screenshot" })).toBeInTheDocument();
     expect(
-      screen.getByRole("tab", { name: "Wardrobe detail screenshot" }),
+      screen.getByRole("tab", { name: "Virtual Try On screenshot" }),
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole("tab", { name: "Ivory maxi screenshot" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("tab", { name: "Blue mini screenshot" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Home screenshot" })).toBeInTheDocument();
     expect(
       screen.getByRole("tab", { name: "Item detail screenshot" }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("tab", { name: "Outfits screenshot" }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("tab", { name: "Try-on screenshot" }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("tab", { name: "Account screenshot" }),
+      screen.getByRole("tab", { name: "Add item screenshot" }),
     ).toBeInTheDocument();
 
     expect(

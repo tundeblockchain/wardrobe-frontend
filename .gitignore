@@ -28,3 +28,7 @@ coverage
 *.njsproj
 *.sln
 *.sw?
+
+# Raw multi-MB iOS captures — commit optimized derivatives only
+screenshots-source/
+public/screenshots/generation-report.json

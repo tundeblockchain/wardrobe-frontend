@@ -3,8 +3,11 @@ import { describe, expect, it } from "vitest";
 import { LandingHero } from "./LandingHero";
 import { renderWithProviders } from "../../test/renderWithProviders";
 
+const heroAlt =
+  "Pocket Closet Virtual Try On showing a rust floral maxi dress on the user's profile photo";
+
 describe("LandingHero", () => {
-  it("renders the value proposition, home placeholder, and store CTAs", () => {
+  it("renders the value proposition, Virtual Try On hero, and store CTAs", () => {
     renderWithProviders(
       <LandingHero
         appName="Pocket Closet"
@@ -20,9 +23,7 @@ describe("LandingHero", () => {
         name: "Your closet, beautifully organized",
       }),
     ).toBeInTheDocument();
-    expect(
-      screen.getByRole("img", { name: "Placeholder for the Home screen" }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: heroAlt })).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: "See the screenshot showcase" }),
     ).toHaveAttribute("href", "/#screenshots");
@@ -30,23 +31,23 @@ describe("LandingHero", () => {
       screen.getByRole("button", { name: "App Store — coming soon" }),
     ).toBeDisabled();
     expect(
-      screen.getByRole("heading", {
-        level: 1,
-        name: "Your closet, beautifully organized",
-      }).closest("[data-surface]"),
+      screen
+        .getByRole("heading", {
+          level: 1,
+          name: "Your closet, beautifully organized",
+        })
+        .closest("[data-surface]"),
     ).toHaveAttribute("data-surface", "hero");
     expect(
       screen.getByRole("list", { name: "App screenshot samples" }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: "Outfits screenshot sample" }),
+      screen.getByRole("link", { name: "Ivory maxi screenshot sample" }),
     ).toHaveAttribute("href", "/#screenshots");
-    expect(
-      screen.getAllByRole("img", { name: "Placeholder for the Home screen" }),
-    ).toHaveLength(1);
+    expect(screen.getAllByRole("img", { name: heroAlt })).toHaveLength(1);
   });
 
-  it("places sample thumbs under See the app and keeps the large home phone", () => {
+  it("places sample thumbs under See the app and keeps the large hero phone", () => {
     renderWithProviders(
       <LandingHero
         appName="Pocket Closet"
@@ -59,15 +60,13 @@ describe("LandingHero", () => {
       name: "See the screenshot showcase",
     });
     const thumbs = screen.getByRole("list", { name: "App screenshot samples" });
-    const homePhone = screen.getByRole("img", {
-      name: "Placeholder for the Home screen",
-    });
+    const heroPhone = screen.getByRole("img", { name: heroAlt });
 
     expect(
       seeTheApp.compareDocumentPosition(thumbs) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
     expect(
-      thumbs.compareDocumentPosition(homePhone) & Node.DOCUMENT_POSITION_FOLLOWING,
+      thumbs.compareDocumentPosition(heroPhone) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
   });
 });

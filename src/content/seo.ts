@@ -7,7 +7,7 @@ import { featureItems } from "./featureItems";
 import { LEGAL_LAST_UPDATED_ISO } from "./legal/legalDocument";
 import { getSharePreviewStatusCopy } from "./sharePreviewCopy";
 
-export const OG_IMAGE_PATH = "/og-image.png";
+export const OG_IMAGE_PATH = "/og-image.jpg";
 export const JSON_LD_SCRIPT_ID = "wardrobe-json-ld";
 
 export const DEFAULT_LANDING_TITLE =
