@@ -30,6 +30,10 @@ describe("AppHeader", () => {
       "href",
       appPaths.privacy,
     );
+    expect(screen.getByRole("link", { name: "Contact us" })).toHaveAttribute(
+      "href",
+      appPaths.contact,
+    );
     expect(
       screen.getByRole("link", { name: "Pocket Closet home" }).querySelector("img"),
     ).toHaveAttribute("src", "/logo.png");

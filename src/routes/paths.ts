@@ -2,6 +2,7 @@ export const appPaths = {
   home: "/",
   terms: "/terms",
   privacy: "/privacy",
+  contact: "/contact",
   share: "/share/:token",
 } as const;
 

@@ -50,6 +50,12 @@ export const legalNavLinks: RouteNavLink[] = [
     label: "Privacy Policy",
     ariaLabel: "Privacy Policy",
   },
+  {
+    kind: "route",
+    to: appPaths.contact,
+    label: "Contact us",
+    ariaLabel: "Contact us",
+  },
 ];
 
 export const primaryNavLinks: AppNavLink[] = [
