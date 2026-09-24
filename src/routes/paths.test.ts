@@ -23,6 +23,7 @@ describe("share paths", () => {
     expect(isSharePreviewPath("/")).toBe(false);
     expect(isSharePreviewPath("/terms")).toBe(false);
     expect(isSharePreviewPath("/privacy")).toBe(false);
+    expect(isSharePreviewPath("/contact")).toBe(false);
     expect(isSharePreviewPath("/share")).toBe(false);
     expect(isSharePreviewPath("/share/a/b")).toBe(false);
   });

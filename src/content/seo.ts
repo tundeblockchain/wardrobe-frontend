@@ -104,6 +104,14 @@ export const getPrivacyDescription = (appName: string): string => {
   return `Privacy Policy for ${appName}, covering wardrobe photos, try-on previews, accounts, and optional website analytics.`;
 };
 
+export const getContactTitle = (appName: string): string => {
+  return `Contact us — ${appName}`;
+};
+
+export const getContactDescription = (appName: string): string => {
+  return `Contact the ${appName} operator with product questions or support requests.`;
+};
+
 export const getShareFallbackTitle = (appName: string): string => {
   return `Shared look — ${appName}`;
 };
@@ -223,27 +231,32 @@ const getLandingJsonLd = ({
   };
 };
 
-const getLegalPageJsonLd = ({
+const getWebPageJsonLd = ({
   name,
   description,
   url,
   siteName,
   siteUrl,
+  dateModified,
 }: {
   name: string;
   description: string;
   url: string | undefined;
   siteName: string;
   siteUrl: string | undefined;
+  dateModified?: string;
 }): JsonLd => {
   const jsonLd: JsonLd = {
     "@context": "https://schema.org",
     "@type": "WebPage",
     name,
     description,
-    dateModified: LEGAL_LAST_UPDATED_ISO,
     inLanguage: "en",
   };
+
+  if (dateModified) {
+    jsonLd.dateModified = dateModified;
+  }
 
   if (url) {
     jsonLd.url = url;
@@ -259,6 +272,29 @@ const getLegalPageJsonLd = ({
   jsonLd.isPartOf = isPartOf;
 
   return jsonLd;
+};
+
+const getLegalPageJsonLd = ({
+  name,
+  description,
+  url,
+  siteName,
+  siteUrl,
+}: {
+  name: string;
+  description: string;
+  url: string | undefined;
+  siteName: string;
+  siteUrl: string | undefined;
+}): JsonLd => {
+  return getWebPageJsonLd({
+    name,
+    description,
+    url,
+    siteName,
+    siteUrl,
+    dateModified: LEGAL_LAST_UPDATED_ISO,
+  });
 };
 
 const getSharePageJsonLd = ({
@@ -440,6 +476,30 @@ export const getPageSeo = ({
       ogImageAlt,
       robots: "index,follow",
       jsonLd: getLegalPageJsonLd({
+        name: title,
+        description,
+        url: canonicalUrl,
+        siteName: env.appName,
+        siteUrl,
+      }),
+    };
+  }
+
+  if (path === appPaths.contact) {
+    const title = getContactTitle(env.appName);
+    const description = getContactDescription(env.appName);
+
+    return {
+      title,
+      description,
+      path,
+      siteName: env.appName,
+      canonicalUrl,
+      ogType: "website",
+      ogImageUrl,
+      ogImageAlt,
+      robots: "index,follow",
+      jsonLd: getWebPageJsonLd({
         name: title,
         description,
         url: canonicalUrl,

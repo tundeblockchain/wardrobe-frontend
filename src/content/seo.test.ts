@@ -86,6 +86,20 @@ describe("getPageSeo", () => {
     expect(jsonLdText(termsSeo.jsonLd)).not.toMatch(/aggregateRating|ratingValue/);
   });
 
+  it("uses WebPage structured data for the contact route", () => {
+    const contactSeo = getPageSeo({
+      pathname: "/contact",
+      env: exampleEnv,
+    });
+
+    expect(contactSeo.title).toBe("Contact us — Pocket Closet");
+    expect(contactSeo.description).toContain("Pocket Closet operator");
+    expect(contactSeo.canonicalUrl).toBe("https://example.com/contact");
+    expect(jsonLdText(contactSeo.jsonLd)).toContain("WebPage");
+    expect(jsonLdText(contactSeo.jsonLd)).not.toContain("SoftwareApplication");
+    expect(jsonLdText(contactSeo.jsonLd)).not.toContain("dateModified");
+  });
+
   it("uses share-friendly title and OG image when a preview is loaded", () => {
     const pageSeo = getPageSeo({
       pathname: "/share/shr_abcdefghijklmnopqrstu",

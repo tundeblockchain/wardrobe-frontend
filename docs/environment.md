@@ -14,7 +14,7 @@ Never commit secrets, tokens, or private keys.
 | `VITE_APP_STORE_URL` | No | Public App Store URL for landing download CTAs. Empty values render a disabled button. | `https://apps.apple.com/app/id000000000` |
 | `VITE_PLAY_STORE_URL` | No | Public Play Store URL for landing download CTAs. Empty values render a disabled button. | `https://play.google.com/store/apps/details?id=com.example.wardrobe` |
 | `VITE_PUBLIC_SITE_URL` | No | Public origin for canonical, Open Graph, and Twitter URLs (no trailing slash). When unset, the current origin is used in the browser. | `https://example.com` |
-| `VITE_API_BASE_URL` | No | Public backend API origin (no trailing slash) for `GET /public/shares/{token}` on `/share/:token`. Empty values show a clear “couldn't load” state. | `https://api.example.com` |
+| `VITE_API_BASE_URL` | No | Public backend API origin (no trailing slash) for `GET /public/shares/{token}` on `/share/:token` and `POST /support/contact` on `/contact`. Empty values keep those pages rendering with a clear unavailable state. | `https://api.example.com` |
 | `VITE_GA_MEASUREMENT_ID` | No | Google Analytics 4 measurement ID. Scripts are injected only when this value is a `G-` ID. | `G-XXXXXXXXXX` |
 | `VITE_META_PIXEL_ID` | No | Meta Pixel ID. The pixel is injected only when this value is a numeric ID. | `000000000000000` |
 | `VITE_LEGAL_CONTACT_EMAIL` | No | Public operator contact email shown on Terms of Service and Privacy Policy. Empty values show a store-listing contact fallback. | `legal@example.com` |
@@ -36,6 +36,19 @@ Enabled App Store and Google Play buttons (hero, download band, and share previe
 A vendor is called only when its env ID is a valid public identifier **and** that vendor’s function (`gtag` or `fbq`) is present. Empty, blank, or malformed IDs are a no-op. Disabled “coming soon” buttons do not send events.
 
 Legal pages always refer to **the operator** (no personal names). Set `VITE_LEGAL_CONTACT_EMAIL` in Netlify so store reviewers have a visible contact address.
+
+## Contact form
+
+The Contact Us page (`/contact`) POSTs JSON to `{VITE_API_BASE_URL}/support/contact` with `Content-Type: application/json`. The request is unauthenticated: no `Authorization` header and no cookies (`credentials: "omit"`).
+
+If `VITE_API_BASE_URL` is unset, the page still renders and the submit button stays disabled.
+
+The backend must allowlist this site’s origin(s) via `SUPPORT_CONTACT_ALLOWED_ORIGINS`:
+
+- Production public site origin (the same origin as `VITE_PUBLIC_SITE_URL`)
+- Netlify deploy-preview origins, using the deploy-preview pattern (for example `https://deploy-preview-*--<site>.netlify.app`)
+
+This frontend never calls an email provider. Delivery is owned by the backend.
 
 ## Netlify notes
 

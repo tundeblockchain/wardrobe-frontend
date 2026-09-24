@@ -23,6 +23,22 @@ describe("AppRoutes", () => {
     ).toBeInTheDocument();
   });
 
+  it("renders Contact us at /contact", () => {
+    renderWithProviders(
+      <AppShell>
+        <AppRoutes />
+      </AppShell>,
+      { route: appPaths.contact },
+    );
+
+    expect(
+      screen.getByRole("heading", { level: 1, name: "Contact us" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("form", { name: "Contact form" }),
+    ).toBeInTheDocument();
+  });
+
   it("renders Privacy Policy at /privacy", () => {
     renderWithProviders(
       <AppShell>
@@ -39,7 +55,7 @@ describe("AppRoutes", () => {
     ).toBeInTheDocument();
   });
 
-  it("navigates from the landing footer to both legal pages", async () => {
+  it("navigates from the landing footer to legal and contact pages", async () => {
     const user = userEvent.setup();
     renderWithProviders(
       <AppShell>
@@ -73,6 +89,17 @@ describe("AppRoutes", () => {
 
     expect(
       screen.getByRole("heading", { level: 1, name: "Privacy Policy" }),
+    ).toBeInTheDocument();
+
+    await user.click(
+      within(screen.getByRole("navigation", { name: "Legal" })).getByRole(
+        "link",
+        { name: "Contact us" },
+      ),
+    );
+
+    expect(
+      screen.getByRole("heading", { level: 1, name: "Contact us" }),
     ).toBeInTheDocument();
   });
 

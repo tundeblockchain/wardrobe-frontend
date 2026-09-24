@@ -21,6 +21,9 @@ describe("AppFooter", () => {
     expect(
       within(legalNav).getByRole("link", { name: "Privacy Policy" }),
     ).toHaveAttribute("href", appPaths.privacy);
+    expect(
+      within(legalNav).getByRole("link", { name: "Contact us" }),
+    ).toHaveAttribute("href", appPaths.contact);
     expect(footer).toHaveAttribute("data-surface", "mist");
     expect(footer).toHaveTextContent(/© \d{4} Pocket Closet/);
   });

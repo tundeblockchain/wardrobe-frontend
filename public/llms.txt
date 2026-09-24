@@ -9,6 +9,7 @@ Pocket Closet is a software product with a public marketing website. This site d
 - [Home](/): Product landing page with features, screenshot placeholders, and store download calls to action
 - [Terms of Service](/terms): Terms for the websites, iOS and Android apps, and related services
 - [Privacy Policy](/privacy): How the operator handles wardrobe photos, try-on previews, accounts, and optional website analytics
+- [Contact us](/contact): Public form for product questions and support requests to the operator
 
 ## Notes
 
