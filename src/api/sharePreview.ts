@@ -1,3 +1,6 @@
+import { isApiError, joinApiUrl } from "./httpClient";
+import { publicRequest } from "./publicApi";
+
 export const SHARE_RESOURCE_TYPES = ["ITEM", "OUTFIT"] as const;
 
 export type ShareResourceType = (typeof SHARE_RESOURCE_TYPES)[number];
@@ -40,7 +43,10 @@ export const getPublicSharePreviewUrl = (
   apiBaseUrl: string,
   token: string,
 ): string => {
-  return `${apiBaseUrl}/public/shares/${encodeURIComponent(token)}`;
+  return joinApiUrl(
+    apiBaseUrl,
+    `/public/shares/${encodeURIComponent(token)}`,
+  );
 };
 
 const isShareResourceType = (value: unknown): value is ShareResourceType => {
@@ -108,36 +114,30 @@ export const fetchSharePreview = async ({
   }
 
   try {
-    const response = await fetchImpl(
+    const payload = await publicRequest<unknown>(
       getPublicSharePreviewUrl(apiBaseUrl, trimmedToken),
       {
         method: "GET",
-        headers: {
-          Accept: "application/json",
-        },
+        fetchImpl,
       },
     );
-
-    if (response.status === 404) {
-      return { status: "not_found" };
-    }
-
-    if (response.status === 410) {
-      return { status: "gone" };
-    }
-
-    if (!response.ok) {
-      return { status: "network" };
-    }
-
-    const payload: unknown = await response.json();
     const preview = parseSharePreview(payload);
     if (!preview) {
       return { status: "network" };
     }
 
     return { status: "ok", preview };
-  } catch {
+  } catch (error) {
+    if (isApiError(error)) {
+      if (error.status === 404) {
+        return { status: "not_found" };
+      }
+
+      if (error.status === 410) {
+        return { status: "gone" };
+      }
+    }
+
     return { status: "network" };
   }
 };
