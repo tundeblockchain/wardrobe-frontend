@@ -131,6 +131,20 @@ describe("LoginPage", () => {
     ).toBeInTheDocument();
   });
 
+  it("opens the create-account view from the signup deep link", () => {
+    renderLoginRoute("/login?mode=signup");
+
+    expect(
+      screen.getByRole("heading", { level: 1, name: "Create account" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("form", { name: "Create account form" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Back to sign in" }),
+    ).toBeInTheDocument();
+  });
+
   it("shows create account and forgot password without feature flags", async () => {
     const user = userEvent.setup();
     renderLoginRoute();

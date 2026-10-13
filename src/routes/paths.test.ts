@@ -3,7 +3,9 @@ import {
   appPaths,
   getAppPath,
   getLoginPath,
+  getLoginSignupPath,
   getPostLoginRedirectPath,
+  isLoginSignupMode,
   getSafeInternalPath,
   getSharePath,
   isAppPath,
@@ -75,6 +77,15 @@ describe("login and app paths", () => {
     expect(getLoginPath()).toBe("/login");
     expect(getLoginPath("/app")).toBe("/login?next=%2Fapp");
     expect(getLoginPath("/app/x")).toBe("/login?next=%2Fapp%2Fx");
+  });
+
+  it("builds a signup deep link on /login", () => {
+    expect(getLoginSignupPath()).toBe("/login?mode=signup");
+    expect(getLoginSignupPath("/app")).toBe("/login?next=%2Fapp&mode=signup");
+    expect(getLoginPath(undefined, "signup")).toBe("/login?mode=signup");
+    expect(isLoginSignupMode("signup")).toBe(true);
+    expect(isLoginSignupMode("signIn")).toBe(false);
+    expect(isLoginSignupMode(null)).toBe(false);
   });
 
   it("accepts only internal next paths", () => {

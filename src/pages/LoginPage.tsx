@@ -8,7 +8,7 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import { Navigate, useLocation } from "react-router-dom";
+import { Navigate, useLocation, useSearchParams } from "react-router-dom";
 import { EmailAuthForm } from "../auth/EmailAuthForm";
 import { ForgotPasswordForm } from "../auth/ForgotPasswordForm";
 import { SocialAuthButtons } from "../auth/SocialAuthButtons";
@@ -18,8 +18,11 @@ import { SectionSurface } from "../components/surfaces/SectionSurface";
 import { getPublicAppEnv, hasFirebaseWebConfig } from "../config/env";
 import { RouteFallback } from "../routes/RouteFallback";
 import {
+  LOGIN_MODE_QUERY_PARAM,
   LOGIN_NEXT_QUERY_PARAM,
+  LOGIN_SIGNUP_MODE,
   getPostLoginRedirectPath,
+  isLoginSignupMode,
 } from "../routes/paths";
 
 type LoginView = "signIn" | "register" | "forgotPassword";
@@ -50,9 +53,15 @@ export const LoginPage = () => {
   const { appName } = getPublicAppEnv();
   const { user, loading } = useAuth();
   const location = useLocation();
-  const [view, setView] = useState<LoginView>("signIn");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const headingId = "login-page-heading";
   const isFirebaseConfigured = hasFirebaseWebConfig();
+  const view: LoginView = showForgotPassword
+    ? "forgotPassword"
+    : isLoginSignupMode(searchParams.get(LOGIN_MODE_QUERY_PARAM))
+      ? "register"
+      : "signIn";
 
   if (loading) {
     return <RouteFallback label="Checking sign-in status" />;
@@ -75,15 +84,29 @@ export const LoginPage = () => {
         : "Sign in";
 
   const handleShowSignIn = () => {
-    setView("signIn");
+    setShowForgotPassword(false);
+    if (!searchParams.has(LOGIN_MODE_QUERY_PARAM)) {
+      return;
+    }
+
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete(LOGIN_MODE_QUERY_PARAM);
+    setSearchParams(nextParams, { replace: true });
   };
 
   const handleShowRegister = () => {
-    setView("register");
+    setShowForgotPassword(false);
+    if (isLoginSignupMode(searchParams.get(LOGIN_MODE_QUERY_PARAM))) {
+      return;
+    }
+
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.set(LOGIN_MODE_QUERY_PARAM, LOGIN_SIGNUP_MODE);
+    setSearchParams(nextParams, { replace: true });
   };
 
   const handleShowForgotPassword = () => {
-    setView("forgotPassword");
+    setShowForgotPassword(true);
   };
 
   return (

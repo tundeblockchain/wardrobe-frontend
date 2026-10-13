@@ -6,6 +6,7 @@ type AppNavLinksProps = {
   ariaLabel: string;
   links: AppNavLink[];
   justifyContent?: "center" | "flex-start";
+  flexDirection?: "row" | "column";
   fontSize?: { xs: string; sm: string } | string;
 };
 
@@ -13,6 +14,7 @@ export const AppNavLinks = ({
   ariaLabel,
   links,
   justifyContent = "flex-start",
+  flexDirection = "row",
   fontSize = "0.875rem",
 }: AppNavLinksProps) => {
   return (
@@ -21,9 +23,11 @@ export const AppNavLinks = ({
       aria-label={ariaLabel}
       sx={{
         display: "flex",
+        flexDirection,
         gap: { xs: 1.5, sm: 2.5 },
-        flexWrap: "wrap",
+        flexWrap: flexDirection === "column" ? "nowrap" : "wrap",
         justifyContent,
+        alignItems: flexDirection === "column" ? "flex-start" : "center",
       }}
     >
       {links.map((navLink) => {
