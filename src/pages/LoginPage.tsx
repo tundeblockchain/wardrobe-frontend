@@ -1,10 +1,90 @@
-import { Container, Paper, Stack, Typography } from "@mui/material";
+import { useState } from "react";
+import {
+  Alert,
+  Button,
+  Container,
+  Divider,
+  Paper,
+  Stack,
+  Typography,
+} from "@mui/material";
+import { Navigate, useLocation } from "react-router-dom";
+import { EmailAuthForm } from "../auth/EmailAuthForm";
+import { ForgotPasswordForm } from "../auth/ForgotPasswordForm";
+import { SocialAuthButtons } from "../auth/SocialAuthButtons";
+import { useFirebaseAuthListener } from "../auth/firebaseSession";
+import { useAuth } from "../auth/useAuth";
 import { SectionSurface } from "../components/surfaces/SectionSurface";
-import { getPublicAppEnv } from "../config/env";
+import { getPublicAppEnv, hasFirebaseWebConfig } from "../config/env";
+import { RouteFallback } from "../routes/RouteFallback";
+import {
+  LOGIN_NEXT_QUERY_PARAM,
+  getPostLoginRedirectPath,
+} from "../routes/paths";
+
+type LoginView = "signIn" | "register" | "forgotPassword";
+
+type LoginLocationState = {
+  from?: {
+    pathname?: string;
+    search?: string;
+    hash?: string;
+  };
+};
+
+const getFromPath = (state: unknown): string | undefined => {
+  if (typeof state !== "object" || state === null || !("from" in state)) {
+    return undefined;
+  }
+
+  const from = (state as LoginLocationState).from;
+  if (!from?.pathname) {
+    return undefined;
+  }
+
+  return `${from.pathname}${from.search ?? ""}${from.hash ?? ""}`;
+};
 
 export const LoginPage = () => {
+  useFirebaseAuthListener();
   const { appName } = getPublicAppEnv();
+  const { user, loading } = useAuth();
+  const location = useLocation();
+  const [view, setView] = useState<LoginView>("signIn");
   const headingId = "login-page-heading";
+  const isFirebaseConfigured = hasFirebaseWebConfig();
+
+  if (loading) {
+    return <RouteFallback label="Checking sign-in status" />;
+  }
+
+  if (user) {
+    const searchParams = new URLSearchParams(location.search);
+    const redirectPath = getPostLoginRedirectPath(
+      searchParams.get(LOGIN_NEXT_QUERY_PARAM),
+      getFromPath(location.state),
+    );
+    return <Navigate to={redirectPath} replace />;
+  }
+
+  const heading =
+    view === "register"
+      ? "Create account"
+      : view === "forgotPassword"
+        ? "Forgot password"
+        : "Sign in";
+
+  const handleShowSignIn = () => {
+    setView("signIn");
+  };
+
+  const handleShowRegister = () => {
+    setView("register");
+  };
+
+  const handleShowForgotPassword = () => {
+    setView("forgotPassword");
+  };
 
   return (
     <SectionSurface
@@ -25,21 +105,81 @@ export const LoginPage = () => {
             bgcolor: "background.paper",
           }}
         >
-          <Stack spacing={2}>
-            <Typography
-              variant="overline"
-              component="p"
-              sx={{ color: "secondary.dark", letterSpacing: "0.16em" }}
-            >
-              {appName}
-            </Typography>
-            <Typography id={headingId} variant="h1" component="h1">
-              Sign in
-            </Typography>
-            <Typography variant="body1" color="text.secondary">
-              Sign in to open your closet on the web. Account sign-in will be
-              connected in a later update.
-            </Typography>
+          <Stack spacing={3}>
+            <Stack spacing={1.5}>
+              <Typography
+                variant="overline"
+                component="p"
+                sx={{ color: "secondary.dark", letterSpacing: "0.16em" }}
+              >
+                {appName}
+              </Typography>
+              <Typography id={headingId} variant="h1" component="h1">
+                {heading}
+              </Typography>
+              <Typography variant="body1" color="text.secondary">
+                {view === "forgotPassword"
+                  ? "Enter the email you use for Pocket Closet and we will send a reset link."
+                  : view === "register"
+                    ? "Create an account with the same email you use in the mobile app, or continue with Google or Apple."
+                    : "Sign in with the same account you use in the Pocket Closet app."}
+              </Typography>
+            </Stack>
+
+            {!isFirebaseConfigured ? (
+              <Alert severity="info" role="status" aria-live="polite">
+                Sign-in is not configured yet. Set the public VITE_FIREBASE_*
+                environment variables to enable Google, Apple, and email
+                sign-in.
+              </Alert>
+            ) : null}
+
+            {view === "forgotPassword" ? (
+              <ForgotPasswordForm onBackToSignIn={handleShowSignIn} />
+            ) : (
+              <Stack spacing={3}>
+                <SocialAuthButtons />
+                <Divider>or</Divider>
+                <EmailAuthForm mode={view === "register" ? "register" : "signIn"} />
+                <Stack spacing={0.5} sx={{ alignItems: "flex-start" }}>
+                  {view === "signIn" ? (
+                    <>
+                      <Button
+                        type="button"
+                        variant="text"
+                        color="primary"
+                        onClick={handleShowRegister}
+                        tabIndex={0}
+                        aria-label="Create account"
+                      >
+                        Create account
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="text"
+                        color="primary"
+                        onClick={handleShowForgotPassword}
+                        tabIndex={0}
+                        aria-label="Forgot password"
+                      >
+                        Forgot password?
+                      </Button>
+                    </>
+                  ) : (
+                    <Button
+                      type="button"
+                      variant="text"
+                      color="primary"
+                      onClick={handleShowSignIn}
+                      tabIndex={0}
+                      aria-label="Back to sign in"
+                    >
+                      Already have an account? Sign in
+                    </Button>
+                  )}
+                </Stack>
+              </Stack>
+            )}
           </Stack>
         </Paper>
       </Container>

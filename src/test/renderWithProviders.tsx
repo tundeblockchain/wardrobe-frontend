@@ -8,24 +8,38 @@ import { appTheme } from "../theme/appTheme";
 
 type RenderWithProvidersOptions = {
   route?: string;
+  routeState?: unknown;
   auth?: Partial<AuthState>;
+  liveAuth?: boolean;
 };
 
 export const renderWithProviders = (
   ui: ReactElement,
   options: RenderWithProvidersOptions = {},
 ) => {
-  const { route = "/", auth } = options;
+  const { route = "/", routeState, auth, liveAuth = false } = options;
   const authState: AuthState = {
     user: auth?.user ?? null,
     loading: auth?.loading ?? false,
   };
+  const routeUrl = new URL(route, "http://localhost");
 
   return render(
     <ThemeProvider theme={appTheme}>
       <CssBaseline />
-      <AuthProvider initialState={authState}>
-        <MemoryRouter initialEntries={[route]}>{ui}</MemoryRouter>
+      <AuthProvider initialState={liveAuth ? undefined : authState}>
+        <MemoryRouter
+          initialEntries={[
+            {
+              pathname: routeUrl.pathname,
+              search: routeUrl.search,
+              hash: routeUrl.hash,
+              state: routeState,
+            },
+          ]}
+        >
+          {ui}
+        </MemoryRouter>
       </AuthProvider>
     </ThemeProvider>,
   );

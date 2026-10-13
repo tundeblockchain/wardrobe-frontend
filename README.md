@@ -6,7 +6,7 @@ The public landing page includes a hero, feature sections, a labeled screenshot 
 
 Public share links use `/share/:token`. That page is read-only: it loads a title, optional image, and ITEM/OUTFIT type from `GET {VITE_API_BASE_URL}/public/shares/{token}` (no auth), then shows the same store CTAs. Missing, expired, or failed previews have clear empty states.
 
-The public marketing site (`/`, `/terms`, `/privacy`, `/contact`, `/share/:token`) is separate from the signed-in web app at `/app/*`. `/login` is the public sign-in page. The `/app` area does not use the landing header and footer. Sign-in is a placeholder until account auth is wired.
+The public marketing site (`/`, `/terms`, `/privacy`, `/contact`, `/share/:token`) is separate from the signed-in web app at `/app/*`. `/login` signs in with Firebase Auth (Google, Apple, and email/password) on the same project as the mobile app. The `/app` area does not use the landing header and footer. Firebase is loaded only on `/login` and `/app`; public marketing pages do not initialize it.
 
 Terms of Service (`/terms`) and Privacy Policy (`/privacy`) are linked from the header and footer. Operator contact on those pages is env-driven (`VITE_LEGAL_CONTACT_EMAIL`, optional `VITE_LEGAL_CONTACT_URL`). Copy refers to the operator only — no personal names.
 
@@ -35,7 +35,17 @@ The landing and legal pages ship semantic markup, Open Graph / Twitter tags, and
 
 ## Environment variables
 
-Required and optional public env vars (store URLs, backend API origin, legal contact, GA, Meta Pixel IDs) are listed in [docs/environment.md](docs/environment.md) and `.env.example`. Values must use the `VITE_` prefix. Never put private keys in this repo.
+Required and optional public env vars (store URLs, backend API origin, legal contact, GA, Meta Pixel IDs, Firebase web config) are listed in [docs/environment.md](docs/environment.md) and `.env.example`. Values must use the `VITE_` prefix. Never put private keys or Firebase Admin credentials in this repo.
+
+## Firebase console setup
+
+Use the same Firebase project as the mobile app so web and mobile share the same uid.
+
+- Enable the Google provider
+- Enable the Apple provider (requires an Apple Services ID, Team ID, Key ID and private key configured in Firebase)
+- Enable the Email/Password provider
+- Add the Netlify site domain and any custom domain to Authentication > Settings > Authorized domains
+- Set the `VITE_FIREBASE_*` env vars in Netlify
 
 Landing and share-preview CTAs read `VITE_APP_STORE_URL` and `VITE_PLAY_STORE_URL`. Leave them blank to render disabled “coming soon” buttons.
 
