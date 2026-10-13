@@ -9,10 +9,14 @@ export const appPaths = {
   login: "/login",
   app: APP_BASE_PATH,
   appWardrobes: `${APP_BASE_PATH}/wardrobes`,
+  appWardrobe: `${APP_BASE_PATH}/wardrobes/:id`,
+  appItem: `${APP_BASE_PATH}/items/:id`,
   appOutfits: `${APP_BASE_PATH}/outfits`,
   appVirtualProfiles: `${APP_BASE_PATH}/virtual-profiles`,
   appPlan: `${APP_BASE_PATH}/plan`,
 } as const;
+
+export const WARDROBE_ID_QUERY_PARAM = "wardrobeId";
 
 export type AppPath = (typeof appPaths)[keyof typeof appPaths];
 
@@ -48,6 +52,26 @@ export const parseShareTokenFromPath = (
 
 export const isSharePreviewPath = (pathname: string): boolean => {
   return parseShareTokenFromPath(pathname) !== undefined;
+};
+
+export const getAppWardrobePath = (wardrobeId: string): string => {
+  return `${appPaths.appWardrobes}/${encodeURIComponent(wardrobeId)}`;
+};
+
+export const getAppItemPath = (
+  itemId: string,
+  wardrobeId?: string,
+): string => {
+  const path = `${APP_BASE_PATH}/items/${encodeURIComponent(itemId)}`;
+  const trimmedWardrobeId = wardrobeId?.trim();
+  if (!trimmedWardrobeId) {
+    return path;
+  }
+
+  const searchParams = new URLSearchParams({
+    [WARDROBE_ID_QUERY_PARAM]: trimmedWardrobeId,
+  });
+  return `${path}?${searchParams.toString()}`;
 };
 
 export const getAppPath = (subPath = ""): string => {

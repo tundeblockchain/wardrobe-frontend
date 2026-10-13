@@ -29,6 +29,16 @@ const WardrobesPage = lazy(async () => {
   return { default: module.WardrobesPage };
 });
 
+const WardrobeDetailPage = lazy(async () => {
+  const module = await import("../pages/app/WardrobeDetailPage");
+  return { default: module.WardrobeDetailPage };
+});
+
+const ItemDetailPage = lazy(async () => {
+  const module = await import("../pages/app/ItemDetailPage");
+  return { default: module.ItemDetailPage };
+});
+
 const OutfitsPage = lazy(async () => {
   const module = await import("../pages/app/OutfitsPage");
   return { default: module.OutfitsPage };
@@ -72,6 +82,8 @@ export const AppRoutes = () => {
       >
         <Route index element={<AppHomePage />} />
         <Route path="wardrobes" element={<WardrobesPage />} />
+        <Route path="wardrobes/:id" element={<WardrobeDetailPage />} />
+        <Route path="items/:id" element={<ItemDetailPage />} />
         <Route path="outfits" element={<OutfitsPage />} />
         <Route path="virtual-profiles" element={<VirtualProfilesPage />} />
         <Route path="plan" element={<PlanPage />} />

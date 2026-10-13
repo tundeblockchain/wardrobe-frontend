@@ -67,6 +67,7 @@ const getAppNav = () => screen.getByRole("navigation", { name: "App" });
 describe("DashboardLayout", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    authProviderMocks.getIdToken.mockResolvedValue("test-id-token");
     authProviderMocks.signOutUser.mockResolvedValue(undefined);
     window.localStorage.removeItem(SIDEBAR_COLLAPSED_STORAGE_KEY);
     stubMatchMedia(false);
@@ -76,7 +77,7 @@ describe("DashboardLayout", () => {
     window.localStorage.removeItem(SIDEBAR_COLLAPSED_STORAGE_KEY);
   });
 
-  it("renders sidebar nav links and navigates to placeholder pages", async () => {
+  it("renders sidebar nav links and navigates to signed-in pages", async () => {
     const user = userEvent.setup();
     renderDashboard();
 
@@ -114,7 +115,9 @@ describe("DashboardLayout", () => {
       await screen.findByRole("heading", { level: 1, name: "Virtual Profiles" }),
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/Create a Virtual Profile and preview looks with Virtual Try On/),
+      screen.getByText(
+        /Browse Virtual Profiles and preview looks with Virtual Try On/,
+      ),
     ).toBeInTheDocument();
   });
 

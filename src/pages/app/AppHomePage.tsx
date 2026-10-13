@@ -5,7 +5,7 @@ export const AppHomePage = () => {
     <ComingSoonPage
       headingId="app-home-heading"
       title="Your closet"
-      description="This is the signed-in app home. Open Wardrobes, Outfits, Virtual Profiles, or Plan from the sidebar — those views are coming soon."
+      description="This is the signed-in app home. Open Wardrobes, Outfits, or Virtual Profiles from the sidebar. Plan is still coming soon."
     />
   );
 };
