@@ -55,7 +55,10 @@ describe("VirtualTryOnPage", () => {
     renderPage(createMockResourceApi({ renderItem }));
 
     expect(
-      await screen.findByRole("heading", { level: 1, name: "Virtual Try On" }),
+      await screen.findByRole("button", { name: "Start Virtual Try On" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { level: 1, name: "Virtual Try On" }),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("img", { name: "Virtual Try On render 1" }),

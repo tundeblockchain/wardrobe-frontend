@@ -430,9 +430,6 @@ const VirtualTryOnReady = ({
                             handleItemToggle(item.itemId);
                           }}
                           tabIndex={0}
-                          inputProps={{
-                            "aria-label": item.name,
-                          }}
                         />
                       }
                       label={item.name}

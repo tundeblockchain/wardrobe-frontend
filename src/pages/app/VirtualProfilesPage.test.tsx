@@ -38,7 +38,10 @@ describe("VirtualProfilesPage", () => {
     renderPage(createMockResourceApi());
 
     expect(
-      await screen.findByRole("heading", { level: 1, name: "Virtual Profiles" }),
+      await screen.findByRole("heading", { name: "Weekday look" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { level: 1, name: "Virtual Profiles" }),
     ).toBeInTheDocument();
     expect(
       screen.getByText(

@@ -575,7 +575,7 @@ export const createMockResourceApi = (
   };
 
   const listAiProfiles = async () => {
-    assertOtherAi();
+    assertAiTryOn();
     return delay({
       aiProfiles: aiProfiles
         .filter((profile) => profile.type === "PERSONAL")
