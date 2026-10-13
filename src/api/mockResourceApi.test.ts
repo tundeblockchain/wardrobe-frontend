@@ -32,7 +32,10 @@ describe("createMockResourceApi", () => {
       outfits: [{ name: "Sunday brunch" }],
     });
     await expect(api.listAiProfiles()).resolves.toMatchObject({
-      aiProfiles: [{ label: "Weekday look" }, { label: "Catalog model" }],
+      aiProfiles: [{ label: "Weekday look" }],
+    });
+    await expect(api.listGenericAiProfiles()).resolves.toMatchObject({
+      aiProfiles: [{ label: "Catalog model" }],
     });
     expect(mockWardrobes[0]).toEqual(
       expect.objectContaining({

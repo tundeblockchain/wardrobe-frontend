@@ -1,10 +1,13 @@
 import { screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import userEvent from "@testing-library/user-event";
+import { describe, expect, it, vi } from "vitest";
 import {
+  createAiTryOnOffResourceApi,
   createEmptyResourceApi,
   createEntitlementAiRequiredResourceApi,
   createErrorResourceApi,
   createMockResourceApi,
+  createOtherAiOffResourceApi,
 } from "../../api/mockResourceApi";
 import { appPaths } from "../../routes/paths";
 import { renderWithProviders } from "../../test/renderWithProviders";
@@ -22,7 +25,7 @@ describe("VirtualProfilesPage", () => {
   it("renders a loading state", () => {
     renderPage(
       createMockResourceApi({
-        listAiProfiles: () => new Promise(() => undefined),
+        getMe: () => new Promise(() => undefined),
       }),
     );
 
@@ -47,12 +50,11 @@ describe("VirtualProfilesPage", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("Used for Virtual Try On on weekdays.")).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: "Catalog model" }),
-    ).toBeInTheDocument();
-    expect(screen.getByRole("img", { name: "Weekday look" })).toHaveAttribute(
-      "src",
-      "/screenshots/try-on-blue-mini-390.jpg",
-    );
+      screen.getByRole("link", { name: "Add a Virtual Profile" }),
+    ).toHaveAttribute("href", appPaths.appVirtualProfileNew);
+    expect(
+      screen.getByRole("img", { name: "Weekday look" }),
+    ).toHaveAttribute("src", "/screenshots/try-on-blue-mini-390.jpg");
   });
 
   it("renders an empty Virtual Profiles state", async () => {
@@ -63,7 +65,7 @@ describe("VirtualProfilesPage", () => {
     ).toBeInTheDocument();
     expect(
       screen.getByText(
-        /Create a Virtual Profile in the app to preview looks with Virtual Try On/,
+        /Add a Virtual Profile to preview looks with Virtual Try On/,
       ),
     ).toBeInTheDocument();
   });
@@ -76,6 +78,22 @@ describe("VirtualProfilesPage", () => {
         name: "Couldn't load Virtual Profiles",
       }),
     ).toBeInTheDocument();
+  });
+
+  it("renders an upgrade prompt when /me features.aiTryOn is false", async () => {
+    renderPage(createAiTryOnOffResourceApi());
+
+    expect(
+      await screen.findByRole("heading", {
+        name: "Virtual Try On is a Premium feature",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "View plan for Virtual Try On" }),
+    ).toHaveAttribute("href", appPaths.appPlan);
+    expect(
+      screen.queryByRole("heading", { name: "Weekday look" }),
+    ).not.toBeInTheDocument();
   });
 
   it("renders an upgrade prompt for 403 ENTITLEMENT_AI_REQUIRED", async () => {
@@ -97,5 +115,31 @@ describe("VirtualProfilesPage", () => {
     expect(
       screen.queryByRole("heading", { name: "Couldn't load Virtual Profiles" }),
     ).not.toBeInTheDocument();
+  });
+
+  it("hides write actions when otherAi is off", async () => {
+    renderPage(createOtherAiOffResourceApi());
+
+    expect(
+      await screen.findByRole("heading", { name: "Weekday look" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: "Add a Virtual Profile" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("deletes a Virtual Profile after confirm", async () => {
+    const user = userEvent.setup();
+    const deleteAiProfile = vi.fn().mockResolvedValue(undefined);
+    renderPage(createMockResourceApi({ deleteAiProfile }));
+
+    await user.click(
+      await screen.findByRole("button", { name: "Delete Weekday look" }),
+    );
+    await user.click(
+      screen.getByRole("button", { name: "Delete Virtual Profile" }),
+    );
+
+    expect(deleteAiProfile).toHaveBeenCalledWith("aip_personal01");
   });
 });

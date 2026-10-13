@@ -1,3 +1,4 @@
+import { mapRenderImageUrls } from "./renderImages";
 import type {
   AiProfile,
   AiProfileStatus,
@@ -73,7 +74,7 @@ export const getWardrobeImageUrl = (wardrobe: Wardrobe): string | undefined => {
 };
 
 export const getOutfitImageUrl = (outfit: Outfit): string | undefined => {
-  return outfit.render?.imageUrl ?? outfit.renderImageUrls?.[0];
+  return mapRenderImageUrls(outfit)[0];
 };
 
 export const getAiProfileImageUrl = (profile: AiProfile): string | undefined => {

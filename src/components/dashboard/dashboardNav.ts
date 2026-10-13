@@ -1,6 +1,7 @@
 import type { SvgIconComponent } from "@mui/icons-material";
 import CalendarMonthOutlined from "@mui/icons-material/CalendarMonthOutlined";
 import CheckroomOutlined from "@mui/icons-material/CheckroomOutlined";
+import AutoAwesomeOutlined from "@mui/icons-material/AutoAwesomeOutlined";
 import FaceRetouchingNaturalOutlined from "@mui/icons-material/FaceRetouchingNaturalOutlined";
 import HomeOutlined from "@mui/icons-material/HomeOutlined";
 import StyleOutlined from "@mui/icons-material/StyleOutlined";
@@ -39,6 +40,12 @@ export const dashboardNavItems: DashboardNavItem[] = [
     label: "Virtual Profiles",
     path: appPaths.appVirtualProfiles,
     Icon: FaceRetouchingNaturalOutlined,
+  },
+  {
+    id: "virtual-try-on",
+    label: "Virtual Try On",
+    path: appPaths.appVirtualTryOn,
+    Icon: AutoAwesomeOutlined,
   },
   {
     id: "plan",

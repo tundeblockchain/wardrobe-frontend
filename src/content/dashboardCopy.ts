@@ -148,6 +148,22 @@ export const dashboardCopy = {
     notFoundDescription:
       "This outfit is missing or you do not have access to it.",
   },
+  upgrade: {
+    basic: {
+      title: "Upgrade to Basic",
+      description:
+        "This plan has reached a catalog limit. Upgrade to Basic to add more wardrobes, clothing items, or outfits.",
+      actionLabel: "View plan",
+      actionAriaLabel: "View plan to upgrade to Basic",
+    },
+    premium: {
+      title: "Virtual Try On is a Premium feature",
+      description:
+        "Upgrade to browse Virtual Profiles and preview looks with Virtual Try On.",
+      actionLabel: "View plan",
+      actionAriaLabel: "View plan for Virtual Try On",
+    },
+  },
   virtualProfiles: {
     title: "Virtual Profiles",
     description:
@@ -155,7 +171,7 @@ export const dashboardCopy = {
     loadingLabel: "Loading Virtual Profiles",
     emptyTitle: "No Virtual Profiles yet",
     emptyDescription:
-      "Create a Virtual Profile in the app to preview looks with Virtual Try On.",
+      "Add a Virtual Profile to preview looks with Virtual Try On.",
     errorTitle: "Couldn't load Virtual Profiles",
     errorDescription:
       "Try again in a moment. Your Virtual Profiles were not changed.",
@@ -165,5 +181,77 @@ export const dashboardCopy = {
       "Upgrade to browse Virtual Profiles and preview looks with Virtual Try On.",
     upgradeActionLabel: "View plan",
     upgradeActionAriaLabel: "View plan for Virtual Try On",
+    addLabel: "Add Virtual Profile",
+    addAriaLabel: "Add a Virtual Profile",
+    editLabel: "Edit",
+    deleteLabel: "Delete",
+    deleteAriaLabel: "Delete this Virtual Profile",
+    deleteConfirmTitle: "Delete this Virtual Profile?",
+    deleteConfirmDescription:
+      "This Virtual Profile will be removed. Looks that already used it stay as they are.",
+    deleteConfirmLabel: "Delete Virtual Profile",
+    otherAiTitle: "Virtual Profile edits need Premium",
+    otherAiDescription:
+      "Upgrade to create, edit, or delete a Virtual Profile.",
+    otherAiActionAriaLabel: "View plan to edit Virtual Profiles",
+  },
+  virtualProfileForm: {
+    createTitle: "Add Virtual Profile",
+    editTitle: "Edit Virtual Profile",
+    createDescription:
+      "Add a photo and a name so you can use this Virtual Profile for Virtual Try On.",
+    editDescription: "Update the photo or details for this Virtual Profile.",
+    loadingLabel: "Loading Virtual Profile",
+    submitCreateLabel: "Save Virtual Profile",
+    submitEditLabel: "Save changes",
+    submittingLabel: "Saving Virtual Profile",
+    uploadingLabel: "Uploading photo",
+    nameLabel: "Name",
+    notesLabel: "Notes",
+    imageLabel: "Photo",
+    imageChooseLabel: "Choose photo",
+    imageReplaceLabel: "Replace photo",
+    uploadErrorTitle: "Couldn't upload this photo",
+    uploadErrorDescription:
+      "The photo did not upload. Check the file and try again.",
+    errorTitle: "Couldn't save this Virtual Profile",
+    errorDescription:
+      "Try again in a moment. This Virtual Profile was not changed.",
+    notFoundTitle: "Virtual Profile not found",
+    notFoundDescription:
+      "This Virtual Profile is missing or you do not have access to it.",
+  },
+  virtualTryOn: {
+    title: "Virtual Try On",
+    description:
+      "Pick a Virtual Profile plus clothing items or an outfit, then start a render.",
+    loadingLabel: "Loading Virtual Try On",
+    errorTitle: "Couldn't load Virtual Try On",
+    errorDescription:
+      "Try again in a moment. Your Virtual Try On renders were not changed.",
+    retryLabel: "Try loading Virtual Try On again",
+    profileLabel: "Virtual Profile",
+    profileEmpty: "Add a Virtual Profile or choose a catalog model to continue.",
+    sourceLabel: "Try on",
+    sourceItemsLabel: "Clothing items",
+    sourceOutfitLabel: "Saved outfit",
+    wardrobeLabel: "Wardrobe",
+    itemsLabel: "Clothing items",
+    itemsEmpty: "This wardrobe has no clothing items yet.",
+    outfitsLabel: "Outfit",
+    outfitsEmpty: "Add an outfit before starting Virtual Try On.",
+    submitLabel: "Start Virtual Try On",
+    submittingLabel: "Starting Virtual Try On",
+    renderErrorTitle: "Couldn't start Virtual Try On",
+    renderErrorDescription:
+      "Try again in a moment. No new Virtual Try On render was started.",
+    pendingLabel: "Virtual Try On is processing.",
+    galleryLabel: "Virtual Try On gallery",
+    galleryEmptyTitle: "No Virtual Try On renders yet",
+    galleryEmptyDescription:
+      "Start a Virtual Try On to see renders here, newest first.",
+    validationProfile: "Choose a Virtual Profile.",
+    validationItems: "Choose at least one clothing item or an outfit.",
+    validationOutfit: "Choose an outfit.",
   },
 } as const;

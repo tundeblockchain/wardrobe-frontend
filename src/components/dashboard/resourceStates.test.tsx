@@ -6,6 +6,7 @@ import { ResourceEmptyState } from "./ResourceEmptyState";
 import { ResourceErrorState } from "./ResourceErrorState";
 import { ResourceLoadingState } from "./ResourceLoadingState";
 import { CatalogLimitPrompt } from "./CatalogLimitPrompt";
+import { ForbiddenUpgradePrompt } from "./ForbiddenUpgradePrompt";
 import { ResourceUpgradeState } from "./ResourceUpgradeState";
 
 describe("dashboard resource states", () => {
@@ -108,6 +109,23 @@ describe("dashboard resource states", () => {
       screen.getByText(
         "The Free plan includes 20 outfits. Upgrade your plan to add another.",
       ),
+    ).toBeInTheDocument();
+  });
+
+  it("maps 403 codes to Basic or Premium upgrade prompts", () => {
+    const { unmount } = renderWithProviders(
+      <ForbiddenUpgradePrompt kind="basic" catalogKind="item" />,
+    );
+    expect(
+      screen.getByRole("heading", { name: "Clothing item limit reached" }),
+    ).toBeInTheDocument();
+    unmount();
+
+    renderWithProviders(<ForbiddenUpgradePrompt kind="premium" />);
+    expect(
+      screen.getByRole("heading", {
+        name: "Virtual Try On is a Premium feature",
+      }),
     ).toBeInTheDocument();
   });
 

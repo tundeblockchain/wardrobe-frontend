@@ -239,7 +239,9 @@ export type CatalogLimitCode = (typeof CATALOG_LIMIT_CODES)[number];
 export type CatalogKind = "wardrobe" | "item" | "outfit";
 
 export const UPLOAD_PURPOSE_WARDROBE_ITEM = "WARDROBE_ITEM";
+export const UPLOAD_PURPOSE_AI_PROFILE_REFERENCE = "AI_PROFILE_REFERENCE";
 export type UploadPurpose = typeof UPLOAD_PURPOSE_WARDROBE_ITEM;
+export type AiProfileUploadPurpose = typeof UPLOAD_PURPOSE_AI_PROFILE_REFERENCE;
 
 export const ALLOWED_UPLOAD_CONTENT_TYPES = [
   "image/jpeg",
@@ -312,4 +314,40 @@ export type CreateUploadResponse = {
   uploadUrl: string;
   objectKey: string;
   expiresIn: number;
+};
+
+/** POST /ai-profiles */
+export type CreateAiProfileRequest = {
+  type?: "PERSONAL";
+  label?: string;
+  notes?: string;
+  referenceImages?: string[];
+};
+
+/** PATCH /ai-profiles/{aiProfileId} */
+export type UpdateAiProfileRequest = {
+  label?: string | null;
+  notes?: string | null;
+};
+
+/** POST /ai-profiles/{aiProfileId}/uploads */
+export type CreateAiProfileUploadRequest = {
+  contentType: string;
+  purpose?: AiProfileUploadPurpose;
+  contentLength?: number;
+};
+
+/** POST /ai-profiles/{aiProfileId}/reference-images */
+export type AttachAiProfileReferenceImagesRequest = {
+  objectKey?: string;
+  objectKeys?: string[];
+  setAsMain?: boolean;
+  replaceMain?: boolean;
+};
+
+/** POST .../outfits/{outfitId}/render and POST .../items/{itemId}/render */
+export type CreateRenderRequest = {
+  aiProfileId: string;
+  items?: OutfitItem[];
+  itemIds?: string[];
 };

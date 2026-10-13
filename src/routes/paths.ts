@@ -19,6 +19,9 @@ export const appPaths = {
   appOutfitNew: `${APP_BASE_PATH}/outfits/new`,
   appOutfitEdit: `${APP_BASE_PATH}/outfits/:id/edit`,
   appVirtualProfiles: `${APP_BASE_PATH}/virtual-profiles`,
+  appVirtualProfileNew: `${APP_BASE_PATH}/virtual-profiles/new`,
+  appVirtualProfileEdit: `${APP_BASE_PATH}/virtual-profiles/:id/edit`,
+  appVirtualTryOn: `${APP_BASE_PATH}/virtual-try-on`,
   appPlan: `${APP_BASE_PATH}/plan`,
 } as const;
 
@@ -116,6 +119,10 @@ export const getAppOutfitEditPath = (
     `${appPaths.appOutfits}/${encodeURIComponent(outfitId)}/edit`,
     wardrobeId,
   );
+};
+
+export const getAppVirtualProfileEditPath = (aiProfileId: string): string => {
+  return `${appPaths.appVirtualProfiles}/${encodeURIComponent(aiProfileId)}/edit`;
 };
 
 export const getAppPath = (subPath = ""): string => {

@@ -6,6 +6,7 @@ import {
   getAppItemPath,
   getAppOutfitEditPath,
   getAppOutfitNewPath,
+  getAppVirtualProfileEditPath,
   getAppPath,
   getAppWardrobeEditPath,
   getAppWardrobePath,
@@ -65,6 +66,11 @@ describe("login and app paths", () => {
     expect(appPaths.appOutfitNew).toBe("/app/outfits/new");
     expect(appPaths.appOutfitEdit).toBe("/app/outfits/:id/edit");
     expect(appPaths.appVirtualProfiles).toBe("/app/virtual-profiles");
+    expect(appPaths.appVirtualProfileNew).toBe("/app/virtual-profiles/new");
+    expect(appPaths.appVirtualProfileEdit).toBe(
+      "/app/virtual-profiles/:id/edit",
+    );
+    expect(appPaths.appVirtualTryOn).toBe("/app/virtual-try-on");
     expect(appPaths.appPlan).toBe("/app/plan");
   });
 
@@ -94,6 +100,9 @@ describe("login and app paths", () => {
     );
     expect(getAppOutfitEditPath("outfit_brunch01", "wd_weekend01")).toBe(
       "/app/outfits/outfit_brunch01/edit?wardrobeId=wd_weekend01",
+    );
+    expect(getAppVirtualProfileEditPath("aip_personal01")).toBe(
+      "/app/virtual-profiles/aip_personal01/edit",
     );
   });
 

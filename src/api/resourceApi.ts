@@ -3,18 +3,24 @@ import type { AuthenticatedApi } from "./authenticatedApi";
 import { ApiError, isApiError } from "./httpClient";
 import { createMockResourceApi } from "./mockResourceApi";
 import {
-  ENTITLEMENT_AI_REQUIRED_CODE,
+  type AiProfile,
   type AiProfileList,
+  type AttachAiProfileReferenceImagesRequest,
   type ClothingItem,
   type ClothingItemList,
+  type CreateAiProfileRequest,
+  type CreateAiProfileUploadRequest,
   type CreateItemRequest,
   type CreateOutfitRequest,
+  type CreateRenderRequest,
   type CreateUploadRequest,
   type CreateUploadResponse,
   type CreateWardrobeRequest,
   type Entitlement,
   type Outfit,
   type OutfitList,
+  type OutfitRender,
+  type UpdateAiProfileRequest,
   type UpdateItemRequest,
   type UpdateOutfitRequest,
   type UpdateWardrobeRequest,
@@ -27,6 +33,7 @@ export const wardrobeCollectionPath = "/wardrobes";
 export const itemCollectionPath = "/items";
 export const outfitCollectionPath = "/outfits";
 export const aiProfilesPath = "/ai-profiles";
+export const aiProfileModelsPath = "/ai-profiles/models";
 export const uploadsPath = "/uploads";
 
 export const getWardrobeApiPath = (wardrobeId: string): string => {
@@ -57,6 +64,34 @@ export const getWardrobeOutfitApiPath = (
 
 export const getItemApiPath = (itemId: string): string => {
   return `${itemCollectionPath}/${encodeURIComponent(itemId)}`;
+};
+
+export const getAiProfileApiPath = (aiProfileId: string): string => {
+  return `${aiProfilesPath}/${encodeURIComponent(aiProfileId)}`;
+};
+
+export const getAiProfileUploadsApiPath = (aiProfileId: string): string => {
+  return `${getAiProfileApiPath(aiProfileId)}/uploads`;
+};
+
+export const getAiProfileReferenceImagesApiPath = (
+  aiProfileId: string,
+): string => {
+  return `${getAiProfileApiPath(aiProfileId)}/reference-images`;
+};
+
+export const getWardrobeItemRenderApiPath = (
+  wardrobeId: string,
+  itemId: string,
+): string => {
+  return `${getWardrobeItemApiPath(wardrobeId, itemId)}/render`;
+};
+
+export const getWardrobeOutfitRenderApiPath = (
+  wardrobeId: string,
+  outfitId: string,
+): string => {
+  return `${getWardrobeOutfitApiPath(wardrobeId, outfitId)}/render`;
 };
 
 export type ResourceApi = {
@@ -92,6 +127,40 @@ export type ResourceApi = {
     body: UpdateOutfitRequest,
   ) => Promise<Outfit>;
   listAiProfiles: () => Promise<AiProfileList>;
+  listGenericAiProfiles: () => Promise<AiProfileList>;
+  getAiProfile: (aiProfileId: string) => Promise<AiProfile>;
+  createAiProfile: (body: CreateAiProfileRequest) => Promise<AiProfile>;
+  updateAiProfile: (
+    aiProfileId: string,
+    body: UpdateAiProfileRequest,
+  ) => Promise<AiProfile>;
+  deleteAiProfile: (aiProfileId: string) => Promise<void>;
+  createAiProfileUpload: (
+    aiProfileId: string,
+    body: CreateAiProfileUploadRequest,
+  ) => Promise<CreateUploadResponse>;
+  attachAiProfileReferenceImages: (
+    aiProfileId: string,
+    body: AttachAiProfileReferenceImagesRequest,
+  ) => Promise<AiProfile>;
+  renderItem: (
+    wardrobeId: string,
+    itemId: string,
+    body: CreateRenderRequest,
+  ) => Promise<ClothingItem>;
+  renderOutfit: (
+    wardrobeId: string,
+    outfitId: string,
+    body: CreateRenderRequest,
+  ) => Promise<Outfit>;
+  getItemRender: (
+    wardrobeId: string,
+    itemId: string,
+  ) => Promise<OutfitRender>;
+  getOutfitRender: (
+    wardrobeId: string,
+    outfitId: string,
+  ) => Promise<OutfitRender>;
   createUpload: (body: CreateUploadRequest) => Promise<CreateUploadResponse>;
 };
 
@@ -217,6 +286,109 @@ export const createLiveResourceApi = (api: AuthenticatedApi): ResourceApi => {
     return api.request<AiProfileList>(aiProfilesPath);
   };
 
+  const listGenericAiProfiles = (): Promise<AiProfileList> => {
+    return api.request<AiProfileList>(aiProfileModelsPath);
+  };
+
+  const getAiProfile = (aiProfileId: string): Promise<AiProfile> => {
+    return api.request<AiProfile>(getAiProfileApiPath(aiProfileId));
+  };
+
+  const createAiProfile = (body: CreateAiProfileRequest): Promise<AiProfile> => {
+    return api.request<AiProfile>(aiProfilesPath, {
+      method: "POST",
+      body,
+    });
+  };
+
+  const updateAiProfile = (
+    aiProfileId: string,
+    body: UpdateAiProfileRequest,
+  ): Promise<AiProfile> => {
+    return api.request<AiProfile>(getAiProfileApiPath(aiProfileId), {
+      method: "PATCH",
+      body,
+    });
+  };
+
+  const deleteAiProfile = async (aiProfileId: string): Promise<void> => {
+    await api.request<unknown>(getAiProfileApiPath(aiProfileId), {
+      method: "DELETE",
+    });
+  };
+
+  const createAiProfileUpload = (
+    aiProfileId: string,
+    body: CreateAiProfileUploadRequest,
+  ): Promise<CreateUploadResponse> => {
+    return api.request<CreateUploadResponse>(
+      getAiProfileUploadsApiPath(aiProfileId),
+      {
+        method: "POST",
+        body,
+      },
+    );
+  };
+
+  const attachAiProfileReferenceImages = (
+    aiProfileId: string,
+    body: AttachAiProfileReferenceImagesRequest,
+  ): Promise<AiProfile> => {
+    return api.request<AiProfile>(
+      getAiProfileReferenceImagesApiPath(aiProfileId),
+      {
+        method: "POST",
+        body,
+      },
+    );
+  };
+
+  const renderItem = (
+    wardrobeId: string,
+    itemId: string,
+    body: CreateRenderRequest,
+  ): Promise<ClothingItem> => {
+    return api.request<ClothingItem>(
+      getWardrobeItemRenderApiPath(wardrobeId, itemId),
+      {
+        method: "POST",
+        body,
+      },
+    );
+  };
+
+  const renderOutfit = (
+    wardrobeId: string,
+    outfitId: string,
+    body: CreateRenderRequest,
+  ): Promise<Outfit> => {
+    return api.request<Outfit>(
+      getWardrobeOutfitRenderApiPath(wardrobeId, outfitId),
+      {
+        method: "POST",
+        body,
+      },
+    );
+  };
+
+  const getItemRender = (
+    wardrobeId: string,
+    itemId: string,
+  ): Promise<OutfitRender> => {
+    return api.request<OutfitRender>(
+      getWardrobeItemRenderApiPath(wardrobeId, itemId),
+    );
+  };
+
+  const getOutfitRender = (
+    wardrobeId: string,
+    outfitId: string,
+  ): Promise<OutfitRender> => {
+    return api.request<OutfitRender>(
+      getWardrobeOutfitRenderApiPath(wardrobeId, outfitId),
+    );
+  };
+
   const createUpload = (
     body: CreateUploadRequest,
   ): Promise<CreateUploadResponse> => {
@@ -242,6 +414,17 @@ export const createLiveResourceApi = (api: AuthenticatedApi): ResourceApi => {
     createOutfit,
     updateOutfit,
     listAiProfiles,
+    listGenericAiProfiles,
+    getAiProfile,
+    createAiProfile,
+    updateAiProfile,
+    deleteAiProfile,
+    createAiProfileUpload,
+    attachAiProfileReferenceImages,
+    renderItem,
+    renderOutfit,
+    getItemRender,
+    getOutfitRender,
     createUpload,
   };
 };
@@ -274,14 +457,5 @@ export const isNotFoundError = (error: unknown): error is ApiError => {
   );
 };
 
-export const isEntitlementAiRequiredError = (
-  error: unknown,
-): error is ApiError => {
-  return (
-    isApiError(error) &&
-    error.status === 403 &&
-    error.code === ENTITLEMENT_AI_REQUIRED_CODE
-  );
-};
-
 export { isCatalogLimitError } from "./catalogLimits";
+export { isEntitlementAiRequiredError } from "./entitlementGating";
