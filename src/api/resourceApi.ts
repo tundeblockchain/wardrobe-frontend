@@ -7,8 +7,17 @@ import {
   type AiProfileList,
   type ClothingItem,
   type ClothingItemList,
+  type CreateItemRequest,
+  type CreateOutfitRequest,
+  type CreateUploadRequest,
+  type CreateUploadResponse,
+  type CreateWardrobeRequest,
   type Entitlement,
+  type Outfit,
   type OutfitList,
+  type UpdateItemRequest,
+  type UpdateOutfitRequest,
+  type UpdateWardrobeRequest,
   type Wardrobe,
   type WardrobeDetail,
   type WardrobeList,
@@ -18,6 +27,7 @@ export const wardrobeCollectionPath = "/wardrobes";
 export const itemCollectionPath = "/items";
 export const outfitCollectionPath = "/outfits";
 export const aiProfilesPath = "/ai-profiles";
+export const uploadsPath = "/uploads";
 
 export const getWardrobeApiPath = (wardrobeId: string): string => {
   return `${wardrobeCollectionPath}/${encodeURIComponent(wardrobeId)}`;
@@ -25,6 +35,24 @@ export const getWardrobeApiPath = (wardrobeId: string): string => {
 
 export const getWardrobeItemsApiPath = (wardrobeId: string): string => {
   return `${getWardrobeApiPath(wardrobeId)}/items`;
+};
+
+export const getWardrobeItemApiPath = (
+  wardrobeId: string,
+  itemId: string,
+): string => {
+  return `${getWardrobeItemsApiPath(wardrobeId)}/${encodeURIComponent(itemId)}`;
+};
+
+export const getWardrobeOutfitsApiPath = (wardrobeId: string): string => {
+  return `${getWardrobeApiPath(wardrobeId)}/outfits`;
+};
+
+export const getWardrobeOutfitApiPath = (
+  wardrobeId: string,
+  outfitId: string,
+): string => {
+  return `${getWardrobeOutfitsApiPath(wardrobeId)}/${encodeURIComponent(outfitId)}`;
 };
 
 export const getItemApiPath = (itemId: string): string => {
@@ -35,11 +63,36 @@ export type ResourceApi = {
   getMe: () => Promise<Entitlement>;
   listWardrobes: () => Promise<WardrobeList>;
   getWardrobe: (wardrobeId: string) => Promise<Wardrobe>;
+  createWardrobe: (body: CreateWardrobeRequest) => Promise<Wardrobe>;
+  updateWardrobe: (
+    wardrobeId: string,
+    body: UpdateWardrobeRequest,
+  ) => Promise<Wardrobe>;
   listWardrobeItems: (wardrobeId: string) => Promise<ClothingItemList>;
   getItem: (itemId: string) => Promise<ClothingItem>;
+  createItem: (
+    wardrobeId: string,
+    body: CreateItemRequest,
+  ) => Promise<ClothingItem>;
+  updateItem: (
+    wardrobeId: string,
+    itemId: string,
+    body: UpdateItemRequest,
+  ) => Promise<ClothingItem>;
   getWardrobeDetail: (wardrobeId: string) => Promise<WardrobeDetail>;
   listOutfits: () => Promise<OutfitList>;
+  getOutfit: (wardrobeId: string, outfitId: string) => Promise<Outfit>;
+  createOutfit: (
+    wardrobeId: string,
+    body: CreateOutfitRequest,
+  ) => Promise<Outfit>;
+  updateOutfit: (
+    wardrobeId: string,
+    outfitId: string,
+    body: UpdateOutfitRequest,
+  ) => Promise<Outfit>;
   listAiProfiles: () => Promise<AiProfileList>;
+  createUpload: (body: CreateUploadRequest) => Promise<CreateUploadResponse>;
 };
 
 const itemNotFoundError = (): ApiError => {
@@ -90,23 +143,106 @@ export const createLiveResourceApi = (api: AuthenticatedApi): ResourceApi => {
     };
   };
 
+  const createWardrobe = (body: CreateWardrobeRequest): Promise<Wardrobe> => {
+    return api.request<Wardrobe>(wardrobeCollectionPath, {
+      method: "POST",
+      body,
+    });
+  };
+
+  const updateWardrobe = (
+    wardrobeId: string,
+    body: UpdateWardrobeRequest,
+  ): Promise<Wardrobe> => {
+    return api.request<Wardrobe>(getWardrobeApiPath(wardrobeId), {
+      method: "PATCH",
+      body,
+    });
+  };
+
+  const createItem = (
+    wardrobeId: string,
+    body: CreateItemRequest,
+  ): Promise<ClothingItem> => {
+    return api.request<ClothingItem>(getWardrobeItemsApiPath(wardrobeId), {
+      method: "POST",
+      body,
+    });
+  };
+
+  const updateItem = (
+    wardrobeId: string,
+    itemId: string,
+    body: UpdateItemRequest,
+  ): Promise<ClothingItem> => {
+    return api.request<ClothingItem>(
+      getWardrobeItemApiPath(wardrobeId, itemId),
+      {
+        method: "PATCH",
+        body,
+      },
+    );
+  };
+
   const listOutfits = (): Promise<OutfitList> => {
     return api.request<OutfitList>(outfitCollectionPath);
+  };
+
+  const getOutfit = (wardrobeId: string, outfitId: string): Promise<Outfit> => {
+    return api.request<Outfit>(getWardrobeOutfitApiPath(wardrobeId, outfitId));
+  };
+
+  const createOutfit = (
+    wardrobeId: string,
+    body: CreateOutfitRequest,
+  ): Promise<Outfit> => {
+    return api.request<Outfit>(getWardrobeOutfitsApiPath(wardrobeId), {
+      method: "POST",
+      body,
+    });
+  };
+
+  const updateOutfit = (
+    wardrobeId: string,
+    outfitId: string,
+    body: UpdateOutfitRequest,
+  ): Promise<Outfit> => {
+    return api.request<Outfit>(getWardrobeOutfitApiPath(wardrobeId, outfitId), {
+      method: "PATCH",
+      body,
+    });
   };
 
   const listAiProfiles = (): Promise<AiProfileList> => {
     return api.request<AiProfileList>(aiProfilesPath);
   };
 
+  const createUpload = (
+    body: CreateUploadRequest,
+  ): Promise<CreateUploadResponse> => {
+    return api.request<CreateUploadResponse>(uploadsPath, {
+      method: "POST",
+      body,
+    });
+  };
+
   return {
     getMe,
     listWardrobes,
     getWardrobe,
+    createWardrobe,
+    updateWardrobe,
     listWardrobeItems,
     getItem,
+    createItem,
+    updateItem,
     getWardrobeDetail,
     listOutfits,
+    getOutfit,
+    createOutfit,
+    updateOutfit,
     listAiProfiles,
+    createUpload,
   };
 };
 
@@ -147,3 +283,5 @@ export const isEntitlementAiRequiredError = (
     error.code === ENTITLEMENT_AI_REQUIRED_CODE
   );
 };
+
+export { isCatalogLimitError } from "./catalogLimits";

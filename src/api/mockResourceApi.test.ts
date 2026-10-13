@@ -4,6 +4,7 @@ import {
   createEmptyResourceApi,
   createEntitlementAiRequiredResourceApi,
   createErrorResourceApi,
+  createFreeAtLimitResourceApi,
   createMockResourceApi,
   mockEntitlement,
   mockItems,
@@ -58,6 +59,57 @@ describe("createMockResourceApi", () => {
     ).rejects.toMatchObject({
       status: 403,
       code: "ENTITLEMENT_AI_REQUIRED",
+    });
+  });
+
+  it("creates catalog records and blocks Free-tier creates over the limit", async () => {
+    const api = createMockResourceApi();
+    const wardrobe = await api.createWardrobe({ name: "Travel" });
+    expect(wardrobe.name).toBe("Travel");
+
+    const upload = await api.createUpload({
+      contentType: "image/jpeg",
+      purpose: "WARDROBE_ITEM",
+      contentLength: 8,
+    });
+    expect(upload.objectKey).toMatch(/^users\/user-1\/uploads\//);
+
+    const item = await api.createItem(wardrobe.wardrobeId, {
+      name: "Travel jacket",
+      category: "OUTERWEAR",
+      imageKey: upload.objectKey,
+    });
+    expect(item.wardrobeId).toBe(wardrobe.wardrobeId);
+
+    const outfit = await api.createOutfit(wardrobe.wardrobeId, {
+      name: "Airport",
+      items: [{ itemId: item.itemId, slot: "OUTERWEAR" }],
+    });
+    expect(outfit.name).toBe("Airport");
+
+    const limited = createFreeAtLimitResourceApi();
+    await expect(limited.createWardrobe({ name: "Extra" })).rejects.toMatchObject({
+      status: 403,
+      code: "ENTITLEMENT_WARDROBE_LIMIT",
+    });
+    await expect(
+      limited.createItem("wd_weekend01", {
+        name: "Extra tee",
+        category: "TOP",
+        imageKey: "users/user-1/uploads/upl_mock.jpg",
+      }),
+    ).rejects.toMatchObject({
+      status: 403,
+      code: "ENTITLEMENT_ITEM_LIMIT",
+    });
+    await expect(
+      limited.createOutfit("wd_weekend01", {
+        name: "Extra look",
+        items: [{ itemId: "item_limit01", slot: "TOP" }],
+      }),
+    ).rejects.toMatchObject({
+      status: 403,
+      code: "ENTITLEMENT_OUTFIT_LIMIT",
     });
   });
 });

@@ -1,5 +1,6 @@
 import CheckroomOutlined from "@mui/icons-material/CheckroomOutlined";
-import { Box } from "@mui/material";
+import { Box, Button } from "@mui/material";
+import { Link as RouterLink } from "react-router-dom";
 import { DashboardPage } from "../../components/dashboard/DashboardPage";
 import { ResourceCard } from "../../components/dashboard/ResourceCard";
 import { ResourceCardGrid } from "../../components/dashboard/ResourceCardGrid";
@@ -10,7 +11,7 @@ import { useResourceApi } from "../../api/useResourceApi";
 import type { ResourceApi } from "../../api/resourceApi";
 import { dashboardCopy } from "../../content/dashboardCopy";
 import { useResourceQuery } from "../../hooks/useResourceQuery";
-import { getAppWardrobePath } from "../../routes/paths";
+import { appPaths, getAppWardrobePath } from "../../routes/paths";
 
 export type WardrobesPageProps = {
   resourceApi?: ResourceApi;
@@ -23,6 +24,18 @@ export const WardrobesPage = ({
   const resourceApi = resourceApiProp ?? defaultResourceApi;
   const copy = dashboardCopy.wardrobes;
   const query = useResourceQuery("wardrobes", resourceApi.listWardrobes);
+  const addAction = (
+    <Button
+      component={RouterLink}
+      to={appPaths.appWardrobeNew}
+      variant="contained"
+      color="primary"
+      tabIndex={0}
+      aria-label={copy.addAriaLabel}
+    >
+      {copy.addLabel}
+    </Button>
+  );
 
   if (query.status === "loading") {
     return (
@@ -64,6 +77,7 @@ export const WardrobesPage = ({
           title={copy.emptyTitle}
           description={copy.emptyDescription}
         />
+        {addAction}
       </DashboardPage>
     );
   }
@@ -73,6 +87,7 @@ export const WardrobesPage = ({
       headingId="wardrobes-heading"
       title={copy.title}
       description={copy.description}
+      actions={addAction}
     >
       <ResourceCardGrid label="Wardrobes">
         {query.data.wardrobes.map((wardrobe) => {

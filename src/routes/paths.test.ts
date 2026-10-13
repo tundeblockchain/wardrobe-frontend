@@ -1,8 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
   appPaths,
+  getAppItemEditPath,
+  getAppItemNewPath,
   getAppItemPath,
+  getAppOutfitEditPath,
+  getAppOutfitNewPath,
   getAppPath,
+  getAppWardrobeEditPath,
   getAppWardrobePath,
   getLoginPath,
   getLoginSignupPath,
@@ -50,9 +55,15 @@ describe("login and app paths", () => {
     expect(appPaths.login).toBe("/login");
     expect(appPaths.app).toBe("/app");
     expect(appPaths.appWardrobes).toBe("/app/wardrobes");
+    expect(appPaths.appWardrobeNew).toBe("/app/wardrobes/new");
     expect(appPaths.appWardrobe).toBe("/app/wardrobes/:id");
+    expect(appPaths.appWardrobeEdit).toBe("/app/wardrobes/:id/edit");
+    expect(appPaths.appWardrobeItemNew).toBe("/app/wardrobes/:id/items/new");
     expect(appPaths.appItem).toBe("/app/items/:id");
+    expect(appPaths.appItemEdit).toBe("/app/items/:id/edit");
     expect(appPaths.appOutfits).toBe("/app/outfits");
+    expect(appPaths.appOutfitNew).toBe("/app/outfits/new");
+    expect(appPaths.appOutfitEdit).toBe("/app/outfits/:id/edit");
     expect(appPaths.appVirtualProfiles).toBe("/app/virtual-profiles");
     expect(appPaths.appPlan).toBe("/app/plan");
   });
@@ -65,9 +76,24 @@ describe("login and app paths", () => {
     expect(getAppPath("/x/")).toBe("/app/x");
     expect(getAppPath("looks/saved")).toBe("/app/looks/saved");
     expect(getAppWardrobePath("wd_weekend01")).toBe("/app/wardrobes/wd_weekend01");
+    expect(getAppWardrobeEditPath("wd_weekend01")).toBe(
+      "/app/wardrobes/wd_weekend01/edit",
+    );
+    expect(getAppItemNewPath("wd_weekend01")).toBe(
+      "/app/wardrobes/wd_weekend01/items/new",
+    );
     expect(getAppItemPath("item_navytee01")).toBe("/app/items/item_navytee01");
     expect(getAppItemPath("item_navytee01", "wd_weekend01")).toBe(
       "/app/items/item_navytee01?wardrobeId=wd_weekend01",
+    );
+    expect(getAppItemEditPath("item_navytee01", "wd_weekend01")).toBe(
+      "/app/items/item_navytee01/edit?wardrobeId=wd_weekend01",
+    );
+    expect(getAppOutfitNewPath("wd_weekend01")).toBe(
+      "/app/outfits/new?wardrobeId=wd_weekend01",
+    );
+    expect(getAppOutfitEditPath("outfit_brunch01", "wd_weekend01")).toBe(
+      "/app/outfits/outfit_brunch01/edit?wardrobeId=wd_weekend01",
     );
   });
 

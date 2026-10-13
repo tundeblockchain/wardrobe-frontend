@@ -221,3 +221,91 @@ export type Entitlement = {
 };
 
 export const ENTITLEMENT_AI_REQUIRED_CODE = "ENTITLEMENT_AI_REQUIRED";
+export const ENTITLEMENT_WARDROBE_LIMIT_CODE = "ENTITLEMENT_WARDROBE_LIMIT";
+export const ENTITLEMENT_ITEM_LIMIT_CODE = "ENTITLEMENT_ITEM_LIMIT";
+export const ENTITLEMENT_OUTFIT_LIMIT_CODE = "ENTITLEMENT_OUTFIT_LIMIT";
+
+export const CATALOG_LIMIT_CODES = [
+  ENTITLEMENT_WARDROBE_LIMIT_CODE,
+  ENTITLEMENT_ITEM_LIMIT_CODE,
+  ENTITLEMENT_OUTFIT_LIMIT_CODE,
+] as const;
+
+export type CatalogLimitCode = (typeof CATALOG_LIMIT_CODES)[number];
+export type CatalogKind = "wardrobe" | "item" | "outfit";
+
+export const UPLOAD_PURPOSE_WARDROBE_ITEM = "WARDROBE_ITEM";
+export type UploadPurpose = typeof UPLOAD_PURPOSE_WARDROBE_ITEM;
+
+export const ALLOWED_UPLOAD_CONTENT_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/heic",
+] as const;
+
+export type AllowedUploadContentType =
+  (typeof ALLOWED_UPLOAD_CONTENT_TYPES)[number];
+
+/** Matches wardrobe-backend MAX_UPLOAD_BYTES (10 MiB). */
+export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
+
+export const NAME_MAX_LENGTH = 100;
+export const COLOUR_MAX_LENGTH = 40;
+
+/** POST /wardrobes */
+export type CreateWardrobeRequest = {
+  name: string;
+};
+
+/** PATCH /wardrobes/{wardrobeId} */
+export type UpdateWardrobeRequest = {
+  name: string;
+};
+
+/** POST /wardrobes/{wardrobeId}/items */
+export type CreateItemRequest = {
+  name: string;
+  category: ClothingCategory;
+  subcategory?: string;
+  colours?: string[];
+  brand?: string;
+  acquiredAt?: string;
+  imageKey: string;
+};
+
+/** PATCH /wardrobes/{wardrobeId}/items/{itemId} */
+export type UpdateItemRequest = {
+  name?: string;
+  category?: ClothingCategory;
+  subcategory?: string | null;
+  colours?: string[];
+  brand?: string;
+  acquiredAt?: string | null;
+  imageKey?: string;
+};
+
+/** POST /wardrobes/{wardrobeId}/outfits */
+export type CreateOutfitRequest = {
+  name: string;
+  items: OutfitItem[];
+};
+
+/** PATCH /wardrobes/{wardrobeId}/outfits/{outfitId} */
+export type UpdateOutfitRequest = {
+  name?: string;
+  items?: OutfitItem[];
+};
+
+/** POST /uploads */
+export type CreateUploadRequest = {
+  contentType: string;
+  purpose: UploadPurpose;
+  contentLength?: number;
+};
+
+export type CreateUploadResponse = {
+  uploadUrl: string;
+  objectKey: string;
+  expiresIn: number;
+};

@@ -29,9 +29,19 @@ const WardrobesPage = lazy(async () => {
   return { default: module.WardrobesPage };
 });
 
+const WardrobeFormPage = lazy(async () => {
+  const module = await import("../pages/app/WardrobeFormPage");
+  return { default: module.WardrobeFormPage };
+});
+
 const WardrobeDetailPage = lazy(async () => {
   const module = await import("../pages/app/WardrobeDetailPage");
   return { default: module.WardrobeDetailPage };
+});
+
+const ItemFormPage = lazy(async () => {
+  const module = await import("../pages/app/ItemFormPage");
+  return { default: module.ItemFormPage };
 });
 
 const ItemDetailPage = lazy(async () => {
@@ -42,6 +52,11 @@ const ItemDetailPage = lazy(async () => {
 const OutfitsPage = lazy(async () => {
   const module = await import("../pages/app/OutfitsPage");
   return { default: module.OutfitsPage };
+});
+
+const OutfitFormPage = lazy(async () => {
+  const module = await import("../pages/app/OutfitFormPage");
+  return { default: module.OutfitFormPage };
 });
 
 const VirtualProfilesPage = lazy(async () => {
@@ -82,9 +97,27 @@ export const AppRoutes = () => {
       >
         <Route index element={<AppHomePage />} />
         <Route path="wardrobes" element={<WardrobesPage />} />
+        <Route
+          path="wardrobes/new"
+          element={<WardrobeFormPage mode="create" />}
+        />
+        <Route
+          path="wardrobes/:id/edit"
+          element={<WardrobeFormPage mode="edit" />}
+        />
+        <Route
+          path="wardrobes/:id/items/new"
+          element={<ItemFormPage mode="create" />}
+        />
         <Route path="wardrobes/:id" element={<WardrobeDetailPage />} />
+        <Route path="items/:id/edit" element={<ItemFormPage mode="edit" />} />
         <Route path="items/:id" element={<ItemDetailPage />} />
         <Route path="outfits" element={<OutfitsPage />} />
+        <Route path="outfits/new" element={<OutfitFormPage mode="create" />} />
+        <Route
+          path="outfits/:id/edit"
+          element={<OutfitFormPage mode="edit" />}
+        />
         <Route path="virtual-profiles" element={<VirtualProfilesPage />} />
         <Route path="plan" element={<PlanPage />} />
         <Route path="*" element={<AppHomePage />} />
