@@ -6,6 +6,8 @@ The public landing page includes a hero, feature sections, a labeled screenshot 
 
 Public share links use `/share/:token`. That page is read-only: it loads a title, optional image, and ITEM/OUTFIT type from `GET {VITE_API_BASE_URL}/public/shares/{token}` (no auth), then shows the same store CTAs. Missing, expired, or failed previews have clear empty states.
 
+The public marketing site (`/`, `/terms`, `/privacy`, `/contact`, `/share/:token`) is separate from the signed-in web app at `/app/*`. `/login` is the public sign-in page. The `/app` area does not use the landing header and footer. Sign-in is a placeholder until account auth is wired.
+
 Terms of Service (`/terms`) and Privacy Policy (`/privacy`) are linked from the header and footer. Operator contact on those pages is env-driven (`VITE_LEGAL_CONTACT_EMAIL`, optional `VITE_LEGAL_CONTACT_URL`). Copy refers to the operator only — no personal names.
 
 Contact Us (`/contact`) is a public form that POSTs to `{VITE_API_BASE_URL}/support/contact` with no auth header and no cookies. If that env var is unset, the page still renders and submit stays disabled. The backend must allowlist this site’s origin(s) via `SUPPORT_CONTACT_ALLOWED_ORIGINS` (production plus the Netlify deploy-preview pattern).
