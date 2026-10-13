@@ -222,6 +222,10 @@ export const request = async <T>(
       });
     }
 
+    if (response.status === 204) {
+      return undefined as T;
+    }
+
     return (await parseJsonBody(response)) as T;
   } catch (error) {
     if (isApiError(error)) {

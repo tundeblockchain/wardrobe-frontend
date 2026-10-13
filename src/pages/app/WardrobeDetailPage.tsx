@@ -1,7 +1,17 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import CheckroomOutlined from "@mui/icons-material/CheckroomOutlined";
-import { Box, Button, Stack } from "@mui/material";
-import { Link as RouterLink, useParams } from "react-router-dom";
+import {
+  Box,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Stack,
+  Typography,
+} from "@mui/material";
+import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
+import { isApiError } from "../../api/httpClient";
 import { isNotFoundError, type ResourceApi } from "../../api/resourceApi";
 import {
   getClothingCategoryLabel,
@@ -15,6 +25,7 @@ import { ResourceEmptyState } from "../../components/dashboard/ResourceEmptyStat
 import { ResourceErrorState } from "../../components/dashboard/ResourceErrorState";
 import { ResourceLoadingState } from "../../components/dashboard/ResourceLoadingState";
 import { dashboardCopy } from "../../content/dashboardCopy";
+import { invalidateCatalogLists } from "../../hooks/resourceQueryCache";
 import { useResourceQuery } from "../../hooks/useResourceQuery";
 import {
   appPaths,
@@ -34,6 +45,7 @@ export const WardrobeDetailPage = ({
 }: WardrobeDetailPageProps) => {
   const { id: wardrobeIdFromParams } = useParams();
   const wardrobeId = wardrobeIdProp ?? wardrobeIdFromParams ?? "";
+  const navigate = useNavigate();
   const defaultResourceApi = useResourceApi();
   const resourceApi = resourceApiProp ?? defaultResourceApi;
   const copy = dashboardCopy.wardrobeDetail;
@@ -45,6 +57,37 @@ export const WardrobeDetailPage = ({
     `wardrobe:${wardrobeId}`,
     loadWardrobeDetail,
   );
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | undefined>();
+
+  const handleOpenDelete = () => {
+    setDeleteError(undefined);
+    setIsDeleteOpen(true);
+  };
+
+  const handleCloseDelete = () => {
+    if (isDeleting) {
+      return;
+    }
+
+    setIsDeleteOpen(false);
+  };
+
+  const handleConfirmDelete = async (id: string) => {
+    setIsDeleting(true);
+    setDeleteError(undefined);
+    try {
+      await resourceApi.deleteWardrobe(id);
+      invalidateCatalogLists();
+      navigate(appPaths.app);
+    } catch (error) {
+      const serverMessage = isApiError(error) ? error.message.trim() : "";
+      setDeleteError(serverMessage || copy.deleteErrorFallback);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   const backLink = (
     <Button
@@ -59,6 +102,56 @@ export const WardrobeDetailPage = ({
     </Button>
   );
 
+  const deleteDialog = (id: string) => (
+    <Dialog
+      open={isDeleteOpen}
+      onClose={handleCloseDelete}
+      aria-labelledby="delete-wardrobe-title"
+      aria-describedby="delete-wardrobe-description"
+    >
+      <DialogTitle id="delete-wardrobe-title">
+        {copy.deleteConfirmTitle}
+      </DialogTitle>
+      <DialogContent>
+        <Stack spacing={2}>
+          <Typography id="delete-wardrobe-description" variant="body2">
+            {copy.deleteConfirmDescription}
+          </Typography>
+          {deleteError ? (
+            <Typography variant="body2" color="error" role="alert">
+              {deleteError}
+            </Typography>
+          ) : null}
+        </Stack>
+      </DialogContent>
+      <DialogActions>
+        <Button
+          type="button"
+          onClick={handleCloseDelete}
+          color="secondary"
+          tabIndex={0}
+          aria-label="Cancel"
+          disabled={isDeleting}
+        >
+          Cancel
+        </Button>
+        <Button
+          type="button"
+          onClick={() => {
+            void handleConfirmDelete(id);
+          }}
+          color="error"
+          variant="contained"
+          tabIndex={0}
+          aria-label={copy.deleteConfirmLabel}
+          disabled={isDeleting}
+        >
+          {copy.deleteConfirmLabel}
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+
   const wardrobeActions = (id: string) => (
     <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: "wrap" }}>
       {backLink}
@@ -71,6 +164,16 @@ export const WardrobeDetailPage = ({
         aria-label={copy.editAriaLabel}
       >
         {copy.editLabel}
+      </Button>
+      <Button
+        type="button"
+        variant="outlined"
+        color="error"
+        tabIndex={0}
+        aria-label={copy.deleteAriaLabel}
+        onClick={handleOpenDelete}
+      >
+        {copy.deleteLabel}
       </Button>
       <Button
         component={RouterLink}
@@ -146,6 +249,7 @@ export const WardrobeDetailPage = ({
           title={copy.emptyTitle}
           description={copy.emptyDescription}
         />
+        {deleteDialog(wardrobe.wardrobeId)}
       </DashboardPage>
     );
   }
@@ -177,6 +281,7 @@ export const WardrobeDetailPage = ({
           );
         })}
       </ResourceCardGrid>
+      {deleteDialog(wardrobe.wardrobeId)}
     </DashboardPage>
   );
 };

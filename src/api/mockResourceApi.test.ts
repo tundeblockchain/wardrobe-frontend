@@ -61,6 +61,39 @@ describe("createMockResourceApi", () => {
     });
   });
 
+  it("deletes a wardrobe and strips its items from outfits in other wardrobes", async () => {
+    const api = createMockResourceApi();
+    const otherOutfit = await api.createOutfit("wd_work02", {
+      name: "Desk look",
+      items: [
+        { itemId: "item_navytee01", slot: "TOP" },
+        { itemId: "item_limit01", slot: "OUTERWEAR" },
+      ],
+    });
+    expect(otherOutfit.items).toEqual([
+      { itemId: "item_navytee01", slot: "TOP" },
+      { itemId: "item_limit01", slot: "OUTERWEAR" },
+    ]);
+
+    await expect(api.deleteWardrobe("wd_weekend01")).resolves.toBeUndefined();
+    await expect(api.getWardrobe("wd_weekend01")).rejects.toMatchObject({
+      status: 404,
+      code: "WARDROBE_NOT_FOUND",
+    });
+    await expect(api.getItem("item_navytee01")).rejects.toMatchObject({
+      status: 404,
+      code: "ITEM_NOT_FOUND",
+    });
+    await expect(api.listOutfits()).resolves.toEqual({
+      outfits: [
+        {
+          ...otherOutfit,
+          items: [{ itemId: "item_limit01", slot: "OUTERWEAR" }],
+        },
+      ],
+    });
+  });
+
   it("returns not-found errors for unknown detail ids", async () => {
     const api = createMockResourceApi();
 

@@ -340,6 +340,47 @@ export const createMockResourceApi = (
     return delay(cloneWardrobe(wardrobe));
   };
 
+  const deleteWardrobe = async (wardrobeId: string): Promise<void> => {
+    const wardrobeIndex = wardrobes.findIndex(
+      (entry) => entry.wardrobeId === wardrobeId,
+    );
+    if (wardrobeIndex < 0) {
+      throw notFound("WARDROBE_NOT_FOUND", "Wardrobe not found.");
+    }
+
+    const deletedItemIds = new Set(
+      items
+        .filter((item) => item.wardrobeId === wardrobeId)
+        .map((item) => item.itemId),
+    );
+
+    wardrobes.splice(wardrobeIndex, 1);
+
+    for (let itemIndex = items.length - 1; itemIndex >= 0; itemIndex -= 1) {
+      if (items[itemIndex]?.wardrobeId === wardrobeId) {
+        items.splice(itemIndex, 1);
+      }
+    }
+
+    for (let outfitIndex = outfits.length - 1; outfitIndex >= 0; outfitIndex -= 1) {
+      const outfit = outfits[outfitIndex];
+      if (!outfit) {
+        continue;
+      }
+
+      if (outfit.wardrobeId === wardrobeId) {
+        outfits.splice(outfitIndex, 1);
+        continue;
+      }
+
+      outfit.items = outfit.items.filter(
+        (entry) => !deletedItemIds.has(entry.itemId),
+      );
+    }
+
+    syncUsage();
+  };
+
   const listWardrobeItems = async (
     wardrobeId: string,
     options: ListWardrobeItemsOptions = {},
@@ -541,6 +582,7 @@ export const createMockResourceApi = (
     getWardrobe,
     createWardrobe,
     updateWardrobe,
+    deleteWardrobe,
     listWardrobeItems,
     getItem,
     createItem,
@@ -585,6 +627,7 @@ const rejectAll = (error: ApiError): ResourceApi => {
     getWardrobe: reject,
     createWardrobe: reject,
     updateWardrobe: reject,
+    deleteWardrobe: reject,
     listWardrobeItems: reject,
     getItem: reject,
     createItem: reject,

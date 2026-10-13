@@ -90,6 +90,7 @@ export type ResourceApi = {
     wardrobeId: string,
     body: UpdateWardrobeRequest,
   ) => Promise<Wardrobe>;
+  deleteWardrobe: (wardrobeId: string) => Promise<void>;
   listWardrobeItems: (
     wardrobeId: string,
     options?: ListWardrobeItemsOptions,
@@ -190,6 +191,12 @@ export const createLiveResourceApi = (api: AuthenticatedApi): ResourceApi => {
     });
   };
 
+  const deleteWardrobe = (wardrobeId: string): Promise<void> => {
+    return api.request<void>(getWardrobeApiPath(wardrobeId), {
+      method: "DELETE",
+    });
+  };
+
   const createItem = (
     wardrobeId: string,
     body: CreateItemRequest,
@@ -262,6 +269,7 @@ export const createLiveResourceApi = (api: AuthenticatedApi): ResourceApi => {
     getWardrobe,
     createWardrobe,
     updateWardrobe,
+    deleteWardrobe,
     listWardrobeItems,
     getItem,
     createItem,

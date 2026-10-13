@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { ApiError } from "../api/httpClient";
 import { renderWithProviders } from "../test/renderWithProviders";
+import { invalidateCatalogLists } from "./resourceQueryCache";
 import { useResourceQuery } from "./useResourceQuery";
 
 const QueryProbe = ({
@@ -54,6 +55,47 @@ describe("useResourceQuery", () => {
 
     await waitFor(() => {
       expect(screen.getByText("ready")).toBeInTheDocument();
+    });
+    expect(queryFn).toHaveBeenCalledTimes(2);
+  });
+
+  it("refetches a catalog list after cache invalidation", async () => {
+    const queryFn = vi
+      .fn()
+      .mockResolvedValueOnce("stale")
+      .mockResolvedValueOnce("fresh");
+
+    renderWithProviders(
+      <QueryProbe queryKey="wardrobes" queryFn={queryFn} />,
+      { auth: { user: { id: "user-1" } } },
+    );
+
+    expect(await screen.findByText("stale")).toBeInTheDocument();
+
+    invalidateCatalogLists();
+
+    await waitFor(() => {
+      expect(screen.getByText("fresh")).toBeInTheDocument();
+    });
+    expect(queryFn).toHaveBeenCalledTimes(2);
+  });
+
+  it("refetches entitlements after cache invalidation", async () => {
+    const queryFn = vi
+      .fn()
+      .mockResolvedValueOnce("used-2")
+      .mockResolvedValueOnce("used-1");
+
+    renderWithProviders(<QueryProbe queryKey="me" queryFn={queryFn} />, {
+      auth: { user: { id: "user-1" } },
+    });
+
+    expect(await screen.findByText("used-2")).toBeInTheDocument();
+
+    invalidateCatalogLists();
+
+    await waitFor(() => {
+      expect(screen.getByText("used-1")).toBeInTheDocument();
     });
     expect(queryFn).toHaveBeenCalledTimes(2);
   });
