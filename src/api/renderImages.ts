@@ -1,9 +1,14 @@
 /**
- * Single mapper for optional Virtual Try On image fields.
- * Backend may still rename a field; keep the fallback order here.
+ * Single mapper for optional Virtual Try On image fields on item and outfit
+ * responses (GET /items/{itemId}, nested item/outfit GETs and lists, GET /outfits).
  *
- * Order: renderImageUrls[], then renderHistory[].imageUrl, then render.imageUrl.
- * Newest first. Every field is optional.
+ * Confirmed fields, all optional:
+ * 1. renderImageUrls[] — signed URLs, already newest first
+ * 2. renderHistory[] — { imageUrl, createdAt }; sort by createdAt descending
+ *    only when falling back to this list
+ * 3. render.imageUrl — current render once READY
+ *
+ * Dedupes URLs across the three sources.
  */
 
 export type RenderImageHistoryEntry = {

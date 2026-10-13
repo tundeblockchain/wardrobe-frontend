@@ -6,6 +6,30 @@ import {
 } from "./renderImages";
 
 describe("mapRenderImageUrls", () => {
+  it("keeps renderImageUrls in the backend newest-first order", () => {
+    expect(
+      mapRenderImageUrls({
+        renderImageUrls: [
+          "https://cdn.example.com/newest.jpg",
+          "https://cdn.example.com/older.jpg",
+        ],
+        renderHistory: [
+          {
+            imageUrl: "https://cdn.example.com/older.jpg",
+            createdAt: "2026-10-12T18:00:00.000Z",
+          },
+          {
+            imageUrl: "https://cdn.example.com/newest.jpg",
+            createdAt: "2026-09-01T09:00:00.000Z",
+          },
+        ],
+      }),
+    ).toEqual([
+      "https://cdn.example.com/newest.jpg",
+      "https://cdn.example.com/older.jpg",
+    ]);
+  });
+
   it("uses renderImageUrls, then history, then render, and skips missing fields", () => {
     expect(mapRenderImageUrls({})).toEqual([]);
     expect(

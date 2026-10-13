@@ -101,7 +101,9 @@ export type ClothingItem = {
   processingStatus: ProcessingStatus;
   processingError?: string;
   render?: OutfitRender;
+  /** Successful try-ons. Soft-omitted. Entries may omit imageUrl. */
   renderHistory?: OutfitRenderHistoryEntry[];
+  /** Signed GET URLs, newest first when present. Soft-omitted. */
   renderImageUrls?: string[];
   createdAt: string;
   updatedAt: string;
@@ -123,7 +125,9 @@ export type Outfit = {
   name: string;
   items: OutfitItem[];
   render?: OutfitRender;
+  /** Successful try-ons. Soft-omitted. Entries may omit imageUrl. */
   renderHistory?: OutfitRenderHistoryEntry[];
+  /** Signed GET URLs, newest first when present. Soft-omitted. */
   renderImageUrls?: string[];
   createdAt: string;
   updatedAt: string;
