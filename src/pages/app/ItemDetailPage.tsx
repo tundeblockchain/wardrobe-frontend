@@ -131,9 +131,8 @@ const ItemDetailPhoto = ({
     >
       {!imageUrl || hasImageError ? (
         <Stack
-          alignItems="center"
           spacing={1}
-          sx={{ color: "text.secondary", px: 2 }}
+          sx={{ alignItems: "center", color: "text.secondary", px: 2 }}
           aria-label={`${alt} photo not available`}
         >
           <CheckroomOutlined aria-hidden="true" sx={{ fontSize: 40 }} />
