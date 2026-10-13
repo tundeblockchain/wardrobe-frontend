@@ -51,6 +51,18 @@ describe("createMockResourceApi", () => {
     expect(mockWardrobes[1]).not.toHaveProperty("imageUrl");
   });
 
+  it("deletes a clothing item from the nested wardrobe route", async () => {
+    const api = createMockResourceApi();
+
+    await expect(
+      api.deleteItem("wd_weekend01", "item_navytee01"),
+    ).resolves.toBeUndefined();
+    await expect(api.getItem("item_navytee01")).rejects.toMatchObject({
+      status: 404,
+      code: "ITEM_NOT_FOUND",
+    });
+  });
+
   it("returns not-found errors for unknown detail ids", async () => {
     const api = createMockResourceApi();
 

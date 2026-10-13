@@ -114,6 +114,7 @@ export type ResourceApi = {
     itemId: string,
     body: UpdateItemRequest,
   ) => Promise<ClothingItem>;
+  deleteItem: (wardrobeId: string, itemId: string) => Promise<void>;
   getWardrobeDetail: (wardrobeId: string) => Promise<WardrobeDetail>;
   listOutfits: () => Promise<OutfitList>;
   getOutfit: (wardrobeId: string, outfitId: string) => Promise<Outfit>;
@@ -251,6 +252,15 @@ export const createLiveResourceApi = (api: AuthenticatedApi): ResourceApi => {
         body,
       },
     );
+  };
+
+  const deleteItem = async (
+    wardrobeId: string,
+    itemId: string,
+  ): Promise<void> => {
+    await api.request<unknown>(getWardrobeItemApiPath(wardrobeId, itemId), {
+      method: "DELETE",
+    });
   };
 
   const listOutfits = (): Promise<OutfitList> => {
@@ -408,6 +418,7 @@ export const createLiveResourceApi = (api: AuthenticatedApi): ResourceApi => {
     getItem,
     createItem,
     updateItem,
+    deleteItem,
     getWardrobeDetail,
     listOutfits,
     getOutfit,

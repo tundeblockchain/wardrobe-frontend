@@ -5,6 +5,8 @@ import {
   getAiProfileTypeLabel,
   getClothingCategoryLabel,
   getColourLabel,
+  getColourSwatchHex,
+  getItemDisplayName,
   getItemImageUrl,
   getOutfitImageUrl,
   getProcessingStatusLabel,
@@ -29,6 +31,10 @@ describe("resource display helpers", () => {
   it("formats controlled tokens for display", () => {
     expect(getClothingCategoryLabel("OUTERWEAR")).toBe("Outerwear");
     expect(getColourLabel("MULTICOLOUR")).toBe("Multicolour");
+    expect(getColourSwatchHex("NAVY")).toBe("#1B365D");
+    expect(getColourSwatchHex("unknown")).toBe("#9E9E9E");
+    expect(getItemDisplayName({ name: "Navy tee" })).toBe("Navy tee");
+    expect(getItemDisplayName({ name: "  " })).toBe("Item");
     expect(getProcessingStatusLabel("PROCESSING")).toBe("Processing");
     expect(getAiProfileTypeLabel("PERSONAL")).toBe("Personal");
     expect(getAiProfileTypeLabel("GENERIC_MODEL")).toBe("Catalog");

@@ -95,6 +95,10 @@ export type ClothingItem = {
   colours?: string[];
   brand?: string;
   acquiredAt?: string;
+  season?: string;
+  notes?: string;
+  size?: string;
+  tags?: string[];
   image?: ClothingItemImage;
   originalImageUrl?: string;
   processedImageUrl?: string;

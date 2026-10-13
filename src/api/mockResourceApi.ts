@@ -206,6 +206,7 @@ const cloneItem = (item: ClothingItem): ClothingItem => {
   return {
     ...item,
     colours: item.colours ? [...item.colours] : undefined,
+    tags: item.tags ? [...item.tags] : undefined,
     image: item.image ? { ...item.image } : undefined,
   };
 };
@@ -507,6 +508,18 @@ export const createMockResourceApi = (
     }
     item.updatedAt = nowIso();
     return delay(cloneItem(item));
+  };
+
+  const deleteItem = async (wardrobeId: string, itemId: string) => {
+    const index = items.findIndex(
+      (entry) => entry.itemId === itemId && entry.wardrobeId === wardrobeId,
+    );
+    if (index < 0) {
+      throw notFound("ITEM_NOT_FOUND", "Clothing item not found.");
+    }
+
+    items.splice(index, 1);
+    syncUsage();
   };
 
   const getWardrobeDetail = async (wardrobeId: string) => {
@@ -834,6 +847,7 @@ export const createMockResourceApi = (
     getItem,
     createItem,
     updateItem,
+    deleteItem,
     getWardrobeDetail,
     listOutfits,
     getOutfit,
@@ -889,6 +903,7 @@ const rejectAll = (error: ApiError): ResourceApi => {
     getItem: reject,
     createItem: reject,
     updateItem: reject,
+    deleteItem: reject,
     getWardrobeDetail: reject,
     listOutfits: reject,
     getOutfit: reject,

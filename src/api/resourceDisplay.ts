@@ -31,6 +31,45 @@ export const getColourLabel = (colour: string): string => {
   return formatToken(colour);
 };
 
+const COLOUR_SWATCH_HEX: Record<string, string> = {
+  BEIGE: "#D8C3A5",
+  BLACK: "#1A1A1A",
+  BLUE: "#1565C0",
+  BROWN: "#6D4C41",
+  BURGUNDY: "#6D1B2B",
+  CREAM: "#F3E6C8",
+  GOLD: "#C9A227",
+  GREEN: "#2E7D32",
+  GREY: "#757575",
+  GRAY: "#757575",
+  KHAKI: "#BDB76B",
+  MULTICOLOUR: "#9E9E9E",
+  NAVY: "#1B365D",
+  OLIVE: "#6B8E23",
+  ORANGE: "#EF6C00",
+  PINK: "#EC407A",
+  PURPLE: "#7B1FA2",
+  RED: "#C62828",
+  SILVER: "#B0B0B0",
+  TEAL: "#00897B",
+  WHITE: "#F4F4F4",
+  YELLOW: "#F9A825",
+};
+
+export const getColourSwatchHex = (colour: string): string => {
+  const token = colour.trim().toUpperCase().replace(/\s+/g, "_");
+  return COLOUR_SWATCH_HEX[token] ?? "#9E9E9E";
+};
+
+export const getItemDisplayName = (item: { name?: string | null }): string => {
+  const name = item.name?.trim();
+  if (name) {
+    return name;
+  }
+
+  return "Item";
+};
+
 export const getProcessingStatusLabel = (status: ProcessingStatus): string => {
   return formatToken(status);
 };

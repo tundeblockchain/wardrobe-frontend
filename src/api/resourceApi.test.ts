@@ -179,6 +179,12 @@ describe("createLiveResourceApi", () => {
         return { ...item, name: "Updated tee" };
       }
       if (
+        path === getWardrobeItemApiPath("wd_1", "item_1") &&
+        options?.method === "DELETE"
+      ) {
+        return undefined;
+      }
+      if (
         path === getWardrobeOutfitsApiPath("wd_1") &&
         options?.method === "POST"
       ) {
@@ -217,6 +223,7 @@ describe("createLiveResourceApi", () => {
     await expect(
       api.updateItem("wd_1", "item_1", { name: "Updated tee" }),
     ).resolves.toMatchObject({ name: "Updated tee" });
+    await expect(api.deleteItem("wd_1", "item_1")).resolves.toBeUndefined();
     await expect(
       api.createOutfit("wd_1", {
         name: "New look",
@@ -247,6 +254,9 @@ describe("createLiveResourceApi", () => {
         category: "TOP",
         imageKey: "users/user-1/uploads/upl_1.jpg",
       },
+    });
+    expect(request).toHaveBeenCalledWith("/wardrobes/wd_1/items/item_1", {
+      method: "DELETE",
     });
     expect(request).toHaveBeenCalledWith("/uploads", {
       method: "POST",
