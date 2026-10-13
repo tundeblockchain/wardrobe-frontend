@@ -3,6 +3,7 @@ import type { ResourceApi } from "./resourceApi";
 import type {
   AiProfile,
   ClothingItem,
+  Entitlement,
   Outfit,
   Wardrobe,
 } from "./resourceTypes";
@@ -11,6 +12,25 @@ const ITEM_IMAGE = "/screenshots/item-detail-390.jpg";
 const OUTFIT_IMAGE = "/screenshots/try-on-ivory-maxi-390.jpg";
 const PROFILE_IMAGE = "/screenshots/try-on-blue-mini-390.jpg";
 const CATALOG_IMAGE = "/screenshots/try-on-rust-floral-390.jpg";
+
+export const mockEntitlement: Entitlement = {
+  userId: "user-1",
+  tier: "PREMIUM",
+  status: "ACTIVE",
+  features: {
+    unlimitedCatalog: true,
+    aiTryOn: true,
+    otherAi: true,
+  },
+  limits: null,
+  usage: {
+    wardrobes: 2,
+    items: 2,
+    outfits: 1,
+  },
+  store: "STRIPE",
+  updatedAt: "2026-10-01T09:12:00.000Z",
+};
 
 export const mockWardrobes: Wardrobe[] = [
   {
@@ -124,6 +144,10 @@ const delay = async <T>(value: T): Promise<T> => {
 export const createMockResourceApi = (
   overrides: MockResourceApiOverrides = {},
 ): ResourceApi => {
+  const getMe = async () => {
+    return delay(mockEntitlement);
+  };
+
   const listWardrobes = async () => {
     return delay({ wardrobes: mockWardrobes });
   };
@@ -152,22 +176,7 @@ export const createMockResourceApi = (
     });
   };
 
-  const getWardrobeItem = async (wardrobeId: string, itemId: string) => {
-    const item = mockItems.find(
-      (entry) => entry.wardrobeId === wardrobeId && entry.itemId === itemId,
-    );
-    if (!item) {
-      throw notFound("ITEM_NOT_FOUND", "Clothing item not found.");
-    }
-
-    return delay(item);
-  };
-
-  const getItem = async (itemId: string, wardrobeId?: string) => {
-    if (wardrobeId) {
-      return getWardrobeItem(wardrobeId, itemId);
-    }
-
+  const getItem = async (itemId: string) => {
     const item = mockItems.find((entry) => entry.itemId === itemId);
     if (!item) {
       throw notFound("ITEM_NOT_FOUND", "Clothing item not found.");
@@ -191,10 +200,10 @@ export const createMockResourceApi = (
   };
 
   return {
+    getMe,
     listWardrobes,
     getWardrobe,
     listWardrobeItems,
-    getWardrobeItem,
     getItem,
     getWardrobeDetail,
     listOutfits,
@@ -233,13 +242,23 @@ export const createErrorResourceApi = (
   };
 
   return {
+    getMe: reject,
     listWardrobes: reject,
     getWardrobe: reject,
     listWardrobeItems: reject,
-    getWardrobeItem: reject,
     getItem: reject,
     getWardrobeDetail: reject,
     listOutfits: reject,
     listAiProfiles: reject,
   };
+};
+
+export const createEntitlementAiRequiredResourceApi = (): ResourceApi => {
+  return createErrorResourceApi(
+    new ApiError({
+      status: 403,
+      code: "ENTITLEMENT_AI_REQUIRED",
+      message: "Premium is required for Virtual Profiles.",
+    }),
+  );
 };

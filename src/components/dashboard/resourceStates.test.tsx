@@ -5,6 +5,7 @@ import { renderWithProviders } from "../../test/renderWithProviders";
 import { ResourceEmptyState } from "./ResourceEmptyState";
 import { ResourceErrorState } from "./ResourceErrorState";
 import { ResourceLoadingState } from "./ResourceLoadingState";
+import { ResourceUpgradeState } from "./ResourceUpgradeState";
 
 describe("dashboard resource states", () => {
   it("renders a polite loading status", () => {
@@ -44,5 +45,26 @@ describe("dashboard resource states", () => {
       screen.getByRole("button", { name: "Try loading wardrobes again" }),
     );
     expect(handleRetry).toHaveBeenCalledTimes(1);
+  });
+
+  it("links to the plan from the upgrade state", () => {
+    renderWithProviders(
+      <ResourceUpgradeState
+        title="Virtual Try On is a Premium feature"
+        description="Upgrade to browse Virtual Profiles."
+        actionLabel="View plan"
+        actionTo="/app/plan"
+        actionAriaLabel="View plan for Virtual Try On"
+      />,
+    );
+
+    expect(
+      screen.getByRole("heading", {
+        name: "Virtual Try On is a Premium feature",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "View plan for Virtual Try On" }),
+    ).toHaveAttribute("href", "/app/plan");
   });
 });

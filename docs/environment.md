@@ -79,7 +79,7 @@ If `VITE_API_BASE_URL` is unset, authenticated calls fail closed as misconfigure
 
 `VITE_USE_MOCK_API` is a public boolean (default `false`). `true` and `1` (any case, surrounding whitespace ignored) are treated as enabled; every other value, including blank or unset, is disabled.
 
-Read it with `isMockApi()` from `src/config/mockApi.ts`. Keep the flag `false` in production. Live signed-in calls still go through `src/api` (`httpClient`, `authenticatedApi`, `useApi`) when the flag is off. Catalog reads (`src/api/resourceApi.ts`) use that same client. Types for those responses live in `src/api/resourceTypes.ts` so they can be adjusted when backend route shapes are confirmed.
+Read it with `isMockApi()` from `src/config/mockApi.ts`. Keep the flag `false` in production. Live signed-in calls still go through `src/api` (`httpClient`, `authenticatedApi`, `useApi`) when the flag is off. Catalog reads (`src/api/resourceApi.ts`) use that same client. Types for those responses live in `src/api/resourceTypes.ts` and match the WARDROBE-173 contract.
 
 ## Netlify notes
 

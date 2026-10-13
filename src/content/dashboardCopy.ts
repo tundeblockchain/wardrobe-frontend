@@ -57,5 +57,10 @@ export const dashboardCopy = {
     errorDescription:
       "Try again in a moment. Your Virtual Profiles were not changed.",
     retryLabel: "Try loading Virtual Profiles again",
+    upgradeTitle: "Virtual Try On is a Premium feature",
+    upgradeDescription:
+      "Upgrade to browse Virtual Profiles and preview looks with Virtual Try On.",
+    upgradeActionLabel: "View plan",
+    upgradeActionAriaLabel: "View plan for Virtual Try On",
   },
 } as const;

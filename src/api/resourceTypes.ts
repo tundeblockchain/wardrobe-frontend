@@ -1,8 +1,7 @@
 /**
- * Authenticated catalog DTOs inferred from wardrobe-backend handlers
- * (`src/functions/wardrobes|items|outfits|ai-profiles` and `src/shared/types.ts`).
- * WARDROBE-173 is confirming the public route shapes — keep this module as the
- * single place to adjust field names and wrappers.
+ * Authenticated catalog DTOs from the WARDROBE-173 contract
+ * (wardrobe-backend#71). Keep this module as the single place for field names
+ * and wrappers.
  */
 
 export const CLOTHING_CATEGORIES = [
@@ -126,7 +125,7 @@ export type Outfit = {
   updatedAt: string;
 };
 
-/** GET /wardrobes/{wardrobeId}/outfits — composed across wardrobes on the outfits page */
+/** GET /outfits and GET /wardrobes/{wardrobeId}/outfits */
 export type OutfitList = {
   outfits: Outfit[];
 };
@@ -154,7 +153,7 @@ export type AiProfile = {
   gender?: string;
 };
 
-/** GET /ai-profiles and GET /ai-profiles/models */
+/** GET /ai-profiles */
 export type AiProfileList = {
   aiProfiles: AiProfile[];
 };
@@ -163,3 +162,62 @@ export type WardrobeDetail = {
   wardrobe: Wardrobe;
   items: ClothingItem[];
 };
+
+export const SUBSCRIPTION_TIERS = ["FREE", "BASIC", "PREMIUM"] as const;
+export type SubscriptionTier = (typeof SUBSCRIPTION_TIERS)[number];
+
+export const ENTITLEMENT_STATUSES = [
+  "NONE",
+  "ACTIVE",
+  "CANCELED",
+  "BILLING_ISSUE",
+  "PAUSED",
+  "EXPIRED",
+] as const;
+export type EntitlementStatus = (typeof ENTITLEMENT_STATUSES)[number];
+
+export const ENTITLEMENT_STORES = [
+  "APP_STORE",
+  "PLAY_STORE",
+  "STRIPE",
+  "UNKNOWN",
+] as const;
+export type EntitlementStore = (typeof ENTITLEMENT_STORES)[number];
+
+export const ENTITLEMENT_PERIODS = ["MONTHLY", "YEARLY", "UNKNOWN"] as const;
+export type EntitlementPeriod = (typeof ENTITLEMENT_PERIODS)[number];
+
+export type EntitlementFeatures = {
+  unlimitedCatalog: boolean;
+  aiTryOn: boolean;
+  otherAi: boolean;
+};
+
+export type EntitlementLimits = {
+  wardrobes: number;
+  items: number;
+  outfits: number;
+};
+
+export type EntitlementUsage = {
+  wardrobes: number;
+  items: number;
+  outfits: number;
+};
+
+/** GET /me */
+export type Entitlement = {
+  userId: string;
+  tier: SubscriptionTier;
+  status: EntitlementStatus;
+  features: EntitlementFeatures;
+  limits: EntitlementLimits | null;
+  usage: EntitlementUsage;
+  productId?: string;
+  store?: EntitlementStore;
+  period?: EntitlementPeriod;
+  expiresAt?: string;
+  updatedAt: string;
+};
+
+export const ENTITLEMENT_AI_REQUIRED_CODE = "ENTITLEMENT_AI_REQUIRED";

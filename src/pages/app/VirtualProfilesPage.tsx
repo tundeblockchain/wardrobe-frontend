@@ -5,7 +5,10 @@ import {
   getAiProfileImageUrl,
   getAiProfileTypeLabel,
 } from "../../api/resourceDisplay";
-import type { ResourceApi } from "../../api/resourceApi";
+import {
+  isEntitlementAiRequiredError,
+  type ResourceApi,
+} from "../../api/resourceApi";
 import { useResourceApi } from "../../api/useResourceApi";
 import { DashboardPage } from "../../components/dashboard/DashboardPage";
 import { ResourceCard } from "../../components/dashboard/ResourceCard";
@@ -13,8 +16,10 @@ import { ResourceCardGrid } from "../../components/dashboard/ResourceCardGrid";
 import { ResourceEmptyState } from "../../components/dashboard/ResourceEmptyState";
 import { ResourceErrorState } from "../../components/dashboard/ResourceErrorState";
 import { ResourceLoadingState } from "../../components/dashboard/ResourceLoadingState";
+import { ResourceUpgradeState } from "../../components/dashboard/ResourceUpgradeState";
 import { dashboardCopy } from "../../content/dashboardCopy";
 import { useResourceQuery } from "../../hooks/useResourceQuery";
+import { appPaths } from "../../routes/paths";
 
 export type VirtualProfilesPageProps = {
   resourceApi?: ResourceApi;
@@ -41,6 +46,24 @@ export const VirtualProfilesPage = ({
   }
 
   if (query.status === "error") {
+    if (isEntitlementAiRequiredError(query.error)) {
+      return (
+        <DashboardPage
+          headingId="virtual-profiles-heading"
+          title={copy.title}
+          description={copy.description}
+        >
+          <ResourceUpgradeState
+            title={copy.upgradeTitle}
+            description={copy.upgradeDescription}
+            actionLabel={copy.upgradeActionLabel}
+            actionTo={appPaths.appPlan}
+            actionAriaLabel={copy.upgradeActionAriaLabel}
+          />
+        </DashboardPage>
+      );
+    }
+
     return (
       <DashboardPage
         headingId="virtual-profiles-heading"

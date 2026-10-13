@@ -2,18 +2,34 @@ import { describe, expect, it, vi } from "vitest";
 import type { AuthenticatedApi } from "./authenticatedApi";
 import { ApiError } from "./httpClient";
 import {
-  aiProfileModelsPath,
   aiProfilesPath,
   createLiveResourceApi,
   createResourceApi,
+  getItemApiPath,
   getWardrobeApiPath,
-  getWardrobeItemApiPath,
   getWardrobeItemsApiPath,
-  getWardrobeOutfitsApiPath,
+  isEntitlementAiRequiredError,
   isNotFoundError,
+  itemCollectionPath,
+  outfitCollectionPath,
   wardrobeCollectionPath,
 } from "./resourceApi";
-import type { AiProfile, ClothingItem, Outfit, Wardrobe } from "./resourceTypes";
+import type { ClothingItem, Entitlement, Outfit, Wardrobe } from "./resourceTypes";
+
+const entitlement: Entitlement = {
+  userId: "user-1",
+  tier: "PREMIUM",
+  status: "ACTIVE",
+  features: {
+    unlimitedCatalog: true,
+    aiTryOn: true,
+    otherAi: true,
+  },
+  limits: null,
+  usage: { wardrobes: 1, items: 1, outfits: 1 },
+  store: "STRIPE",
+  updatedAt: "2026-10-01T09:12:00.000Z",
+};
 
 const wardrobe: Wardrobe = {
   wardrobeId: "wd_1",
@@ -41,20 +57,13 @@ const outfit: Outfit = {
   updatedAt: "2026-09-20T14:00:00.000Z",
 };
 
-const profile: AiProfile = {
-  aiProfileId: "aip_1",
-  type: "PERSONAL",
-  referenceImages: [],
-  status: "READY",
-  createdAt: "2026-09-01T12:00:00.000Z",
-  updatedAt: "2026-09-01T12:00:00.000Z",
-  label: "Weekday look",
-};
-
-const createApi = (request: AuthenticatedApi["request"]): AuthenticatedApi => {
+const createApi = (
+  request: AuthenticatedApi["request"],
+  getMe: AuthenticatedApi["getMe"] = vi.fn(),
+): AuthenticatedApi => {
   return {
     request,
-    getMe: vi.fn(),
+    getMe,
   };
 };
 
@@ -63,7 +72,15 @@ const asRequest = (request: (path: string) => Promise<unknown>) => {
 };
 
 describe("createLiveResourceApi", () => {
-  it("calls the inferred wardrobe-backend list and detail routes", async () => {
+  it("reads GET /me entitlement through the authenticated client", async () => {
+    const getMe = vi.fn().mockResolvedValue(entitlement);
+    const api = createLiveResourceApi(createApi(vi.fn(), getMe));
+
+    await expect(api.getMe()).resolves.toEqual(entitlement);
+    expect(getMe).toHaveBeenCalledTimes(1);
+  });
+
+  it("calls GET /wardrobes and wardrobe detail plus items", async () => {
     const request = vi.fn(async (path: string) => {
       if (path === wardrobeCollectionPath) {
         return { wardrobes: [wardrobe] };
@@ -88,47 +105,23 @@ describe("createLiveResourceApi", () => {
     expect(request).toHaveBeenCalledWith("/wardrobes/wd_1/items");
   });
 
-  it("finds an item by scanning wardrobes when wardrobeId is omitted", async () => {
+  it("loads an item from GET /items/{itemId}", async () => {
     const request = vi.fn(async (path: string) => {
-      if (path === wardrobeCollectionPath) {
-        return { wardrobes: [wardrobe, { ...wardrobe, wardrobeId: "wd_2" }] };
-      }
-      if (path === getWardrobeItemApiPath("wd_1", "item_1")) {
-        throw new ApiError({ status: 404, code: "ITEM_NOT_FOUND" });
-      }
-      if (path === getWardrobeItemApiPath("wd_2", "item_1")) {
-        return { ...item, wardrobeId: "wd_2" };
-      }
-      throw new Error(`unexpected path ${path}`);
-    });
-    const api = createLiveResourceApi(createApi(asRequest(request)));
-
-    await expect(api.getItem("item_1")).resolves.toMatchObject({
-      itemId: "item_1",
-      wardrobeId: "wd_2",
-    });
-  });
-
-  it("uses the nested item route when wardrobeId is provided", async () => {
-    const request = vi.fn(async (path: string) => {
-      if (path === getWardrobeItemApiPath("wd_1", "item_1")) {
+      if (path === getItemApiPath("item_1")) {
         return item;
       }
       throw new Error(`unexpected path ${path}`);
     });
     const api = createLiveResourceApi(createApi(asRequest(request)));
 
-    await expect(api.getItem("item_1", "wd_1")).resolves.toEqual(item);
+    await expect(api.getItem("item_1")).resolves.toEqual(item);
     expect(request).toHaveBeenCalledTimes(1);
-    expect(request).toHaveBeenCalledWith("/wardrobes/wd_1/items/item_1");
+    expect(request).toHaveBeenCalledWith("/items/item_1");
   });
 
-  it("composes outfits from each wardrobe", async () => {
+  it("lists outfits from GET /outfits", async () => {
     const request = vi.fn(async (path: string) => {
-      if (path === wardrobeCollectionPath) {
-        return { wardrobes: [wardrobe] };
-      }
-      if (path === getWardrobeOutfitsApiPath("wd_1")) {
+      if (path === outfitCollectionPath) {
         return { outfits: [outfit] };
       }
       throw new Error(`unexpected path ${path}`);
@@ -136,38 +129,33 @@ describe("createLiveResourceApi", () => {
     const api = createLiveResourceApi(createApi(asRequest(request)));
 
     await expect(api.listOutfits()).resolves.toEqual({ outfits: [outfit] });
+    expect(request).toHaveBeenCalledWith("/outfits");
   });
 
-  it("merges personal and catalog Virtual Profiles when one source fails", async () => {
-    const catalog: AiProfile = {
-      ...profile,
-      aiProfileId: "aip_model",
-      type: "GENERIC_MODEL",
-      label: "Catalog model",
-    };
+  it("lists Virtual Profiles from GET /ai-profiles", async () => {
     const request = vi.fn(async (path: string) => {
       if (path === aiProfilesPath) {
-        throw new ApiError({ status: 403, code: "PREMIUM_REQUIRED" });
-      }
-      if (path === aiProfileModelsPath) {
-        return { aiProfiles: [catalog] };
+        return { aiProfiles: [] };
       }
       throw new Error(`unexpected path ${path}`);
     });
     const api = createLiveResourceApi(createApi(asRequest(request)));
 
-    await expect(api.listAiProfiles()).resolves.toEqual({
-      aiProfiles: [catalog],
-    });
+    await expect(api.listAiProfiles()).resolves.toEqual({ aiProfiles: [] });
+    expect(request).toHaveBeenCalledWith("/ai-profiles");
   });
 
-  it("throws when both Virtual Profile sources fail", async () => {
+  it("surfaces 404 from GET /items/{itemId} for another user's item", async () => {
     const request = vi.fn(async () => {
-      throw new ApiError({ status: 500, code: "INTERNAL" });
+      throw new ApiError({ status: 404, code: "ITEM_NOT_FOUND" });
     });
     const api = createLiveResourceApi(createApi(asRequest(request)));
 
-    await expect(api.listAiProfiles()).rejects.toMatchObject({ status: 500 });
+    await expect(api.getItem("item_other")).rejects.toMatchObject({
+      status: 404,
+      code: "ITEM_NOT_FOUND",
+    });
+    expect(request).toHaveBeenCalledWith(`${itemCollectionPath}/item_other`);
   });
 });
 
@@ -190,7 +178,7 @@ describe("createResourceApi", () => {
   });
 });
 
-describe("isNotFoundError", () => {
+describe("error helpers", () => {
   it("treats 404 and known not-found codes as missing resources", () => {
     expect(isNotFoundError(new ApiError({ status: 404 }))).toBe(true);
     expect(
@@ -198,5 +186,22 @@ describe("isNotFoundError", () => {
     ).toBe(true);
     expect(isNotFoundError(new ApiError({ status: 500 }))).toBe(false);
     expect(isNotFoundError(new Error("no"))).toBe(false);
+  });
+
+  it("detects the Premium Virtual Profile entitlement error", () => {
+    expect(
+      isEntitlementAiRequiredError(
+        new ApiError({
+          status: 403,
+          code: "ENTITLEMENT_AI_REQUIRED",
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      isEntitlementAiRequiredError(new ApiError({ status: 403, code: "FORBIDDEN" })),
+    ).toBe(false);
+    expect(isEntitlementAiRequiredError(new ApiError({ status: 500 }))).toBe(
+      false,
+    );
   });
 });

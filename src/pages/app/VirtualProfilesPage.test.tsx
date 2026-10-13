@@ -2,9 +2,11 @@ import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import {
   createEmptyResourceApi,
+  createEntitlementAiRequiredResourceApi,
   createErrorResourceApi,
   createMockResourceApi,
 } from "../../api/mockResourceApi";
+import { appPaths } from "../../routes/paths";
 import { renderWithProviders } from "../../test/renderWithProviders";
 import { VirtualProfilesPage } from "./VirtualProfilesPage";
 
@@ -74,5 +76,26 @@ describe("VirtualProfilesPage", () => {
         name: "Couldn't load Virtual Profiles",
       }),
     ).toBeInTheDocument();
+  });
+
+  it("renders an upgrade prompt for 403 ENTITLEMENT_AI_REQUIRED", async () => {
+    renderPage(createEntitlementAiRequiredResourceApi());
+
+    expect(
+      await screen.findByRole("heading", {
+        name: "Virtual Try On is a Premium feature",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /Upgrade to browse Virtual Profiles and preview looks with Virtual Try On/,
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "View plan for Virtual Try On" }),
+    ).toHaveAttribute("href", appPaths.appPlan);
+    expect(
+      screen.queryByRole("heading", { name: "Couldn't load Virtual Profiles" }),
+    ).not.toBeInTheDocument();
   });
 });

@@ -2,8 +2,10 @@ import { describe, expect, it } from "vitest";
 import { ApiError } from "./httpClient";
 import {
   createEmptyResourceApi,
+  createEntitlementAiRequiredResourceApi,
   createErrorResourceApi,
   createMockResourceApi,
+  mockEntitlement,
   mockItems,
   mockWardrobes,
 } from "./mockResourceApi";
@@ -12,6 +14,7 @@ describe("createMockResourceApi", () => {
   it("returns fixture wardrobes, items, outfits, and Virtual Profiles", async () => {
     const api = createMockResourceApi();
 
+    await expect(api.getMe()).resolves.toEqual(mockEntitlement);
     await expect(api.listWardrobes()).resolves.toEqual({
       wardrobes: mockWardrobes,
     });
@@ -50,5 +53,11 @@ describe("createMockResourceApi", () => {
     await expect(createErrorResourceApi().listOutfits()).rejects.toBeInstanceOf(
       ApiError,
     );
+    await expect(
+      createEntitlementAiRequiredResourceApi().listAiProfiles(),
+    ).rejects.toMatchObject({
+      status: 403,
+      code: "ENTITLEMENT_AI_REQUIRED",
+    });
   });
 });

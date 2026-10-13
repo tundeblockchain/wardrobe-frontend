@@ -2,20 +2,22 @@ import { isMockApi } from "../config/mockApi";
 import type { AuthenticatedApi } from "./authenticatedApi";
 import { ApiError, isApiError } from "./httpClient";
 import { createMockResourceApi } from "./mockResourceApi";
-import type {
-  AiProfile,
-  AiProfileList,
-  ClothingItem,
-  ClothingItemList,
-  OutfitList,
-  Wardrobe,
-  WardrobeDetail,
-  WardrobeList,
+import {
+  ENTITLEMENT_AI_REQUIRED_CODE,
+  type AiProfileList,
+  type ClothingItem,
+  type ClothingItemList,
+  type Entitlement,
+  type OutfitList,
+  type Wardrobe,
+  type WardrobeDetail,
+  type WardrobeList,
 } from "./resourceTypes";
 
 export const wardrobeCollectionPath = "/wardrobes";
+export const itemCollectionPath = "/items";
+export const outfitCollectionPath = "/outfits";
 export const aiProfilesPath = "/ai-profiles";
-export const aiProfileModelsPath = "/ai-profiles/models";
 
 export const getWardrobeApiPath = (wardrobeId: string): string => {
   return `${wardrobeCollectionPath}/${encodeURIComponent(wardrobeId)}`;
@@ -25,26 +27,16 @@ export const getWardrobeItemsApiPath = (wardrobeId: string): string => {
   return `${getWardrobeApiPath(wardrobeId)}/items`;
 };
 
-export const getWardrobeItemApiPath = (
-  wardrobeId: string,
-  itemId: string,
-): string => {
-  return `${getWardrobeItemsApiPath(wardrobeId)}/${encodeURIComponent(itemId)}`;
-};
-
-export const getWardrobeOutfitsApiPath = (wardrobeId: string): string => {
-  return `${getWardrobeApiPath(wardrobeId)}/outfits`;
+export const getItemApiPath = (itemId: string): string => {
+  return `${itemCollectionPath}/${encodeURIComponent(itemId)}`;
 };
 
 export type ResourceApi = {
+  getMe: () => Promise<Entitlement>;
   listWardrobes: () => Promise<WardrobeList>;
   getWardrobe: (wardrobeId: string) => Promise<Wardrobe>;
   listWardrobeItems: (wardrobeId: string) => Promise<ClothingItemList>;
-  getWardrobeItem: (
-    wardrobeId: string,
-    itemId: string,
-  ) => Promise<ClothingItem>;
-  getItem: (itemId: string, wardrobeId?: string) => Promise<ClothingItem>;
+  getItem: (itemId: string) => Promise<ClothingItem>;
   getWardrobeDetail: (wardrobeId: string) => Promise<WardrobeDetail>;
   listOutfits: () => Promise<OutfitList>;
   listAiProfiles: () => Promise<AiProfileList>;
@@ -58,37 +50,11 @@ const itemNotFoundError = (): ApiError => {
   });
 };
 
-const isNotFoundStatus = (error: unknown): boolean => {
-  return isApiError(error) && error.status === 404;
-};
-
-const uniqueAiProfiles = (profiles: AiProfile[]): AiProfile[] => {
-  const seen = new Set<string>();
-  const unique: AiProfile[] = [];
-
-  profiles.forEach((profile) => {
-    if (seen.has(profile.aiProfileId)) {
-      return;
-    }
-
-    seen.add(profile.aiProfileId);
-    unique.push(profile);
-  });
-
-  return unique;
-};
-
-const readSettledProfiles = (
-  result: PromiseSettledResult<AiProfileList>,
-): { profiles?: AiProfile[]; error?: unknown } => {
-  if (result.status === "fulfilled") {
-    return { profiles: result.value.aiProfiles };
-  }
-
-  return { error: result.reason };
-};
-
 export const createLiveResourceApi = (api: AuthenticatedApi): ResourceApi => {
+  const getMe = (): Promise<Entitlement> => {
+    return api.getMe();
+  };
+
   const listWardrobes = (): Promise<WardrobeList> => {
     return api.request<WardrobeList>(wardrobeCollectionPath);
   };
@@ -101,50 +67,13 @@ export const createLiveResourceApi = (api: AuthenticatedApi): ResourceApi => {
     return api.request<ClothingItemList>(getWardrobeItemsApiPath(wardrobeId));
   };
 
-  const getWardrobeItem = (
-    wardrobeId: string,
-    itemId: string,
-  ): Promise<ClothingItem> => {
-    return api.request<ClothingItem>(
-      getWardrobeItemApiPath(wardrobeId, itemId),
-    );
-  };
-
-  const getItem = async (
-    itemId: string,
-    wardrobeId?: string,
-  ): Promise<ClothingItem> => {
+  const getItem = (itemId: string): Promise<ClothingItem> => {
     const trimmedItemId = itemId.trim();
     if (!trimmedItemId) {
-      throw itemNotFoundError();
+      return Promise.reject(itemNotFoundError());
     }
 
-    const trimmedWardrobeId = wardrobeId?.trim();
-    if (trimmedWardrobeId) {
-      return getWardrobeItem(trimmedWardrobeId, trimmedItemId);
-    }
-
-    const { wardrobes } = await listWardrobes();
-    const lookups = await Promise.all(
-      wardrobes.map(async (wardrobe) => {
-        try {
-          return await getWardrobeItem(wardrobe.wardrobeId, trimmedItemId);
-        } catch (error) {
-          if (isNotFoundStatus(error)) {
-            return undefined;
-          }
-
-          throw error;
-        }
-      }),
-    );
-
-    const found = lookups.find((item): item is ClothingItem => item !== undefined);
-    if (!found) {
-      throw itemNotFoundError();
-    }
-
-    return found;
+    return api.request<ClothingItem>(getItemApiPath(trimmedItemId));
   };
 
   const getWardrobeDetail = async (
@@ -161,44 +90,19 @@ export const createLiveResourceApi = (api: AuthenticatedApi): ResourceApi => {
     };
   };
 
-  const listOutfits = async (): Promise<OutfitList> => {
-    const { wardrobes } = await listWardrobes();
-    const outfitLists = await Promise.all(
-      wardrobes.map((wardrobe) =>
-        api.request<OutfitList>(getWardrobeOutfitsApiPath(wardrobe.wardrobeId)),
-      ),
-    );
-
-    const outfits = outfitLists.flatMap((list) => list.outfits);
-    return { outfits };
+  const listOutfits = (): Promise<OutfitList> => {
+    return api.request<OutfitList>(outfitCollectionPath);
   };
 
-  const listAiProfiles = async (): Promise<AiProfileList> => {
-    const [personalResult, catalogResult] = await Promise.allSettled([
-      api.request<AiProfileList>(aiProfilesPath),
-      api.request<AiProfileList>(aiProfileModelsPath),
-    ]);
-
-    const personal = readSettledProfiles(personalResult);
-    const catalog = readSettledProfiles(catalogResult);
-
-    if (personal.profiles === undefined && catalog.profiles === undefined) {
-      throw personal.error ?? catalog.error;
-    }
-
-    return {
-      aiProfiles: uniqueAiProfiles([
-        ...(personal.profiles ?? []),
-        ...(catalog.profiles ?? []),
-      ]),
-    };
+  const listAiProfiles = (): Promise<AiProfileList> => {
+    return api.request<AiProfileList>(aiProfilesPath);
   };
 
   return {
+    getMe,
     listWardrobes,
     getWardrobe,
     listWardrobeItems,
-    getWardrobeItem,
     getItem,
     getWardrobeDetail,
     listOutfits,
@@ -231,5 +135,15 @@ export const isNotFoundError = (error: unknown): error is ApiError => {
     error.code === "ITEM_NOT_FOUND" ||
     error.code === "OUTFIT_NOT_FOUND" ||
     error.code === "AI_PROFILE_NOT_FOUND"
+  );
+};
+
+export const isEntitlementAiRequiredError = (
+  error: unknown,
+): error is ApiError => {
+  return (
+    isApiError(error) &&
+    error.status === 403 &&
+    error.code === ENTITLEMENT_AI_REQUIRED_CODE
   );
 };

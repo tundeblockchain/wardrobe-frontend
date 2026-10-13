@@ -56,10 +56,10 @@ export const ItemDetailPage = ({
   const defaultResourceApi = useResourceApi();
   const resourceApi = resourceApiProp ?? defaultResourceApi;
   const copy = dashboardCopy.itemDetail;
-  const queryKey = `item:${itemId}:${wardrobeId ?? ""}`;
+  const queryKey = `item:${itemId}`;
   const loadItem = useMemo(
-    () => () => resourceApi.getItem(itemId, wardrobeId),
-    [itemId, resourceApi, wardrobeId],
+    () => () => resourceApi.getItem(itemId),
+    [itemId, resourceApi],
   );
   const query = useResourceQuery(queryKey, loadItem);
 

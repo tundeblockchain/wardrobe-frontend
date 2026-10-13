@@ -1,6 +1,7 @@
 import { screen } from "@testing-library/react";
 import { Route, Routes } from "react-router-dom";
 import { describe, expect, it } from "vitest";
+import { ApiError } from "../../api/httpClient";
 import {
   createErrorResourceApi,
   createMockResourceApi,
@@ -60,12 +61,26 @@ describe("ItemDetailPage", () => {
     );
   });
 
-  it("renders a not-found state for an unknown item", async () => {
-    renderPage(getAppItemPath("item_missing"), createMockResourceApi());
+  it("renders a not-found state for an unknown or other-user item", async () => {
+    renderPage(
+      getAppItemPath("item_other"),
+      createMockResourceApi({
+        getItem: async () => {
+          throw new ApiError({
+            status: 404,
+            code: "ITEM_NOT_FOUND",
+            message: "Clothing item not found.",
+          });
+        },
+      }),
+    );
 
     expect(
       await screen.findByRole("heading", { level: 1, name: "Item not found" }),
     ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: "Couldn't load this item" }),
+    ).not.toBeInTheDocument();
   });
 
   it("renders an error state", async () => {

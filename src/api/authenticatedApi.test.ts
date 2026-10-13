@@ -5,11 +5,22 @@ import { isApiError } from "./httpClient";
 const API_BASE_URL = "https://api.example.com";
 
 const meBody = {
-  uid: "user-1",
-  email: "ada@example.com",
-  plan: "pro",
-  entitlement: "closet.pro",
+  userId: "user-1",
+  tier: "PREMIUM",
+  status: "ACTIVE",
+  features: {
+    unlimitedCatalog: true,
+    aiTryOn: true,
+    otherAi: true,
+  },
+  limits: null,
+  usage: {
+    wardrobes: 2,
+    items: 5,
+    outfits: 1,
+  },
   store: "STRIPE",
+  updatedAt: "2026-10-01T09:12:00.000Z",
 };
 
 const createJsonResponse = ({
