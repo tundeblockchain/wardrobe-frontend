@@ -1,3 +1,6 @@
+import { isApiError, joinApiUrl } from "./httpClient";
+import { publicRequest } from "./publicApi";
+
 export const CONTACT_NAME_MAX = 100;
 export const CONTACT_EMAIL_MAX = 254;
 export const CONTACT_SUBJECT_MAX = 200;
@@ -57,7 +60,7 @@ const CONTACT_FIELD_NAMES: ContactFieldName[] = [
 ];
 
 export const getSupportContactUrl = (apiBaseUrl: string): string => {
-  return `${apiBaseUrl}/support/contact`;
+  return joinApiUrl(apiBaseUrl, "/support/contact");
 };
 
 export const buildContactRequestBody = (
@@ -145,74 +148,22 @@ export const formatRateLimitedMessage = (
   return `You've sent too many messages. Please try again in about ${minutes} ${unit}.`;
 };
 
-const readErrorRecord = (
-  value: unknown,
-): { code?: string; message?: string } => {
-  if (!value || typeof value !== "object") {
-    return {};
-  }
-
-  const record = value as { error?: unknown };
-  if (!record.error || typeof record.error !== "object") {
-    return {};
-  }
-
-  const errorRecord = record.error as { code?: unknown; message?: unknown };
-  return {
-    code: typeof errorRecord.code === "string" ? errorRecord.code : undefined,
-    message:
-      typeof errorRecord.message === "string" ? errorRecord.message : undefined,
-  };
-};
-
-const parseBackendError = async (
-  response: Response,
-): Promise<{ code?: string; message?: string }> => {
-  try {
-    const payload: unknown = await response.json();
-    return readErrorRecord(payload);
-  } catch {
-    return {};
-  }
-};
-
-const parseOptionalSuccessId = async (
-  response: Response,
-): Promise<string | undefined> => {
-  try {
-    const payload: unknown = await response.json();
-    if (!payload || typeof payload !== "object") {
-      return undefined;
-    }
-
-    const id = (payload as { id?: unknown }).id;
-    if (typeof id !== "string") {
-      return undefined;
-    }
-
-    const trimmedId = id.trim();
-    if (trimmedId.length === 0) {
-      return undefined;
-    }
-
-    return trimmedId;
-  } catch {
-    return undefined;
-  }
-};
-
-const parseRetryAfterSeconds = (response: Response): number | undefined => {
-  const rawValue = response.headers.get("Retry-After");
-  if (!rawValue) {
+const readOptionalSuccessId = (payload: unknown): string | undefined => {
+  if (!payload || typeof payload !== "object") {
     return undefined;
   }
 
-  const seconds = Number.parseInt(rawValue.trim(), 10);
-  if (!Number.isFinite(seconds) || seconds < 0) {
+  const id = (payload as { id?: unknown }).id;
+  if (typeof id !== "string") {
     return undefined;
   }
 
-  return seconds;
+  const trimmedId = id.trim();
+  if (trimmedId.length === 0) {
+    return undefined;
+  }
+
+  return trimmedId;
 };
 
 export const sendContactMessage = async ({
@@ -225,50 +176,47 @@ export const sendContactMessage = async ({
   }
 
   try {
-    const response = await fetchImpl(getSupportContactUrl(apiBaseUrl), {
+    const payload = await publicRequest<unknown>("/support/contact", {
       method: "POST",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
+      baseUrl: apiBaseUrl,
       credentials: "omit",
-      body: JSON.stringify(buildContactRequestBody(fields)),
+      body: buildContactRequestBody(fields),
+      fetchImpl,
     });
 
-    if (response.status === 202) {
-      const id = await parseOptionalSuccessId(response);
-      if (id) {
-        return { status: "success", id };
-      }
-
-      return { status: "success" };
+    const id = readOptionalSuccessId(payload);
+    if (id) {
+      return { status: "success", id };
     }
 
-    if (response.status === 403) {
+    return { status: "success" };
+  } catch (error) {
+    if (!isApiError(error)) {
+      return { status: "error", message: CONTACT_STATUS_MESSAGES.generic };
+    }
+
+    if (error.status === 403) {
       return {
         status: "error",
         message: CONTACT_STATUS_MESSAGES.originNotAllowed,
       };
     }
 
-    if (response.status === 429) {
+    if (error.status === 429) {
       return {
         status: "rateLimited",
-        retryAfterSeconds: parseRetryAfterSeconds(response),
+        retryAfterSeconds: error.retryAfterSeconds,
       };
     }
 
-    const backendError = await parseBackendError(response);
-    if (backendError.code === "VALIDATION_ERROR" || response.status === 400) {
+    if (error.code === "VALIDATION_ERROR" || error.status === 400) {
       return {
         status: "validation",
         message: CONTACT_STATUS_MESSAGES.validation,
-        fieldErrors: mapValidationFieldErrors(backendError.message),
+        fieldErrors: mapValidationFieldErrors(error.message),
       };
     }
 
-    return { status: "error", message: CONTACT_STATUS_MESSAGES.generic };
-  } catch {
     return { status: "error", message: CONTACT_STATUS_MESSAGES.generic };
   }
 };
