@@ -3,6 +3,7 @@ import {
   appPaths,
   getAppPath,
   getLoginPath,
+  getPostLoginRedirectPath,
   getSafeInternalPath,
   getSharePath,
   isAppPath,
@@ -78,5 +79,13 @@ describe("login and app paths", () => {
     expect(getSafeInternalPath("https://example.com")).toBeUndefined();
     expect(getSafeInternalPath("//example.com")).toBeUndefined();
     expect(getSafeInternalPath("login")).toBeUndefined();
+  });
+
+  it("redirects to next or router state after sign-in and defaults to /app", () => {
+    expect(getPostLoginRedirectPath("/app/x")).toBe("/app/x");
+    expect(getPostLoginRedirectPath(null, "/app/looks")).toBe("/app/looks");
+    expect(getPostLoginRedirectPath("/login", "/app/x")).toBe("/app/x");
+    expect(getPostLoginRedirectPath("https://example.com")).toBe("/app");
+    expect(getPostLoginRedirectPath()).toBe("/app");
   });
 });

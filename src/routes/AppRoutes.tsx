@@ -7,7 +7,6 @@ import { PrivacyPolicyPage } from "../pages/PrivacyPolicyPage";
 import { SharePreviewPage } from "../pages/SharePreviewPage";
 import { TermsOfServicePage } from "../pages/TermsOfServicePage";
 import { appPaths } from "./paths";
-import { ProtectedRoute } from "./ProtectedRoute";
 import { RouteFallback } from "./RouteFallback";
 
 const LoginPage = lazy(async () => {
@@ -41,11 +40,9 @@ export const AppRoutes = () => {
       <Route
         path={`${appPaths.app}/*`}
         element={
-          <ProtectedRoute>
-            <Suspense fallback={<RouteFallback />}>
-              <AppArea />
-            </Suspense>
-          </ProtectedRoute>
+          <Suspense fallback={<RouteFallback />}>
+            <AppArea />
+          </Suspense>
         }
       />
     </Routes>

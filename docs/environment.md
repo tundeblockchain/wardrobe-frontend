@@ -19,6 +19,12 @@ Never commit secrets, tokens, or private keys.
 | `VITE_META_PIXEL_ID` | No | Meta Pixel ID. The pixel is injected only when this value is a numeric ID. | `000000000000000` |
 | `VITE_LEGAL_CONTACT_EMAIL` | No | Public operator contact email shown on Terms of Service and Privacy Policy. Empty values show a store-listing contact fallback. | `legal@example.com` |
 | `VITE_LEGAL_CONTACT_URL` | No | Optional public operator contact page shown on Terms of Service and Privacy Policy. | `https://example.com/contact` |
+| `VITE_FIREBASE_API_KEY` | For `/login` and `/app` sign-in | Public Firebase web API key for the same project as the mobile app | |
+| `VITE_FIREBASE_AUTH_DOMAIN` | For `/login` and `/app` sign-in | Public Firebase Auth domain | `example.firebaseapp.com` |
+| `VITE_FIREBASE_PROJECT_ID` | For `/login` and `/app` sign-in | Firebase project ID | `example` |
+| `VITE_FIREBASE_STORAGE_BUCKET` | For `/login` and `/app` sign-in | Firebase storage bucket | `example.appspot.com` |
+| `VITE_FIREBASE_MESSAGING_SENDER_ID` | For `/login` and `/app` sign-in | Firebase messaging sender ID | `000000000000` |
+| `VITE_FIREBASE_APP_ID` | For `/login` and `/app` sign-in | Firebase web app ID | `1:000000000000:web:example` |
 
 Empty or whitespace-only values are treated as unset by `getPublicAppEnv()`.
 
@@ -49,6 +55,18 @@ The backend must allowlist this site’s origin(s) via `SUPPORT_CONTACT_ALLOWED_
 - Netlify deploy-preview origins, using the deploy-preview pattern (for example `https://deploy-preview-*--<site>.netlify.app`)
 
 This frontend never calls an email provider. Delivery is owned by the backend.
+
+## Firebase console setup
+
+Use the same Firebase project as the mobile app so a user who signed up there signs in on the web with the same uid. These values are public web config only. Do not put Firebase Admin keys or other secrets in this repo or in Netlify as private server keys for the frontend.
+
+- Enable the Google provider
+- Enable the Apple provider (requires an Apple Services ID, Team ID, Key ID and private key configured in Firebase)
+- Enable the Email/Password provider
+- Add the Netlify site domain and any custom domain to Authentication > Settings > Authorized domains
+- Set the `VITE_FIREBASE_*` env vars in Netlify
+
+Landing, legal, and contact pages do not initialize Firebase. The SDK loads only from the `/login` and `/app` route chunks.
 
 ## Netlify notes
 

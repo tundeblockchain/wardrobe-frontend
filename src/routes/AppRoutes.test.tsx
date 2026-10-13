@@ -1,5 +1,6 @@
 import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { getApps } from "firebase/app";
 import { useLocation } from "react-router-dom";
 import { describe, expect, it } from "vitest";
 import { renderWithProviders } from "../test/renderWithProviders";
@@ -27,6 +28,21 @@ const renderAppRoutes = (
 };
 
 describe("AppRoutes", () => {
+  it("renders public pages without auth and without initialising Firebase", () => {
+    const publicRoutes = [
+      appPaths.home,
+      appPaths.terms,
+      appPaths.privacy,
+      appPaths.contact,
+    ];
+
+    publicRoutes.forEach((route) => {
+      const { unmount } = renderAppRoutes(route);
+      expect(getApps()).toHaveLength(0);
+      unmount();
+    });
+  });
+
   it("renders the landing page at / without auth", () => {
     renderAppRoutes(appPaths.home);
 
@@ -41,6 +57,7 @@ describe("AppRoutes", () => {
     expect(
       screen.getByRole("navigation", { name: "Legal" }),
     ).toBeInTheDocument();
+    expect(getApps()).toHaveLength(0);
   });
 
   it("renders Terms of Service at /terms", () => {
@@ -52,6 +69,7 @@ describe("AppRoutes", () => {
     expect(
       screen.getByRole("heading", { name: "Acceptable use" }),
     ).toBeInTheDocument();
+    expect(getApps()).toHaveLength(0);
   });
 
   it("renders Contact us at /contact", () => {
@@ -63,6 +81,7 @@ describe("AppRoutes", () => {
     expect(
       screen.getByRole("form", { name: "Contact form" }),
     ).toBeInTheDocument();
+    expect(getApps()).toHaveLength(0);
   });
 
   it("renders Privacy Policy at /privacy", () => {
@@ -74,13 +93,17 @@ describe("AppRoutes", () => {
     expect(
       screen.getByRole("heading", { name: "Children’s privacy" }),
     ).toBeInTheDocument();
+    expect(getApps()).toHaveLength(0);
   });
 
-  it("renders the public login placeholder at /login without auth", async () => {
+  it("renders the public login page at /login without auth", async () => {
     renderAppRoutes(appPaths.login);
 
     expect(
       await screen.findByRole("heading", { level: 1, name: "Sign in" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Continue with Google" }),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("navigation", { name: "Primary" }),

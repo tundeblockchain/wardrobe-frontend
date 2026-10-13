@@ -89,3 +89,29 @@ export const getSafeInternalPath = (
 
   return value;
 };
+
+const getPathnameFromInternalPath = (value: string): string => {
+  const pathname = value.split(/[?#]/, 1)[0] ?? value;
+  return stripTrailingSlash(pathname);
+};
+
+export const getPostLoginRedirectPath = (
+  nextParam?: string | null,
+  fromPath?: string | null,
+): string => {
+  const candidates = [nextParam, fromPath];
+  for (const candidate of candidates) {
+    const safePath = getSafeInternalPath(candidate);
+    if (!safePath) {
+      continue;
+    }
+
+    if (getPathnameFromInternalPath(safePath) === appPaths.login) {
+      continue;
+    }
+
+    return safePath;
+  }
+
+  return appPaths.app;
+};
