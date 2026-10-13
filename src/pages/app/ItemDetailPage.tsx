@@ -19,6 +19,7 @@ import { ResourceLoadingState } from "../../components/dashboard/ResourceLoading
 import { dashboardCopy } from "../../content/dashboardCopy";
 import { useResourceQuery } from "../../hooks/useResourceQuery";
 import {
+  getAppItemEditPath,
   getAppWardrobePath,
   WARDROBE_ID_QUERY_PARAM,
 } from "../../routes/paths";
@@ -137,16 +138,28 @@ export const ItemDetailPage = ({
       title={item.name}
       description={copy.description}
       actions={
-        <Button
-          component={RouterLink}
-          to={wardrobePath}
-          variant="text"
-          color="secondary"
-          tabIndex={0}
-          aria-label="Back to wardrobe"
-        >
-          Back to wardrobe
-        </Button>
+        <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: "wrap" }}>
+          <Button
+            component={RouterLink}
+            to={wardrobePath}
+            variant="text"
+            color="secondary"
+            tabIndex={0}
+            aria-label="Back to wardrobe"
+          >
+            Back to wardrobe
+          </Button>
+          <Button
+            component={RouterLink}
+            to={getAppItemEditPath(item.itemId, item.wardrobeId)}
+            variant="contained"
+            color="primary"
+            tabIndex={0}
+            aria-label={copy.editAriaLabel}
+          >
+            {copy.editLabel}
+          </Button>
+        </Stack>
       }
     >
       <Paper

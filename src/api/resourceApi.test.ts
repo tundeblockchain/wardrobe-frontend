@@ -7,13 +7,18 @@ import {
   createResourceApi,
   getItemApiPath,
   getWardrobeApiPath,
+  getWardrobeItemApiPath,
   getWardrobeItemsApiPath,
+  getWardrobeOutfitApiPath,
+  getWardrobeOutfitsApiPath,
   isEntitlementAiRequiredError,
   isNotFoundError,
   itemCollectionPath,
   outfitCollectionPath,
+  uploadsPath,
   wardrobeCollectionPath,
 } from "./resourceApi";
+import { isCatalogLimitError } from "./catalogLimits";
 import type { ClothingItem, Entitlement, Outfit, Wardrobe } from "./resourceTypes";
 
 const entitlement: Entitlement = {
@@ -67,7 +72,9 @@ const createApi = (
   };
 };
 
-const asRequest = (request: (path: string) => Promise<unknown>) => {
+const asRequest = (
+  request: (path: string, options?: { method?: string; body?: unknown }) => Promise<unknown>,
+) => {
   return request as AuthenticatedApi["request"];
 };
 
@@ -130,6 +137,103 @@ describe("createLiveResourceApi", () => {
 
     await expect(api.listOutfits()).resolves.toEqual({ outfits: [outfit] });
     expect(request).toHaveBeenCalledWith("/outfits");
+  });
+
+  it("creates and edits catalog resources on the nested write routes", async () => {
+    const request = vi.fn(async (path: string, options?: { method?: string; body?: unknown }) => {
+      if (path === wardrobeCollectionPath && options?.method === "POST") {
+        return { ...wardrobe, name: "New closet" };
+      }
+      if (path === getWardrobeApiPath("wd_1") && options?.method === "PATCH") {
+        return { ...wardrobe, name: "Updated closet" };
+      }
+      if (path === getWardrobeItemsApiPath("wd_1") && options?.method === "POST") {
+        return { ...item, name: "New tee" };
+      }
+      if (
+        path === getWardrobeItemApiPath("wd_1", "item_1") &&
+        options?.method === "PATCH"
+      ) {
+        return { ...item, name: "Updated tee" };
+      }
+      if (
+        path === getWardrobeOutfitsApiPath("wd_1") &&
+        options?.method === "POST"
+      ) {
+        return { ...outfit, name: "New look" };
+      }
+      if (
+        path === getWardrobeOutfitApiPath("wd_1", "outfit_1") &&
+        options?.method === "PATCH"
+      ) {
+        return { ...outfit, name: "Updated look" };
+      }
+      if (path === uploadsPath && options?.method === "POST") {
+        return {
+          uploadUrl: "https://uploads.example.com/presigned/jpg",
+          objectKey: "users/user-1/uploads/upl_1.jpg",
+          expiresIn: 900,
+        };
+      }
+      throw new Error(`unexpected ${options?.method} ${path}`);
+    });
+    const api = createLiveResourceApi(createApi(asRequest(request)));
+
+    await expect(api.createWardrobe({ name: "New closet" })).resolves.toMatchObject({
+      name: "New closet",
+    });
+    await expect(
+      api.updateWardrobe("wd_1", { name: "Updated closet" }),
+    ).resolves.toMatchObject({ name: "Updated closet" });
+    await expect(
+      api.createItem("wd_1", {
+        name: "New tee",
+        category: "TOP",
+        imageKey: "users/user-1/uploads/upl_1.jpg",
+      }),
+    ).resolves.toMatchObject({ name: "New tee" });
+    await expect(
+      api.updateItem("wd_1", "item_1", { name: "Updated tee" }),
+    ).resolves.toMatchObject({ name: "Updated tee" });
+    await expect(
+      api.createOutfit("wd_1", {
+        name: "New look",
+        items: [{ itemId: "item_1", slot: "TOP" }],
+      }),
+    ).resolves.toMatchObject({ name: "New look" });
+    await expect(
+      api.updateOutfit("wd_1", "outfit_1", { name: "Updated look" }),
+    ).resolves.toMatchObject({ name: "Updated look" });
+    await expect(
+      api.createUpload({
+        contentType: "image/jpeg",
+        purpose: "WARDROBE_ITEM",
+        contentLength: 12,
+      }),
+    ).resolves.toMatchObject({
+      objectKey: "users/user-1/uploads/upl_1.jpg",
+    });
+
+    expect(request).toHaveBeenCalledWith("/wardrobes", {
+      method: "POST",
+      body: { name: "New closet" },
+    });
+    expect(request).toHaveBeenCalledWith("/wardrobes/wd_1/items", {
+      method: "POST",
+      body: {
+        name: "New tee",
+        category: "TOP",
+        imageKey: "users/user-1/uploads/upl_1.jpg",
+      },
+    });
+    expect(request).toHaveBeenCalledWith("/uploads", {
+      method: "POST",
+      body: {
+        contentType: "image/jpeg",
+        purpose: "WARDROBE_ITEM",
+        contentLength: 12,
+      },
+    });
   });
 
   it("lists Virtual Profiles from GET /ai-profiles", async () => {
@@ -203,5 +307,10 @@ describe("error helpers", () => {
     expect(isEntitlementAiRequiredError(new ApiError({ status: 500 }))).toBe(
       false,
     );
+    expect(
+      isCatalogLimitError(
+        new ApiError({ status: 403, code: "ENTITLEMENT_ITEM_LIMIT" }),
+      ),
+    ).toBe(true);
   });
 });

@@ -5,6 +5,7 @@ import { renderWithProviders } from "../../test/renderWithProviders";
 import { ResourceEmptyState } from "./ResourceEmptyState";
 import { ResourceErrorState } from "./ResourceErrorState";
 import { ResourceLoadingState } from "./ResourceLoadingState";
+import { CatalogLimitPrompt } from "./CatalogLimitPrompt";
 import { ResourceUpgradeState } from "./ResourceUpgradeState";
 
 describe("dashboard resource states", () => {
@@ -65,6 +66,17 @@ describe("dashboard resource states", () => {
     ).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: "View plan for Virtual Try On" }),
+    ).toHaveAttribute("href", "/app/plan");
+  });
+
+  it("links catalog limit prompts to Plan", () => {
+    renderWithProviders(<CatalogLimitPrompt kind="wardrobe" />);
+
+    expect(
+      screen.getByRole("heading", { name: "Wardrobe limit reached" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "View plan to add more wardrobes" }),
     ).toHaveAttribute("href", "/app/plan");
   });
 });

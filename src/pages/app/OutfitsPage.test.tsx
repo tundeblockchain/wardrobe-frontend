@@ -39,6 +39,15 @@ describe("OutfitsPage", () => {
       screen.getByRole("heading", { name: "Sunday brunch" }),
     ).toBeInTheDocument();
     expect(screen.getByText("2 items")).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Add an outfit" }),
+    ).toHaveAttribute("href", "/app/outfits/new");
+    expect(
+      screen.getByRole("link", { name: "Edit outfit Sunday brunch" }),
+    ).toHaveAttribute(
+      "href",
+      "/app/outfits/outfit_brunch01/edit?wardrobeId=wd_weekend01",
+    );
     expect(screen.getByRole("img", { name: "Sunday brunch" })).toHaveAttribute(
       "src",
       "/screenshots/try-on-ivory-maxi-390.jpg",

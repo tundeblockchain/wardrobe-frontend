@@ -1,5 +1,6 @@
 import StyleOutlined from "@mui/icons-material/StyleOutlined";
-import { Box } from "@mui/material";
+import { Box, Button } from "@mui/material";
+import { Link as RouterLink } from "react-router-dom";
 import { getOutfitImageUrl } from "../../api/resourceDisplay";
 import type { ResourceApi } from "../../api/resourceApi";
 import { useResourceApi } from "../../api/useResourceApi";
@@ -11,6 +12,7 @@ import { ResourceErrorState } from "../../components/dashboard/ResourceErrorStat
 import { ResourceLoadingState } from "../../components/dashboard/ResourceLoadingState";
 import { dashboardCopy } from "../../content/dashboardCopy";
 import { useResourceQuery } from "../../hooks/useResourceQuery";
+import { appPaths, getAppOutfitEditPath } from "../../routes/paths";
 
 export type OutfitsPageProps = {
   resourceApi?: ResourceApi;
@@ -31,6 +33,18 @@ export const OutfitsPage = ({
   const resourceApi = resourceApiProp ?? defaultResourceApi;
   const copy = dashboardCopy.outfits;
   const query = useResourceQuery("outfits", resourceApi.listOutfits);
+  const addAction = (
+    <Button
+      component={RouterLink}
+      to={appPaths.appOutfitNew}
+      variant="contained"
+      color="primary"
+      tabIndex={0}
+      aria-label={copy.addAriaLabel}
+    >
+      {copy.addLabel}
+    </Button>
+  );
 
   if (query.status === "loading") {
     return (
@@ -72,6 +86,7 @@ export const OutfitsPage = ({
           title={copy.emptyTitle}
           description={copy.emptyDescription}
         />
+        {addAction}
       </DashboardPage>
     );
   }
@@ -81,6 +96,7 @@ export const OutfitsPage = ({
       headingId="outfits-heading"
       title={copy.title}
       description={copy.description}
+      actions={addAction}
     >
       <ResourceCardGrid label="Outfits">
         {query.data.outfits.map((outfit) => {
@@ -96,7 +112,21 @@ export const OutfitsPage = ({
                 FallbackIcon={StyleOutlined}
                 chips={[getOutfitItemCountLabel(outfit.items.length)]}
                 description="Saved look from this wardrobe."
-              />
+              >
+                <Button
+                  component={RouterLink}
+                  to={getAppOutfitEditPath(outfit.outfitId, outfit.wardrobeId)}
+                  variant="outlined"
+                  color="secondary"
+                  tabIndex={0}
+                  aria-label={`${copy.editLabel} ${outfit.name}`}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                  }}
+                >
+                  {copy.editLabel}
+                </Button>
+              </ResourceCard>
             </Box>
           );
         })}

@@ -9,9 +9,15 @@ export const appPaths = {
   login: "/login",
   app: APP_BASE_PATH,
   appWardrobes: `${APP_BASE_PATH}/wardrobes`,
+  appWardrobeNew: `${APP_BASE_PATH}/wardrobes/new`,
   appWardrobe: `${APP_BASE_PATH}/wardrobes/:id`,
+  appWardrobeEdit: `${APP_BASE_PATH}/wardrobes/:id/edit`,
+  appWardrobeItemNew: `${APP_BASE_PATH}/wardrobes/:id/items/new`,
   appItem: `${APP_BASE_PATH}/items/:id`,
+  appItemEdit: `${APP_BASE_PATH}/items/:id/edit`,
   appOutfits: `${APP_BASE_PATH}/outfits`,
+  appOutfitNew: `${APP_BASE_PATH}/outfits/new`,
+  appOutfitEdit: `${APP_BASE_PATH}/outfits/:id/edit`,
   appVirtualProfiles: `${APP_BASE_PATH}/virtual-profiles`,
   appPlan: `${APP_BASE_PATH}/plan`,
 } as const;
@@ -58,11 +64,15 @@ export const getAppWardrobePath = (wardrobeId: string): string => {
   return `${appPaths.appWardrobes}/${encodeURIComponent(wardrobeId)}`;
 };
 
-export const getAppItemPath = (
-  itemId: string,
-  wardrobeId?: string,
-): string => {
-  const path = `${APP_BASE_PATH}/items/${encodeURIComponent(itemId)}`;
+export const getAppWardrobeEditPath = (wardrobeId: string): string => {
+  return `${getAppWardrobePath(wardrobeId)}/edit`;
+};
+
+export const getAppItemNewPath = (wardrobeId: string): string => {
+  return `${getAppWardrobePath(wardrobeId)}/items/new`;
+};
+
+const withWardrobeIdQuery = (path: string, wardrobeId?: string): string => {
   const trimmedWardrobeId = wardrobeId?.trim();
   if (!trimmedWardrobeId) {
     return path;
@@ -72,6 +82,40 @@ export const getAppItemPath = (
     [WARDROBE_ID_QUERY_PARAM]: trimmedWardrobeId,
   });
   return `${path}?${searchParams.toString()}`;
+};
+
+export const getAppItemPath = (
+  itemId: string,
+  wardrobeId?: string,
+): string => {
+  return withWardrobeIdQuery(
+    `${APP_BASE_PATH}/items/${encodeURIComponent(itemId)}`,
+    wardrobeId,
+  );
+};
+
+export const getAppItemEditPath = (
+  itemId: string,
+  wardrobeId?: string,
+): string => {
+  return withWardrobeIdQuery(
+    `${APP_BASE_PATH}/items/${encodeURIComponent(itemId)}/edit`,
+    wardrobeId,
+  );
+};
+
+export const getAppOutfitNewPath = (wardrobeId?: string): string => {
+  return withWardrobeIdQuery(appPaths.appOutfitNew, wardrobeId);
+};
+
+export const getAppOutfitEditPath = (
+  outfitId: string,
+  wardrobeId?: string,
+): string => {
+  return withWardrobeIdQuery(
+    `${appPaths.appOutfits}/${encodeURIComponent(outfitId)}/edit`,
+    wardrobeId,
+  );
 };
 
 export const getAppPath = (subPath = ""): string => {
