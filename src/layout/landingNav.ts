@@ -58,7 +58,4 @@ export const legalNavLinks: RouteNavLink[] = [
   },
 ];
 
-export const primaryNavLinks: AppNavLink[] = [
-  ...landingNavLinks,
-  ...legalNavLinks,
-];
+export const primaryNavLinks: AppNavLink[] = [...landingNavLinks];

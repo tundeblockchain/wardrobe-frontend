@@ -11,9 +11,10 @@ const getHeaderAccountNav = () => {
 };
 
 describe("AppHeader", () => {
-  it("renders the brand home link, section navigation, and legal links", () => {
+  it("renders the brand home link and section navigation without legal links", () => {
     renderWithProviders(<AppHeader />);
 
+    const header = screen.getByRole("banner");
     expect(
       screen.getByRole("link", { name: "Pocket Closet home" }),
     ).toHaveAttribute("href", appPaths.home);
@@ -28,18 +29,15 @@ describe("AppHeader", () => {
       "href",
       "/#download",
     );
-    expect(screen.getByRole("link", { name: "Terms of Service" })).toHaveAttribute(
-      "href",
-      appPaths.terms,
-    );
-    expect(screen.getByRole("link", { name: "Privacy Policy" })).toHaveAttribute(
-      "href",
-      appPaths.privacy,
-    );
-    expect(screen.getByRole("link", { name: "Contact us" })).toHaveAttribute(
-      "href",
-      appPaths.contact,
-    );
+    expect(
+      within(header).queryByRole("link", { name: "Terms of Service" }),
+    ).not.toBeInTheDocument();
+    expect(
+      within(header).queryByRole("link", { name: "Privacy Policy" }),
+    ).not.toBeInTheDocument();
+    expect(
+      within(header).queryByRole("link", { name: "Contact us" }),
+    ).not.toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: "Pocket Closet home" }).querySelector("img"),
     ).toHaveAttribute("src", "/logo.png");
@@ -95,6 +93,15 @@ describe("AppHeader", () => {
     ).toHaveAttribute("href", getLoginSignupPath());
     expect(
       within(mobileMenu).queryByRole("link", { name: "Dashboard" }),
+    ).not.toBeInTheDocument();
+    expect(
+      within(mobileMenu).queryByRole("link", { name: "Terms of Service" }),
+    ).not.toBeInTheDocument();
+    expect(
+      within(mobileMenu).queryByRole("link", { name: "Privacy Policy" }),
+    ).not.toBeInTheDocument();
+    expect(
+      within(mobileMenu).queryByRole("link", { name: "Contact us" }),
     ).not.toBeInTheDocument();
   });
 

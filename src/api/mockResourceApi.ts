@@ -24,6 +24,9 @@ const ITEM_IMAGE = "/screenshots/item-detail-390.jpg";
 const OUTFIT_IMAGE = "/screenshots/try-on-ivory-maxi-390.jpg";
 const PROFILE_IMAGE = "/screenshots/try-on-blue-mini-390.jpg";
 const CATALOG_IMAGE = "/screenshots/try-on-rust-floral-390.jpg";
+export const WEEKEND_WARDROBE_IMAGE_URL = "/screenshots/home-390.jpg";
+export const WORKWEAR_WARDROBE_COVER_IMAGE_URL =
+  "/screenshots/item-detail-390.jpg";
 
 export const mockEntitlement: Entitlement = {
   userId: "user-1",
@@ -72,12 +75,14 @@ export const mockWardrobes: Wardrobe[] = [
     name: "Weekend closet",
     createdAt: "2026-09-03T18:35:00.000Z",
     updatedAt: "2026-10-01T09:12:00.000Z",
+    imageUrl: WEEKEND_WARDROBE_IMAGE_URL,
   },
   {
     wardrobeId: "wd_work02",
     name: "Workwear",
     createdAt: "2026-09-12T11:00:00.000Z",
     updatedAt: "2026-09-28T16:44:00.000Z",
+    coverImageUrl: WORKWEAR_WARDROBE_COVER_IMAGE_URL,
   },
 ];
 

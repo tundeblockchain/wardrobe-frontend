@@ -9,6 +9,8 @@ import {
   mockEntitlement,
   mockItems,
   mockWardrobes,
+  WEEKEND_WARDROBE_IMAGE_URL,
+  WORKWEAR_WARDROBE_COVER_IMAGE_URL,
 } from "./mockResourceApi";
 
 describe("createMockResourceApi", () => {
@@ -32,6 +34,18 @@ describe("createMockResourceApi", () => {
     await expect(api.listAiProfiles()).resolves.toMatchObject({
       aiProfiles: [{ label: "Weekday look" }, { label: "Catalog model" }],
     });
+    expect(mockWardrobes[0]).toEqual(
+      expect.objectContaining({
+        imageUrl: WEEKEND_WARDROBE_IMAGE_URL,
+      }),
+    );
+    expect(mockWardrobes[0]).not.toHaveProperty("coverImageUrl");
+    expect(mockWardrobes[1]).toEqual(
+      expect.objectContaining({
+        coverImageUrl: WORKWEAR_WARDROBE_COVER_IMAGE_URL,
+      }),
+    );
+    expect(mockWardrobes[1]).not.toHaveProperty("imageUrl");
   });
 
   it("returns not-found errors for unknown detail ids", async () => {

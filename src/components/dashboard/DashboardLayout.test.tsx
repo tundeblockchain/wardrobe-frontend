@@ -192,4 +192,33 @@ describe("DashboardLayout", () => {
       screen.queryByRole("navigation", { name: "App" }),
     ).not.toBeInTheDocument();
   });
+
+  it("places main content flush with the sidebar", () => {
+    renderDashboard();
+
+    expect(screen.getByTestId("dashboard-content")).toHaveStyle({
+      marginLeft: "0px",
+    });
+  });
+
+  it("keeps Terms, Privacy, and Contact in the dashboard footer", () => {
+    renderDashboard();
+
+    const footer = screen.getByRole("contentinfo");
+    const legalNav = within(footer).getByRole("navigation", { name: "Legal" });
+    expect(
+      within(legalNav).getByRole("link", { name: "Terms of Service" }),
+    ).toHaveAttribute("href", appPaths.terms);
+    expect(
+      within(legalNav).getByRole("link", { name: "Privacy Policy" }),
+    ).toHaveAttribute("href", appPaths.privacy);
+    expect(
+      within(legalNav).getByRole("link", { name: "Contact us" }),
+    ).toHaveAttribute("href", appPaths.contact);
+    expect(
+      within(screen.getByRole("banner")).queryByRole("link", {
+        name: "Terms of Service",
+      }),
+    ).not.toBeInTheDocument();
+  });
 });

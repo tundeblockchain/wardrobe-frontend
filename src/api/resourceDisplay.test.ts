@@ -8,8 +8,9 @@ import {
   getItemImageUrl,
   getOutfitImageUrl,
   getProcessingStatusLabel,
+  getWardrobeImageUrl,
 } from "./resourceDisplay";
-import type { AiProfile, ClothingItem, Outfit } from "./resourceTypes";
+import type { AiProfile, ClothingItem, Outfit, Wardrobe } from "./resourceTypes";
 
 const item = (overrides: Partial<ClothingItem> = {}): ClothingItem => {
   return {
@@ -78,5 +79,33 @@ describe("resource display helpers", () => {
     expect(getAiProfileDisplayName({ ...profile, label: "Weekday look" })).toBe(
       "Weekday look",
     );
+  });
+
+  it("prefers a wardrobe image, then coverImageUrl, then no image", () => {
+    const wardrobe = (overrides: Partial<Wardrobe> = {}): Wardrobe => {
+      return {
+        wardrobeId: "wd_1",
+        name: "Weekend closet",
+        createdAt: "2026-09-03T18:35:00.000Z",
+        updatedAt: "2026-09-03T18:35:00.000Z",
+        ...overrides,
+      };
+    };
+
+    expect(
+      getWardrobeImageUrl(
+        wardrobe({
+          imageUrl: "https://cdn.example.com/wardrobe.jpg",
+          coverImageUrl: "https://cdn.example.com/cover.jpg",
+        }),
+      ),
+    ).toBe("https://cdn.example.com/wardrobe.jpg");
+    expect(
+      getWardrobeImageUrl(
+        wardrobe({ coverImageUrl: "https://cdn.example.com/cover.jpg" }),
+      ),
+    ).toBe("https://cdn.example.com/cover.jpg");
+    expect(getWardrobeImageUrl(wardrobe({ coverImageUrl: "  " }))).toBeUndefined();
+    expect(getWardrobeImageUrl(wardrobe())).toBeUndefined();
   });
 });

@@ -6,6 +6,7 @@ import type {
   ClothingItem,
   Outfit,
   ProcessingStatus,
+  Wardrobe,
 } from "./resourceTypes";
 
 const formatToken = (value: string): string => {
@@ -56,6 +57,19 @@ export const getAiProfileDisplayName = (profile: AiProfile): string => {
 
 export const getItemImageUrl = (item: ClothingItem): string | undefined => {
   return item.processedImageUrl ?? item.originalImageUrl;
+};
+
+const readOptionalUrl = (value: string | undefined): string | undefined => {
+  const trimmed = value?.trim();
+  if (!trimmed) {
+    return undefined;
+  }
+
+  return trimmed;
+};
+
+export const getWardrobeImageUrl = (wardrobe: Wardrobe): string | undefined => {
+  return readOptionalUrl(wardrobe.imageUrl) ?? readOptionalUrl(wardrobe.coverImageUrl);
 };
 
 export const getOutfitImageUrl = (outfit: Outfit): string | undefined => {

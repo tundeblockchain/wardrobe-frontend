@@ -1,17 +1,15 @@
-import CheckroomOutlined from "@mui/icons-material/CheckroomOutlined";
-import { Box, Button } from "@mui/material";
+import { Button } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 import { DashboardPage } from "../../components/dashboard/DashboardPage";
-import { ResourceCard } from "../../components/dashboard/ResourceCard";
-import { ResourceCardGrid } from "../../components/dashboard/ResourceCardGrid";
 import { ResourceEmptyState } from "../../components/dashboard/ResourceEmptyState";
 import { ResourceErrorState } from "../../components/dashboard/ResourceErrorState";
 import { ResourceLoadingState } from "../../components/dashboard/ResourceLoadingState";
+import { WardrobeCardGrid } from "../../components/dashboard/WardrobeCardGrid";
 import { useResourceApi } from "../../api/useResourceApi";
 import type { ResourceApi } from "../../api/resourceApi";
 import { dashboardCopy } from "../../content/dashboardCopy";
 import { useResourceQuery } from "../../hooks/useResourceQuery";
-import { appPaths, getAppWardrobePath } from "../../routes/paths";
+import { appPaths } from "../../routes/paths";
 
 export type WardrobesPageProps = {
   resourceApi?: ResourceApi;
@@ -89,24 +87,7 @@ export const WardrobesPage = ({
       description={copy.description}
       actions={addAction}
     >
-      <ResourceCardGrid label="Wardrobes">
-        {query.data.wardrobes.map((wardrobe) => {
-          const titleId = `wardrobe-${wardrobe.wardrobeId}-title`;
-          return (
-            <Box key={wardrobe.wardrobeId} component="li" sx={{ minWidth: 0 }}>
-              <ResourceCard
-                to={getAppWardrobePath(wardrobe.wardrobeId)}
-                title={wardrobe.name}
-                titleId={titleId}
-                imageAlt={wardrobe.name}
-                fallbackLabel="No photo for this wardrobe"
-                FallbackIcon={CheckroomOutlined}
-                description="Open this wardrobe to see its clothing items."
-              />
-            </Box>
-          );
-        })}
-      </ResourceCardGrid>
+      <WardrobeCardGrid wardrobes={query.data.wardrobes} />
     </DashboardPage>
   );
 };

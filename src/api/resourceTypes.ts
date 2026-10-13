@@ -54,6 +54,10 @@ export type Wardrobe = {
   name: string;
   createdAt: string;
   updatedAt: string;
+  /** Wardrobe photo when the API includes one. Preferred over coverImageUrl. */
+  imageUrl?: string;
+  /** Optional signed read URL from GET /wardrobes. Use as img src; do not fetch(). */
+  coverImageUrl?: string;
 };
 
 /** GET /wardrobes */

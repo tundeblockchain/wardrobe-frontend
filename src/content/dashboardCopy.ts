@@ -22,6 +22,17 @@ export const dashboardCopy = {
       actionAriaLabel: "View plan to add more outfits",
     },
   },
+  home: {
+    title: "Your closet",
+    description: "Open a wardrobe to browse its clothing items.",
+    loadingLabel: "Loading wardrobes",
+    emptyTitle: "No wardrobes yet",
+    emptyDescription: "Add a wardrobe to start organizing clothing items.",
+    errorTitle: "Couldn't load wardrobes",
+    errorDescription:
+      "Try again in a moment. Your collections were not changed.",
+    retryLabel: "Try loading wardrobes again",
+  },
   wardrobes: {
     title: "Wardrobes",
     description:
