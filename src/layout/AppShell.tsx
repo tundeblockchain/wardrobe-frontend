@@ -5,6 +5,7 @@ import { SkipLink } from "../components/SkipLink";
 import { AppFooter } from "./AppFooter";
 import { AppHeader } from "./AppHeader";
 import { AppMain } from "./AppMain";
+import { PublicAuthListener } from "./PublicAuthListener";
 
 type AppShellProps = PropsWithChildren;
 
@@ -22,6 +23,7 @@ export const AppShell = ({ children }: AppShellProps) => {
       }}
     >
       <SkipLink targetId="main-content" />
+      <PublicAuthListener />
       <AppHeader />
       <AppMain>{children ?? <Outlet />}</AppMain>
       <AppFooter />

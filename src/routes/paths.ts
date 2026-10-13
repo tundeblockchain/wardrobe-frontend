@@ -17,6 +17,8 @@ export const appPaths = {
 export type AppPath = (typeof appPaths)[keyof typeof appPaths];
 
 export const LOGIN_NEXT_QUERY_PARAM = "next";
+export const LOGIN_MODE_QUERY_PARAM = "mode";
+export const LOGIN_SIGNUP_MODE = "signup";
 
 const SHARE_PATH_PATTERN = /^\/share\/([^/]+)$/;
 
@@ -70,14 +72,27 @@ export const isAppPath = (pathname: string): boolean => {
   );
 };
 
-export const getLoginPath = (nextPath?: string): string => {
-  if (!nextPath) {
-    return appPaths.login;
+export const getLoginPath = (nextPath?: string, mode?: string): string => {
+  const searchParams = new URLSearchParams();
+  if (nextPath) {
+    searchParams.set(LOGIN_NEXT_QUERY_PARAM, nextPath);
+  }
+  if (mode) {
+    searchParams.set(LOGIN_MODE_QUERY_PARAM, mode);
   }
 
-  const searchParams = new URLSearchParams();
-  searchParams.set(LOGIN_NEXT_QUERY_PARAM, nextPath);
-  return `${appPaths.login}?${searchParams.toString()}`;
+  const query = searchParams.toString();
+  return query ? `${appPaths.login}?${query}` : appPaths.login;
+};
+
+export const getLoginSignupPath = (nextPath?: string): string => {
+  return getLoginPath(nextPath, LOGIN_SIGNUP_MODE);
+};
+
+export const isLoginSignupMode = (
+  mode: string | null | undefined,
+): boolean => {
+  return mode === LOGIN_SIGNUP_MODE;
 };
 
 export const getSafeInternalPath = (

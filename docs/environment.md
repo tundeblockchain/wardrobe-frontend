@@ -67,7 +67,7 @@ Use the same Firebase project as the mobile app so a user who signed up there si
 - Add the Netlify site domain and any custom domain to Authentication > Settings > Authorized domains
 - Set the `VITE_FIREBASE_*` env vars in Netlify
 
-Landing, legal, and contact pages do not initialize Firebase. The SDK loads only from the `/login` and `/app` route chunks.
+The landing header resolves auth lazily after mount so a signed-in visitor sees Dashboard instead of Log in and Sign up. Firebase stays out of the landing entry chunk. The SDK loads from a later async chunk when auth is resolved, and from the `/login` and `/app` route chunks.
 
 ## Authenticated API
 

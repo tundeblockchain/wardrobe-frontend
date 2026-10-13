@@ -1,9 +1,36 @@
 import { useEffect } from "react";
-import { onAuthStateChanged } from "firebase/auth";
 import { hasFirebaseWebConfig } from "../config/env";
-import { getFirebaseAuth } from "../firebase/config";
-import { mapFirebaseUser } from "./mapFirebaseUser";
+import type { AuthController } from "./authContext";
 import { useAuthController } from "./useAuth";
+
+type AuthSessionController = Pick<AuthController, "setAuthLoading" | "setAuthUser">;
+
+const loadFirebaseAuth = () => import("firebase/auth");
+const loadFirebaseConfig = () => import("../firebase/config");
+const loadMapFirebaseUser = () => import("./mapFirebaseUser");
+
+export const subscribeToFirebaseAuth = async (
+  controller: AuthSessionController,
+): Promise<() => void> => {
+  if (!hasFirebaseWebConfig()) {
+    controller.setAuthUser(null);
+    controller.setAuthLoading(false);
+    return () => undefined;
+  }
+
+  controller.setAuthLoading(true);
+  const [{ onAuthStateChanged }, { getFirebaseAuth }, { mapFirebaseUser }] =
+    await Promise.all([
+      loadFirebaseAuth(),
+      loadFirebaseConfig(),
+      loadMapFirebaseUser(),
+    ]);
+
+  return onAuthStateChanged(getFirebaseAuth(), (firebaseUser) => {
+    controller.setAuthUser(firebaseUser ? mapFirebaseUser(firebaseUser) : null);
+    controller.setAuthLoading(false);
+  });
+};
 
 export const useFirebaseAuthListener = () => {
   const { isControlled, setAuthLoading, setAuthUser } = useAuthController();
@@ -13,18 +40,26 @@ export const useFirebaseAuthListener = () => {
       return;
     }
 
-    if (!hasFirebaseWebConfig()) {
-      setAuthUser(null);
-      setAuthLoading(false);
-      return;
-    }
+    let cancelled = false;
+    let unsubscribe: (() => void) | undefined;
 
-    setAuthLoading(true);
-    const unsubscribe = onAuthStateChanged(getFirebaseAuth(), (firebaseUser) => {
-      setAuthUser(firebaseUser ? mapFirebaseUser(firebaseUser) : null);
-      setAuthLoading(false);
-    });
+    const start = async () => {
+      const stop = await subscribeToFirebaseAuth({
+        setAuthLoading,
+        setAuthUser,
+      });
+      if (cancelled) {
+        stop();
+        return;
+      }
+      unsubscribe = stop;
+    };
 
-    return unsubscribe;
+    void start();
+
+    return () => {
+      cancelled = true;
+      unsubscribe?.();
+    };
   }, [isControlled, setAuthLoading, setAuthUser]);
 };

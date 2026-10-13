@@ -6,7 +6,7 @@ The public landing page includes a hero, feature sections, a labeled screenshot 
 
 Public share links use `/share/:token`. That page is read-only: it loads a title, optional image, and ITEM/OUTFIT type from `GET {VITE_API_BASE_URL}/public/shares/{token}` (no auth), then shows the same store CTAs. Missing, expired, or failed previews have clear empty states.
 
-The public marketing site (`/`, `/terms`, `/privacy`, `/contact`, `/share/:token`) is separate from the signed-in web app at `/app/*`. `/login` signs in with Firebase Auth (Google, Apple, and email/password) on the same project as the mobile app. Signed-in `/app/*` routes use a dashboard shell (collapsible sidebar, account menu) instead of the landing header and footer. Firebase is loaded only on `/login` and `/app`; public marketing pages do not initialize it.
+The public marketing site (`/`, `/terms`, `/privacy`, `/contact`, `/share/:token`) is separate from the signed-in web app at `/app/*`. `/login` signs in with Firebase Auth (Google, Apple, and email/password) on the same project as the mobile app. `/login?mode=signup` opens the create-account view. Signed-in `/app/*` routes use a dashboard shell (collapsible sidebar, account menu) instead of the landing header and footer. The landing header and mobile menu show Log in and Sign up, or Dashboard when a session is already present. Firebase stays out of the landing entry chunk; the SDK loads lazily after mount when auth state is resolved, and on `/login` and `/app`.
 
 Terms of Service (`/terms`) and Privacy Policy (`/privacy`) are linked from the header and footer. Operator contact on those pages is env-driven (`VITE_LEGAL_CONTACT_EMAIL`, optional `VITE_LEGAL_CONTACT_URL`). Copy refers to the operator only — no personal names.
 

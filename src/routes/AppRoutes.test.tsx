@@ -96,6 +96,30 @@ describe("AppRoutes", () => {
     expect(getApps()).toHaveLength(0);
   });
 
+  it("opens the create-account view from /login?mode=signup", async () => {
+    renderAppRoutes(`${appPaths.login}?mode=signup`);
+
+    expect(
+      await screen.findByRole("heading", { level: 1, name: "Create account" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("form", { name: "Create account form" }),
+    ).toBeInTheDocument();
+  });
+
+  it("shows Dashboard in the landing header for a signed-in visitor", () => {
+    renderAppRoutes(appPaths.home, { user: { id: "user-1" } });
+
+    const header = screen.getByRole("banner");
+    expect(
+      within(header).getByRole("link", { name: "Dashboard" }),
+    ).toHaveAttribute("href", appPaths.app);
+    expect(
+      within(header).queryByRole("link", { name: "Log in" }),
+    ).not.toBeInTheDocument();
+    expect(getApps()).toHaveLength(0);
+  });
+
   it("renders the public login page at /login without auth", async () => {
     renderAppRoutes(appPaths.login);
 
