@@ -89,6 +89,21 @@ describe("OutfitFormPage", () => {
     ).toHaveAttribute("href", appPaths.appPlan);
   });
 
+  it("reads outfit limit copy from the /me entitlement", async () => {
+    renderCreate(
+      createFreeAtLimitResourceApi(
+        {},
+        { limits: { wardrobes: 3, items: 12, outfits: 20 } },
+      ),
+    );
+
+    expect(
+      await screen.findByText(
+        "You've used 20 of 20 outfits. Upgrade your plan to add another.",
+      ),
+    ).toBeInTheDocument();
+  });
+
   it("shows the same upgrade prompt when create returns 403", async () => {
     const user = userEvent.setup();
     const createOutfit = vi.fn().mockRejectedValue(catalogLimitError("outfit"));
@@ -107,6 +122,11 @@ describe("OutfitFormPage", () => {
 
     expect(
       await screen.findByRole("heading", { name: "Outfit limit reached" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "This plan has reached its outfit limit. Upgrade your plan to add another.",
+      ),
     ).toBeInTheDocument();
   });
 

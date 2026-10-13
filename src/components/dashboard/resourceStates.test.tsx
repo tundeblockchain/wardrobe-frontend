@@ -79,4 +79,48 @@ describe("dashboard resource states", () => {
       screen.getByRole("link", { name: "View plan to add more wardrobes" }),
     ).toHaveAttribute("href", "/app/plan");
   });
+
+  it("renders catalog limit copy from non-default /me limits", () => {
+    const limits = { wardrobes: 3, items: 12, outfits: 20 };
+
+    const { unmount } = renderWithProviders(
+      <CatalogLimitPrompt kind="wardrobe" limits={limits} />,
+    );
+    expect(
+      screen.getByText(
+        "The Free plan includes 3 wardrobes. Upgrade your plan to add another.",
+      ),
+    ).toBeInTheDocument();
+    unmount();
+
+    const itemView = renderWithProviders(
+      <CatalogLimitPrompt kind="item" limits={limits} />,
+    );
+    expect(
+      screen.getByText(
+        "The Free plan includes 12 clothing items. Upgrade your plan to add another.",
+      ),
+    ).toBeInTheDocument();
+    itemView.unmount();
+
+    renderWithProviders(<CatalogLimitPrompt kind="outfit" limits={limits} />);
+    expect(
+      screen.getByText(
+        "The Free plan includes 20 outfits. Upgrade your plan to add another.",
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it("renders fallback catalog limit copy without numbers", () => {
+    renderWithProviders(<CatalogLimitPrompt kind="item" />);
+
+    expect(
+      screen.getByText(
+        "This plan has reached its clothing item limit. Upgrade your plan to add another.",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(/1|5|3|12|20/),
+    ).not.toBeInTheDocument();
+  });
 });

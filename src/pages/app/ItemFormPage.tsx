@@ -17,7 +17,11 @@ import {
 import { isApiError } from "../../api/httpClient";
 import { isNotFoundError, type ResourceApi } from "../../api/resourceApi";
 import { getItemImageUrl } from "../../api/resourceDisplay";
-import type { ClothingItem, CreateItemRequest } from "../../api/resourceTypes";
+import type {
+  ClothingItem,
+  CreateItemRequest,
+  Entitlement,
+} from "../../api/resourceTypes";
 import { uploadWardrobeItemImage } from "../../api/uploadWardrobeItemImage";
 import { putFileToPresignedUrl } from "../../api/uploadToPresignedUrl";
 import { CatalogLimitPrompt } from "../../components/dashboard/CatalogLimitPrompt";
@@ -170,7 +174,11 @@ export const ItemFormPage = ({
         title={dashboardCopy.itemForm.createTitle}
         description={dashboardCopy.itemForm.createDescription}
       >
-        <CatalogLimitPrompt kind="item" />
+        <CatalogLimitPrompt
+          kind="item"
+          limits={meQuery.data.limits}
+          usage={meQuery.data.usage}
+        />
       </DashboardPage>
     );
   }
@@ -187,6 +195,7 @@ export const ItemFormPage = ({
       wardrobeId={item?.wardrobeId ?? wardrobeId}
       item={item}
       putFile={putFile}
+      entitlement={meQuery.data}
     />
   );
 };
@@ -197,6 +206,7 @@ type ItemFormReadyProps = {
   wardrobeId: string;
   item?: ClothingItem;
   putFile: typeof putFileToPresignedUrl;
+  entitlement: Entitlement;
 };
 
 const ItemFormReady = ({
@@ -205,6 +215,7 @@ const ItemFormReady = ({
   wardrobeId,
   item,
   putFile,
+  entitlement,
 }: ItemFormReadyProps) => {
   const navigate = useNavigate();
   const copy = dashboardCopy.itemForm;
@@ -350,7 +361,11 @@ const ItemFormReady = ({
         title={copy.createTitle}
         description={copy.createDescription}
       >
-        <CatalogLimitPrompt kind="item" />
+        <CatalogLimitPrompt
+          kind="item"
+          limits={entitlement.limits}
+          usage={entitlement.usage}
+        />
       </DashboardPage>
     );
   }

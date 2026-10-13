@@ -3,21 +3,21 @@ export const dashboardCopy = {
     wardrobe: {
       title: "Wardrobe limit reached",
       description:
-        "The Free plan includes one wardrobe. Upgrade your plan to add another.",
+        "This plan has reached its wardrobe limit. Upgrade your plan to add another.",
       actionLabel: "View plan",
       actionAriaLabel: "View plan to add more wardrobes",
     },
     item: {
       title: "Clothing item limit reached",
       description:
-        "The Free plan includes five clothing items. Upgrade your plan to add another.",
+        "This plan has reached its clothing item limit. Upgrade your plan to add another.",
       actionLabel: "View plan",
       actionAriaLabel: "View plan to add more clothing items",
     },
     outfit: {
       title: "Outfit limit reached",
       description:
-        "The Free plan includes five outfits. Upgrade your plan to add another.",
+        "This plan has reached its outfit limit. Upgrade your plan to add another.",
       actionLabel: "View plan",
       actionAriaLabel: "View plan to add more outfits",
     },

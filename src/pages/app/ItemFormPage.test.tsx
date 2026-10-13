@@ -176,6 +176,22 @@ describe("ItemFormPage", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("reads clothing item limit copy from the /me entitlement", async () => {
+    renderCreate(
+      "wd_weekend01",
+      createFreeAtLimitResourceApi(
+        {},
+        { limits: { wardrobes: 3, items: 12, outfits: 20 } },
+      ),
+    );
+
+    expect(
+      await screen.findByText(
+        "You've used 12 of 12 clothing items. Upgrade your plan to add another.",
+      ),
+    ).toBeInTheDocument();
+  });
+
   it("shows the same upgrade prompt when create returns 403 after going over the limit", async () => {
     const user = userEvent.setup();
     const createItem = vi.fn().mockRejectedValue(catalogLimitError("item"));
@@ -199,6 +215,11 @@ describe("ItemFormPage", () => {
       await screen.findByRole("heading", {
         name: "Clothing item limit reached",
       }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "This plan has reached its clothing item limit. Upgrade your plan to add another.",
+      ),
     ).toBeInTheDocument();
   });
 

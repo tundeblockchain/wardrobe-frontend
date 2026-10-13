@@ -112,4 +112,37 @@ describe("createMockResourceApi", () => {
       code: "ENTITLEMENT_OUTFIT_LIMIT",
     });
   });
+
+  it("exposes custom /me limits in getMe and blocked-create errors", async () => {
+    const limits = { wardrobes: 3, items: 12, outfits: 20 };
+    const limited = createFreeAtLimitResourceApi({}, { limits });
+
+    await expect(limited.getMe()).resolves.toMatchObject({
+      limits,
+      usage: limits,
+    });
+    await expect(limited.createWardrobe({ name: "Extra" })).rejects.toMatchObject({
+      status: 403,
+      message: "Free plan allows 3 wardrobes. Upgrade to add more.",
+    });
+    await expect(
+      limited.createItem("wd_weekend01", {
+        name: "Extra tee",
+        category: "TOP",
+        imageKey: "users/user-1/uploads/upl_mock.jpg",
+      }),
+    ).rejects.toMatchObject({
+      status: 403,
+      message: "Free plan allows 12 clothing items. Upgrade to add more.",
+    });
+    await expect(
+      limited.createOutfit("wd_weekend01", {
+        name: "Extra look",
+        items: [{ itemId: "item_limit01", slot: "TOP" }],
+      }),
+    ).rejects.toMatchObject({
+      status: 403,
+      message: "Free plan allows 20 outfits. Upgrade to add more.",
+    });
+  });
 });
