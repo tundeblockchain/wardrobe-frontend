@@ -25,6 +25,7 @@ Never commit secrets, tokens, or private keys.
 | `VITE_FIREBASE_STORAGE_BUCKET` | For `/login` and `/app` sign-in | Firebase storage bucket | `example.appspot.com` |
 | `VITE_FIREBASE_MESSAGING_SENDER_ID` | For `/login` and `/app` sign-in | Firebase messaging sender ID | `000000000000` |
 | `VITE_FIREBASE_APP_ID` | For `/login` and `/app` sign-in | Firebase web app ID | `1:000000000000:web:example` |
+| `VITE_USE_MOCK_API` | No (defaults to `false`) | When `true` or `1`, signed-in app calls should use mock API responses instead of the live backend. Parsed by `isMockApi()` in `src/config/mockApi.ts`. | `false` |
 
 Empty or whitespace-only values are treated as unset by `getPublicAppEnv()`.
 
@@ -73,6 +74,12 @@ Landing, legal, and contact pages do not initialize Firebase. The SDK loads only
 Signed-in `/app` requests use `VITE_API_BASE_URL` with `Authorization: Bearer <Firebase ID token>`. The token comes from the same public Firebase web config used at `/login`. These are public client values; never put Admin keys, service-account files, or other secrets in Netlify frontend env vars.
 
 If `VITE_API_BASE_URL` is unset, authenticated calls fail closed as misconfigured.
+
+## Mock API
+
+`VITE_USE_MOCK_API` is a public boolean (default `false`). `true` and `1` (any case, surrounding whitespace ignored) are treated as enabled; every other value, including blank or unset, is disabled.
+
+Read it with `isMockApi()` from `src/config/mockApi.ts`. Keep the flag `false` in production. Live signed-in calls still go through `src/api` (`httpClient`, `authenticatedApi`, `useApi`) when the flag is off.
 
 ## Netlify notes
 

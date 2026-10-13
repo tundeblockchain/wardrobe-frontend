@@ -45,6 +45,10 @@ describe("login and app paths", () => {
     expect(appPaths.share).toBe("/share/:token");
     expect(appPaths.login).toBe("/login");
     expect(appPaths.app).toBe("/app");
+    expect(appPaths.appWardrobes).toBe("/app/wardrobes");
+    expect(appPaths.appOutfits).toBe("/app/outfits");
+    expect(appPaths.appVirtualProfiles).toBe("/app/virtual-profiles");
+    expect(appPaths.appPlan).toBe("/app/plan");
   });
 
   it("builds /app and nested /app/* paths", () => {

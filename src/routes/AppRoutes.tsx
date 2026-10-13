@@ -19,6 +19,31 @@ const AppArea = lazy(async () => {
   return { default: module.AppArea };
 });
 
+const AppHomePage = lazy(async () => {
+  const module = await import("../pages/app/AppHomePage");
+  return { default: module.AppHomePage };
+});
+
+const WardrobesPage = lazy(async () => {
+  const module = await import("../pages/app/WardrobesPage");
+  return { default: module.WardrobesPage };
+});
+
+const OutfitsPage = lazy(async () => {
+  const module = await import("../pages/app/OutfitsPage");
+  return { default: module.OutfitsPage };
+});
+
+const VirtualProfilesPage = lazy(async () => {
+  const module = await import("../pages/app/VirtualProfilesPage");
+  return { default: module.VirtualProfilesPage };
+});
+
+const PlanPage = lazy(async () => {
+  const module = await import("../pages/app/PlanPage");
+  return { default: module.PlanPage };
+});
+
 export const AppRoutes = () => {
   return (
     <Routes>
@@ -38,13 +63,20 @@ export const AppRoutes = () => {
         />
       </Route>
       <Route
-        path={`${appPaths.app}/*`}
+        path={appPaths.app}
         element={
           <Suspense fallback={<RouteFallback />}>
             <AppArea />
           </Suspense>
         }
-      />
+      >
+        <Route index element={<AppHomePage />} />
+        <Route path="wardrobes" element={<WardrobesPage />} />
+        <Route path="outfits" element={<OutfitsPage />} />
+        <Route path="virtual-profiles" element={<VirtualProfilesPage />} />
+        <Route path="plan" element={<PlanPage />} />
+        <Route path="*" element={<AppHomePage />} />
+      </Route>
     </Routes>
   );
 };
