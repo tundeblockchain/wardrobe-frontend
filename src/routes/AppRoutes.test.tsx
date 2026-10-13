@@ -200,6 +200,12 @@ describe("AppRoutes", () => {
     ).toBeInTheDocument();
     expect(screen.getByTestId("route-location")).toHaveTextContent(appPaths.app);
     expect(
+      screen.getByRole("navigation", { name: "App" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Account menu" }),
+    ).toBeInTheDocument();
+    expect(
       screen.queryByRole("navigation", { name: "Primary" }),
     ).not.toBeInTheDocument();
     expect(
@@ -208,14 +214,36 @@ describe("AppRoutes", () => {
   });
 
   it("renders a nested /app path for a signed-in user", async () => {
-    renderAppRoutes(getAppPath("x"), { user: { id: "user-1" } });
+    renderAppRoutes(appPaths.appWardrobes, { user: { id: "user-1" } });
 
     expect(
-      await screen.findByRole("heading", { level: 1, name: "Your closet" }),
+      await screen.findByRole("heading", { level: 1, name: "Wardrobes" }),
     ).toBeInTheDocument();
     expect(screen.getByTestId("route-location")).toHaveTextContent(
-      getAppPath("x"),
+      appPaths.appWardrobes,
     );
+    expect(
+      screen.getByRole("navigation", { name: "App" }),
+    ).toBeInTheDocument();
+  });
+
+  it("keeps public pages on the landing shell without dashboard chrome", () => {
+    renderAppRoutes(appPaths.home);
+
+    expect(
+      screen.getByRole("heading", {
+        name: "Your closet, beautifully organized",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("navigation", { name: "Primary" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("navigation", { name: "App" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Account menu" }),
+    ).not.toBeInTheDocument();
   });
 
   it("waits on a loading auth state instead of redirecting /app", () => {

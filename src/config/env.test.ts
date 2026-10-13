@@ -5,6 +5,7 @@ import {
   hasFirebaseWebConfig,
   MISSING_FIREBASE_WEB_CONFIG_MESSAGE,
 } from "./env";
+import { isMockApi } from "./mockApi";
 
 describe("getPublicAppEnv", () => {
   it("uses the default app name when the env value is missing", () => {
@@ -25,6 +26,7 @@ describe("getPublicAppEnv", () => {
     expect(env.firebaseStorageBucket).toBeUndefined();
     expect(env.firebaseMessagingSenderId).toBeUndefined();
     expect(env.firebaseAppId).toBeUndefined();
+    expect(env.useMockApi).toBe(false);
   });
 
   it("treats blank placeholders as unset", () => {
@@ -43,6 +45,7 @@ describe("getPublicAppEnv", () => {
       VITE_FIREBASE_STORAGE_BUCKET: "\n",
       VITE_FIREBASE_MESSAGING_SENDER_ID: "  ",
       VITE_FIREBASE_APP_ID: " ",
+      VITE_USE_MOCK_API: "  ",
     });
 
     expect(env.appStoreUrl).toBeUndefined();
@@ -59,6 +62,7 @@ describe("getPublicAppEnv", () => {
     expect(env.firebaseStorageBucket).toBeUndefined();
     expect(env.firebaseMessagingSenderId).toBeUndefined();
     expect(env.firebaseAppId).toBeUndefined();
+    expect(env.useMockApi).toBe(false);
   });
 
   it("trims configured public identifiers", () => {
@@ -78,6 +82,7 @@ describe("getPublicAppEnv", () => {
       VITE_FIREBASE_STORAGE_BUCKET: " test-project.appspot.com ",
       VITE_FIREBASE_MESSAGING_SENDER_ID: " 123456789 ",
       VITE_FIREBASE_APP_ID: " 1:123456789:web:abc ",
+      VITE_USE_MOCK_API: " true ",
     });
 
     expect(env.appName).toBe("Wardrobe");
@@ -97,6 +102,21 @@ describe("getPublicAppEnv", () => {
     expect(env.firebaseStorageBucket).toBe("test-project.appspot.com");
     expect(env.firebaseMessagingSenderId).toBe("123456789");
     expect(env.firebaseAppId).toBe("1:123456789:web:abc");
+    expect(env.useMockApi).toBe(true);
+  });
+});
+
+describe("VITE_USE_MOCK_API", () => {
+  it("defaults to false and accepts true or 1", () => {
+    expect(getPublicAppEnv({}).useMockApi).toBe(false);
+    expect(getPublicAppEnv({ VITE_USE_MOCK_API: "false" }).useMockApi).toBe(
+      false,
+    );
+    expect(getPublicAppEnv({ VITE_USE_MOCK_API: "0" }).useMockApi).toBe(false);
+    expect(getPublicAppEnv({ VITE_USE_MOCK_API: "true" }).useMockApi).toBe(true);
+    expect(getPublicAppEnv({ VITE_USE_MOCK_API: "1" }).useMockApi).toBe(true);
+    expect(isMockApi({ VITE_USE_MOCK_API: "TRUE" })).toBe(true);
+    expect(isMockApi({})).toBe(false);
   });
 });
 

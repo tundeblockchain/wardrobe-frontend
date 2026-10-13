@@ -8,6 +8,10 @@ export const appPaths = {
   share: "/share/:token",
   login: "/login",
   app: APP_BASE_PATH,
+  appWardrobes: `${APP_BASE_PATH}/wardrobes`,
+  appOutfits: `${APP_BASE_PATH}/outfits`,
+  appVirtualProfiles: `${APP_BASE_PATH}/virtual-profiles`,
+  appPlan: `${APP_BASE_PATH}/plan`,
 } as const;
 
 export type AppPath = (typeof appPaths)[keyof typeof appPaths];

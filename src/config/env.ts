@@ -23,6 +23,7 @@ export type PublicAppEnv = {
   firebaseStorageBucket: string | undefined;
   firebaseMessagingSenderId: string | undefined;
   firebaseAppId: string | undefined;
+  useMockApi: boolean;
 };
 
 export type EnvSource = {
@@ -41,6 +42,7 @@ export type EnvSource = {
   VITE_FIREBASE_STORAGE_BUCKET?: string;
   VITE_FIREBASE_MESSAGING_SENDER_ID?: string;
   VITE_FIREBASE_APP_ID?: string;
+  VITE_USE_MOCK_API?: string;
 };
 
 export const FIREBASE_WEB_ENV_KEYS = [
@@ -79,6 +81,20 @@ const readOptionalOrigin = (value: string | undefined): string | undefined => {
   return trimmedValue.replace(/\/+$/, "");
 };
 
+const MOCK_API_TRUE_VALUES = new Set(["true", "1"]);
+
+const readBooleanEnv = (
+  value: string | undefined,
+  defaultValue = false,
+): boolean => {
+  const trimmedValue = readOptionalEnv(value);
+  if (!trimmedValue) {
+    return defaultValue;
+  }
+
+  return MOCK_API_TRUE_VALUES.has(trimmedValue.toLowerCase());
+};
+
 export const getPublicAppEnv = (
   source: EnvSource = import.meta.env,
 ): PublicAppEnv => {
@@ -100,6 +116,7 @@ export const getPublicAppEnv = (
       source.VITE_FIREBASE_MESSAGING_SENDER_ID,
     ),
     firebaseAppId: readOptionalEnv(source.VITE_FIREBASE_APP_ID),
+    useMockApi: readBooleanEnv(source.VITE_USE_MOCK_API),
   };
 };
 
