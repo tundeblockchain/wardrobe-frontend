@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { Button } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 import { DashboardPage } from "../../components/dashboard/DashboardPage";
@@ -7,6 +8,7 @@ import { ResourceLoadingState } from "../../components/dashboard/ResourceLoading
 import { WardrobeCardGrid } from "../../components/dashboard/WardrobeCardGrid";
 import { useResourceApi } from "../../api/useResourceApi";
 import type { ResourceApi } from "../../api/resourceApi";
+import { loadWardrobesWithCoverFallbacks } from "../../api/wardrobeCoverFallback";
 import { dashboardCopy } from "../../content/dashboardCopy";
 import { useResourceQuery } from "../../hooks/useResourceQuery";
 import { appPaths } from "../../routes/paths";
@@ -21,7 +23,11 @@ export const WardrobesPage = ({
   const defaultResourceApi = useResourceApi();
   const resourceApi = resourceApiProp ?? defaultResourceApi;
   const copy = dashboardCopy.wardrobes;
-  const query = useResourceQuery("wardrobes", resourceApi.listWardrobes);
+  const loadWardrobes = useMemo(
+    () => () => loadWardrobesWithCoverFallbacks(resourceApi),
+    [resourceApi],
+  );
+  const query = useResourceQuery("wardrobes", loadWardrobes);
   const addAction = (
     <Button
       component={RouterLink}

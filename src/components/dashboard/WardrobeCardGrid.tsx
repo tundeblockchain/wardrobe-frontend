@@ -3,7 +3,7 @@ import { Box } from "@mui/material";
 import { getWardrobeImageUrl } from "../../api/resourceDisplay";
 import type { Wardrobe } from "../../api/resourceTypes";
 import { getAppWardrobePath } from "../../routes/paths";
-import { ResourceCard } from "./ResourceCard";
+import { ResourceCard, WARDROBE_CARD_IMAGE_ASPECT_RATIO } from "./ResourceCard";
 import { ResourceCardGrid } from "./ResourceCardGrid";
 
 export type WardrobeCardGridProps = {
@@ -23,6 +23,7 @@ export const WardrobeCardGrid = ({ wardrobes }: WardrobeCardGridProps) => {
               titleId={titleId}
               imageUrl={getWardrobeImageUrl(wardrobe)}
               imageAlt={wardrobe.name}
+              imageAspectRatio={WARDROBE_CARD_IMAGE_ASPECT_RATIO}
               fallbackLabel="No photo for this wardrobe"
               FallbackIcon={CheckroomOutlined}
               description="Open this wardrobe to see its clothing items."

@@ -9,6 +9,8 @@ import {
   getWardrobeApiPath,
   getWardrobeItemApiPath,
   getWardrobeItemsApiPath,
+  getWardrobeItemsListApiPath,
+  WARDROBE_COVER_ITEM_LIMIT,
   getWardrobeOutfitApiPath,
   getWardrobeOutfitsApiPath,
   isEntitlementAiRequiredError,
@@ -110,6 +112,21 @@ describe("createLiveResourceApi", () => {
     expect(request).toHaveBeenCalledWith("/wardrobes");
     expect(request).toHaveBeenCalledWith("/wardrobes/wd_1");
     expect(request).toHaveBeenCalledWith("/wardrobes/wd_1/items");
+  });
+
+  it("lists wardrobe items with the smallest supported limit", async () => {
+    const request = vi.fn(async (path: string) => {
+      if (path === getWardrobeItemsListApiPath("wd_1", { limit: 1 })) {
+        return { items: [item] };
+      }
+      throw new Error(`unexpected path ${path}`);
+    });
+    const api = createLiveResourceApi(createApi(asRequest(request)));
+
+    await expect(
+      api.listWardrobeItems("wd_1", { limit: WARDROBE_COVER_ITEM_LIMIT }),
+    ).resolves.toEqual({ items: [item] });
+    expect(request).toHaveBeenCalledWith("/wardrobes/wd_1/items?limit=1");
   });
 
   it("loads an item from GET /items/{itemId}", async () => {
