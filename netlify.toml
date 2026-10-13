@@ -5,7 +5,8 @@
 [build.environment]
   NODE_VERSION = "22"
 
-# SPA fallback so client-side routes resolve on refresh and deep links.
+# SPA fallback so client-side routes resolve on refresh and deep links
+# (public pages, /login, and /app/*).
 [[redirects]]
   from = "/*"
   to = "/index.html"

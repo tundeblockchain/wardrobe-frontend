@@ -1,5 +1,6 @@
 import type { PropsWithChildren } from "react";
 import { Box } from "@mui/material";
+import { Outlet } from "react-router-dom";
 import { SkipLink } from "../components/SkipLink";
 import { AppFooter } from "./AppFooter";
 import { AppHeader } from "./AppHeader";
@@ -22,7 +23,7 @@ export const AppShell = ({ children }: AppShellProps) => {
     >
       <SkipLink targetId="main-content" />
       <AppHeader />
-      <AppMain>{children}</AppMain>
+      <AppMain>{children ?? <Outlet />}</AppMain>
       <AppFooter />
     </Box>
   );

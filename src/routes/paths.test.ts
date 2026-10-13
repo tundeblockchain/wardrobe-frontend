@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
   appPaths,
+  getAppPath,
+  getLoginPath,
+  getSafeInternalPath,
   getSharePath,
+  isAppPath,
   isSharePreviewPath,
   parseShareTokenFromPath,
 } from "./paths";
@@ -24,7 +28,55 @@ describe("share paths", () => {
     expect(isSharePreviewPath("/terms")).toBe(false);
     expect(isSharePreviewPath("/privacy")).toBe(false);
     expect(isSharePreviewPath("/contact")).toBe(false);
+    expect(isSharePreviewPath("/login")).toBe(false);
+    expect(isSharePreviewPath("/app")).toBe(false);
     expect(isSharePreviewPath("/share")).toBe(false);
     expect(isSharePreviewPath("/share/a/b")).toBe(false);
+  });
+});
+
+describe("login and app paths", () => {
+  it("keeps public routes and adds login plus the /app base", () => {
+    expect(appPaths.home).toBe("/");
+    expect(appPaths.terms).toBe("/terms");
+    expect(appPaths.privacy).toBe("/privacy");
+    expect(appPaths.contact).toBe("/contact");
+    expect(appPaths.share).toBe("/share/:token");
+    expect(appPaths.login).toBe("/login");
+    expect(appPaths.app).toBe("/app");
+  });
+
+  it("builds /app and nested /app/* paths", () => {
+    expect(getAppPath()).toBe("/app");
+    expect(getAppPath("/")).toBe("/app");
+    expect(getAppPath("x")).toBe("/app/x");
+    expect(getAppPath("/x")).toBe("/app/x");
+    expect(getAppPath("/x/")).toBe("/app/x");
+    expect(getAppPath("looks/saved")).toBe("/app/looks/saved");
+  });
+
+  it("detects /app and nested app paths", () => {
+    expect(isAppPath("/app")).toBe(true);
+    expect(isAppPath("/app/")).toBe(true);
+    expect(isAppPath("/app/x")).toBe(true);
+    expect(isAppPath("/app/looks/saved")).toBe(true);
+    expect(isAppPath("/")).toBe(false);
+    expect(isAppPath("/login")).toBe(false);
+    expect(isAppPath("/application")).toBe(false);
+    expect(isAppPath("/contact")).toBe(false);
+  });
+
+  it("builds a login URL that preserves the intended path", () => {
+    expect(getLoginPath()).toBe("/login");
+    expect(getLoginPath("/app")).toBe("/login?next=%2Fapp");
+    expect(getLoginPath("/app/x")).toBe("/login?next=%2Fapp%2Fx");
+  });
+
+  it("accepts only internal next paths", () => {
+    expect(getSafeInternalPath("/app")).toBe("/app");
+    expect(getSafeInternalPath("/app/x?tab=saved")).toBe("/app/x?tab=saved");
+    expect(getSafeInternalPath("https://example.com")).toBeUndefined();
+    expect(getSafeInternalPath("//example.com")).toBeUndefined();
+    expect(getSafeInternalPath("login")).toBeUndefined();
   });
 });
