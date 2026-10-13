@@ -14,7 +14,7 @@ import {
 } from "../../api/catalogValidation";
 import { ApiError, isApiError } from "../../api/httpClient";
 import { isNotFoundError, type ResourceApi } from "../../api/resourceApi";
-import type { Outfit, Wardrobe } from "../../api/resourceTypes";
+import type { Entitlement, Outfit, Wardrobe } from "../../api/resourceTypes";
 import { CatalogLimitPrompt } from "../../components/dashboard/CatalogLimitPrompt";
 import { DashboardPage } from "../../components/dashboard/DashboardPage";
 import { OutfitForm } from "../../components/dashboard/OutfitForm";
@@ -169,7 +169,11 @@ export const OutfitFormPage = ({
         title={dashboardCopy.outfitForm.createTitle}
         description={dashboardCopy.outfitForm.createDescription}
       >
-        <CatalogLimitPrompt kind="outfit" />
+        <CatalogLimitPrompt
+          kind="outfit"
+          limits={meQuery.data.limits}
+          usage={meQuery.data.usage}
+        />
       </DashboardPage>
     );
   }
@@ -186,6 +190,7 @@ export const OutfitFormPage = ({
       wardrobes={wardrobesQuery.data.wardrobes}
       outfit={outfit}
       initialWardrobeId={outfit?.wardrobeId ?? wardrobeIdFromQuery}
+      entitlement={meQuery.data}
     />
   );
 };
@@ -196,6 +201,7 @@ type OutfitFormReadyProps = {
   wardrobes: Wardrobe[];
   outfit?: Outfit;
   initialWardrobeId: string;
+  entitlement: Entitlement;
 };
 
 const OutfitFormReady = ({
@@ -204,6 +210,7 @@ const OutfitFormReady = ({
   wardrobes,
   outfit,
   initialWardrobeId,
+  entitlement,
 }: OutfitFormReadyProps) => {
   const navigate = useNavigate();
   const copy = dashboardCopy.outfitForm;
@@ -282,7 +289,11 @@ const OutfitFormReady = ({
         title={copy.createTitle}
         description={copy.createDescription}
       >
-        <CatalogLimitPrompt kind="outfit" />
+        <CatalogLimitPrompt
+          kind="outfit"
+          limits={entitlement.limits}
+          usage={entitlement.usage}
+        />
       </DashboardPage>
     );
   }

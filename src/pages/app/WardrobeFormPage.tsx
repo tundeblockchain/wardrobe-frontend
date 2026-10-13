@@ -9,7 +9,7 @@ import {
 } from "../../api/catalogValidation";
 import { isApiError } from "../../api/httpClient";
 import { isNotFoundError, type ResourceApi } from "../../api/resourceApi";
-import type { Wardrobe } from "../../api/resourceTypes";
+import type { Entitlement, Wardrobe } from "../../api/resourceTypes";
 import { CatalogLimitPrompt } from "../../components/dashboard/CatalogLimitPrompt";
 import { DashboardPage } from "../../components/dashboard/DashboardPage";
 import { ResourceEmptyState } from "../../components/dashboard/ResourceEmptyState";
@@ -131,7 +131,11 @@ export const WardrobeFormPage = ({
         title={dashboardCopy.wardrobeForm.createTitle}
         description={dashboardCopy.wardrobeForm.createDescription}
       >
-        <CatalogLimitPrompt kind="wardrobe" />
+        <CatalogLimitPrompt
+          kind="wardrobe"
+          limits={meQuery.data.limits}
+          usage={meQuery.data.usage}
+        />
       </DashboardPage>
     );
   }
@@ -146,6 +150,7 @@ export const WardrobeFormPage = ({
       mode={mode}
       resourceApi={resourceApi}
       wardrobe={wardrobe}
+      entitlement={meQuery.data}
     />
   );
 };
@@ -154,12 +159,14 @@ type WardrobeFormReadyProps = {
   mode: "create" | "edit";
   resourceApi: ResourceApi;
   wardrobe?: Wardrobe;
+  entitlement: Entitlement;
 };
 
 const WardrobeFormReady = ({
   mode,
   resourceApi,
   wardrobe,
+  entitlement,
 }: WardrobeFormReadyProps) => {
   const navigate = useNavigate();
   const copy = dashboardCopy.wardrobeForm;
@@ -223,7 +230,11 @@ const WardrobeFormReady = ({
         title={copy.createTitle}
         description={copy.createDescription}
       >
-        <CatalogLimitPrompt kind="wardrobe" />
+        <CatalogLimitPrompt
+          kind="wardrobe"
+          limits={entitlement.limits}
+          usage={entitlement.usage}
+        />
       </DashboardPage>
     );
   }

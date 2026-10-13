@@ -1,3 +1,4 @@
+import { getCatalogLimitErrorMessage } from "../content/catalogLimitCopy";
 import { ApiError, isApiError } from "./httpClient";
 import {
   CATALOG_LIMIT_CODES,
@@ -7,6 +8,7 @@ import {
   type CatalogKind,
   type CatalogLimitCode,
   type Entitlement,
+  type EntitlementLimits,
 } from "./resourceTypes";
 
 const USAGE_KEY_BY_KIND: Record<
@@ -22,12 +24,6 @@ const LIMIT_CODE_BY_KIND: Record<CatalogKind, CatalogLimitCode> = {
   wardrobe: ENTITLEMENT_WARDROBE_LIMIT_CODE,
   item: ENTITLEMENT_ITEM_LIMIT_CODE,
   outfit: ENTITLEMENT_OUTFIT_LIMIT_CODE,
-};
-
-const LIMIT_MESSAGE_BY_KIND: Record<CatalogKind, string> = {
-  wardrobe: "Free plan allows 1 wardrobe. Upgrade to add more.",
-  item: "Free plan allows 5 clothing items. Upgrade to add more.",
-  outfit: "Free plan allows 5 outfits. Upgrade to add more.",
 };
 
 export const getCatalogUsageKey = (
@@ -69,10 +65,13 @@ export const isCatalogLimitError = (error: unknown): error is ApiError => {
   return (CATALOG_LIMIT_CODES as readonly string[]).includes(error.code);
 };
 
-export const catalogLimitError = (kind: CatalogKind): ApiError => {
+export const catalogLimitError = (
+  kind: CatalogKind,
+  limits?: EntitlementLimits | null,
+): ApiError => {
   return new ApiError({
     status: 403,
     code: getCatalogLimitCode(kind),
-    message: LIMIT_MESSAGE_BY_KIND[kind],
+    message: getCatalogLimitErrorMessage(kind, limits),
   });
 };

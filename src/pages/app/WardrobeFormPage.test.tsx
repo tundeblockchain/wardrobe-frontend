@@ -7,6 +7,7 @@ import {
   createErrorResourceApi,
   createFreeAtLimitResourceApi,
   createMockResourceApi,
+  mockFreeAtLimitEntitlement,
 } from "../../api/mockResourceApi";
 import type { ResourceApi } from "../../api/resourceApi";
 import { appPaths, getAppWardrobeEditPath } from "../../routes/paths";
@@ -98,6 +99,21 @@ describe("WardrobeFormPage", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("reads wardrobe limit copy from the /me entitlement", async () => {
+    renderCreate(
+      createFreeAtLimitResourceApi(
+        {},
+        { limits: { wardrobes: 3, items: 12, outfits: 20 } },
+      ),
+    );
+
+    expect(
+      await screen.findByText(
+        "You've used 3 of 3 wardrobes. Upgrade your plan to add another.",
+      ),
+    ).toBeInTheDocument();
+  });
+
   it("shows the same upgrade prompt when create returns 403", async () => {
     const user = userEvent.setup();
     const createWardrobe = vi.fn().mockRejectedValue(catalogLimitError("wardrobe"));
@@ -111,6 +127,41 @@ describe("WardrobeFormPage", () => {
 
     expect(
       await screen.findByRole("heading", { name: "Wardrobe limit reached" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "This plan has reached its wardrobe limit. Upgrade your plan to add another.",
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it("shows /me limit numbers when create returns 403", async () => {
+    const user = userEvent.setup();
+    const createWardrobe = vi.fn().mockRejectedValue(
+      catalogLimitError("wardrobe", { wardrobes: 3, items: 12, outfits: 20 }),
+    );
+    renderCreate(
+      createMockResourceApi(
+        { createWardrobe },
+        {
+          entitlement: {
+            ...mockFreeAtLimitEntitlement,
+            limits: { wardrobes: 3, items: 12, outfits: 20 },
+          },
+        },
+      ),
+    );
+
+    await user.type(
+      await screen.findByRole("textbox", { name: "Name" }),
+      "Travel",
+    );
+    await user.click(screen.getByRole("button", { name: "Save wardrobe" }));
+
+    expect(
+      await screen.findByText(
+        "You've used 2 of 3 wardrobes. Upgrade your plan to add another.",
+      ),
     ).toBeInTheDocument();
   });
 

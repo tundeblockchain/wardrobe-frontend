@@ -65,6 +65,21 @@ describe("catalog limits", () => {
     expect(isAtCatalogLimit(entitlement, "outfit")).toBe(false);
   });
 
+  it("builds 403 messages from /me limits instead of hardcoded caps", () => {
+    const limits = { wardrobes: 3, items: 12, outfits: 20 };
+
+    expect(catalogLimitError("wardrobe", limits).message).toBe(
+      "Free plan allows 3 wardrobes. Upgrade to add more.",
+    );
+    expect(catalogLimitError("item", limits).message).toBe(
+      "Free plan allows 12 clothing items. Upgrade to add more.",
+    );
+    expect(catalogLimitError("outfit", limits).message).toBe(
+      "Free plan allows 20 outfits. Upgrade to add more.",
+    );
+    expect(catalogLimitError("wardrobe").message).not.toMatch(/\d/);
+  });
+
   it("detects server 403 catalog limit errors", () => {
     expect(isCatalogLimitError(catalogLimitError("item"))).toBe(true);
     expect(

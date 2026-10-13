@@ -11,6 +11,7 @@ import type {
   CreateUploadResponse,
   CreateWardrobeRequest,
   Entitlement,
+  EntitlementLimits,
   Outfit,
   UpdateItemRequest,
   UpdateOutfitRequest,
@@ -213,8 +214,26 @@ const nowIso = (): string => {
   return "2026-10-13T12:00:00.000Z";
 };
 
-const createLimitFillItems = (wardrobeId: string): ClothingItem[] => {
-  return Array.from({ length: 5 }, (_, index) => {
+const createLimitFillWardrobes = (count: number): Wardrobe[] => {
+  return Array.from({ length: count }, (_, index) => {
+    if (index === 0) {
+      return cloneWardrobe(mockWardrobes[0]!);
+    }
+
+    return {
+      wardrobeId: `wd_limit0${index + 1}`,
+      name: `Limit wardrobe ${index + 1}`,
+      createdAt: nowIso(),
+      updatedAt: nowIso(),
+    };
+  });
+};
+
+const createLimitFillItems = (
+  wardrobeId: string,
+  count: number,
+): ClothingItem[] => {
+  return Array.from({ length: count }, (_, index) => {
     return {
       itemId: `item_limit0${index + 1}`,
       wardrobeId,
@@ -227,8 +246,11 @@ const createLimitFillItems = (wardrobeId: string): ClothingItem[] => {
   });
 };
 
-const createLimitFillOutfits = (wardrobeId: string): Outfit[] => {
-  return Array.from({ length: 5 }, (_, index) => {
+const createLimitFillOutfits = (
+  wardrobeId: string,
+  count: number,
+): Outfit[] => {
+  return Array.from({ length: count }, (_, index) => {
     return {
       outfitId: `outfit_limit0${index + 1}`,
       wardrobeId,
@@ -263,7 +285,7 @@ export const createMockResourceApi = (
   const assertCanCreate = (kind: "wardrobe" | "item" | "outfit") => {
     syncUsage();
     if (isAtCatalogLimit(entitlement, kind)) {
-      throw catalogLimitError(kind);
+      throw catalogLimitError(kind, entitlement.limits);
     }
   };
 
@@ -582,14 +604,30 @@ export const createEntitlementAiRequiredResourceApi = (): ResourceApi => {
   );
 };
 
+export type FreeAtLimitOptions = {
+  limits?: EntitlementLimits;
+};
+
 export const createFreeAtLimitResourceApi = (
   overrides: MockResourceApiOverrides = {},
+  options: FreeAtLimitOptions = {},
 ): ResourceApi => {
-  const wardrobe = cloneWardrobe(mockWardrobes[0]!);
+  const limits = options.limits ?? mockFreeAtLimitEntitlement.limits;
+  const wardrobes = createLimitFillWardrobes(limits?.wardrobes ?? 0);
+  const firstWardrobeId = wardrobes[0]?.wardrobeId ?? mockWardrobes[0]!.wardrobeId;
+
   return createMockResourceApi(overrides, {
-    entitlement: mockFreeAtLimitEntitlement,
-    wardrobes: [wardrobe],
-    items: createLimitFillItems(wardrobe.wardrobeId),
-    outfits: createLimitFillOutfits(wardrobe.wardrobeId),
+    entitlement: {
+      ...mockFreeAtLimitEntitlement,
+      limits: limits ? { ...limits } : null,
+      usage: {
+        wardrobes: limits?.wardrobes ?? 0,
+        items: limits?.items ?? 0,
+        outfits: limits?.outfits ?? 0,
+      },
+    },
+    wardrobes,
+    items: createLimitFillItems(firstWardrobeId, limits?.items ?? 0),
+    outfits: createLimitFillOutfits(firstWardrobeId, limits?.outfits ?? 0),
   });
 };
