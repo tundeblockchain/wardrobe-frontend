@@ -2,10 +2,22 @@ import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { getApps } from "firebase/app";
 import { useLocation } from "react-router-dom";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderWithProviders } from "../test/renderWithProviders";
 import { AppRoutes } from "./AppRoutes";
 import { appPaths, getAppPath, getSharePath } from "./paths";
+
+const authProviderMocks = vi.hoisted(() => ({
+  signInWithGoogle: vi.fn(),
+  signInWithApple: vi.fn(),
+  signInWithEmail: vi.fn(),
+  registerWithEmail: vi.fn(),
+  sendPasswordReset: vi.fn(),
+  signOutUser: vi.fn(),
+  getIdToken: vi.fn(),
+}));
+
+vi.mock("../auth/authProviders", () => authProviderMocks);
 
 const RouteLocation = () => {
   const location = useLocation();
@@ -28,6 +40,12 @@ const renderAppRoutes = (
 };
 
 describe("AppRoutes", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    authProviderMocks.getIdToken.mockResolvedValue("test-id-token");
+    authProviderMocks.signOutUser.mockResolvedValue(undefined);
+  });
+
   it("renders public pages without auth and without initialising Firebase", () => {
     const publicRoutes = [
       appPaths.home,
@@ -248,6 +266,28 @@ describe("AppRoutes", () => {
     );
     expect(
       screen.getByRole("navigation", { name: "App" }),
+    ).toBeInTheDocument();
+  });
+
+  it("renders wardrobe and item detail routes for a signed-in user", async () => {
+    const { unmount } = renderAppRoutes("/app/wardrobes/wd_weekend01", {
+      user: { id: "user-1" },
+    });
+
+    expect(screen.getByTestId("route-location")).toHaveTextContent(
+      "/app/wardrobes/wd_weekend01",
+    );
+    expect(
+      await screen.findByRole("heading", { level: 1 }),
+    ).toBeInTheDocument();
+    unmount();
+
+    renderAppRoutes("/app/items/item_navytee01", { user: { id: "user-1" } });
+    expect(screen.getByTestId("route-location")).toHaveTextContent(
+      "/app/items/item_navytee01",
+    );
+    expect(
+      await screen.findByRole("heading", { level: 1 }),
     ).toBeInTheDocument();
   });
 

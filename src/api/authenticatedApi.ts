@@ -7,23 +7,15 @@ import {
   request,
   type RequestOptions,
 } from "./httpClient";
+import {
+  ENTITLEMENT_STORES,
+  type Entitlement,
+  type EntitlementStore,
+} from "./resourceTypes";
 
-export const ME_STORES = [
-  "APP_STORE",
-  "PLAY_STORE",
-  "STRIPE",
-  "UNKNOWN",
-] as const;
-
-export type MeStore = (typeof ME_STORES)[number];
-
-export type MeResponse = {
-  uid: string;
-  email?: string | null;
-  plan?: string | null;
-  entitlement?: string | null;
-  store?: MeStore | null;
-};
+export const ME_STORES = ENTITLEMENT_STORES;
+export type MeStore = EntitlementStore;
+export type MeResponse = Entitlement;
 
 export type ApiAuth = Pick<AuthActions, "getIdToken" | "signOut">;
 

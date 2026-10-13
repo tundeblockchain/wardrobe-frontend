@@ -13,7 +13,7 @@ describe("AppHomePage", () => {
       screen.getByRole("heading", { level: 1, name: "Your closet" }),
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/Open Wardrobes, Outfits, Virtual Profiles, or Plan/),
+      screen.getByText(/Open Wardrobes, Outfits, or Virtual Profiles/),
     ).toBeInTheDocument();
   });
 });

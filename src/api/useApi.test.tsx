@@ -31,9 +31,26 @@ import { renderWithProviders } from "../test/renderWithProviders";
 import { useApi } from "./useApi";
 
 const meBody = {
-  uid: "user-1",
-  email: "ada@example.com",
+  userId: "user-1",
+  tier: "FREE",
+  status: "NONE",
+  features: {
+    unlimitedCatalog: false,
+    aiTryOn: false,
+    otherAi: false,
+  },
+  limits: {
+    wardrobes: 1,
+    items: 5,
+    outfits: 5,
+  },
+  usage: {
+    wardrobes: 0,
+    items: 0,
+    outfits: 0,
+  },
   store: "APP_STORE",
+  updatedAt: "2026-10-01T09:12:00.000Z",
 };
 
 const GetMeProbe = () => {

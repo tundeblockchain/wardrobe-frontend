@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   appPaths,
+  getAppItemPath,
   getAppPath,
+  getAppWardrobePath,
   getLoginPath,
   getLoginSignupPath,
   getPostLoginRedirectPath,
@@ -48,6 +50,8 @@ describe("login and app paths", () => {
     expect(appPaths.login).toBe("/login");
     expect(appPaths.app).toBe("/app");
     expect(appPaths.appWardrobes).toBe("/app/wardrobes");
+    expect(appPaths.appWardrobe).toBe("/app/wardrobes/:id");
+    expect(appPaths.appItem).toBe("/app/items/:id");
     expect(appPaths.appOutfits).toBe("/app/outfits");
     expect(appPaths.appVirtualProfiles).toBe("/app/virtual-profiles");
     expect(appPaths.appPlan).toBe("/app/plan");
@@ -60,6 +64,11 @@ describe("login and app paths", () => {
     expect(getAppPath("/x")).toBe("/app/x");
     expect(getAppPath("/x/")).toBe("/app/x");
     expect(getAppPath("looks/saved")).toBe("/app/looks/saved");
+    expect(getAppWardrobePath("wd_weekend01")).toBe("/app/wardrobes/wd_weekend01");
+    expect(getAppItemPath("item_navytee01")).toBe("/app/items/item_navytee01");
+    expect(getAppItemPath("item_navytee01", "wd_weekend01")).toBe(
+      "/app/items/item_navytee01?wardrobeId=wd_weekend01",
+    );
   });
 
   it("detects /app and nested app paths", () => {
