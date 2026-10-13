@@ -30,7 +30,18 @@ export const DashboardPage = ({
         flex: 1,
       }}
     >
-      <Container maxWidth="lg">
+      <Container
+        maxWidth={false}
+        disableGutters
+        data-testid="dashboard-page-container"
+        sx={{
+          width: "100%",
+          maxWidth: "none",
+          mx: 0,
+          px: 3,
+          boxSizing: "border-box",
+        }}
+      >
         <Stack spacing={3}>
           <Stack
             direction={{ xs: "column", sm: "row" }}

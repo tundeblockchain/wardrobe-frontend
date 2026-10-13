@@ -4,12 +4,16 @@ import { Box, Chip, Paper, Stack, Typography } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 import { ResourceImage } from "./ResourceImage";
 
+export const DEFAULT_RESOURCE_CARD_IMAGE_ASPECT_RATIO = "3 / 4";
+export const WARDROBE_CARD_IMAGE_ASPECT_RATIO = "4 / 3";
+
 export type ResourceCardProps = {
   to?: string;
   title: string;
   titleId: string;
   imageUrl?: string;
   imageAlt: string;
+  imageAspectRatio?: string;
   fallbackLabel: string;
   FallbackIcon?: SvgIconComponent;
   chips?: string[];
@@ -23,6 +27,7 @@ export const ResourceCard = ({
   titleId,
   imageUrl,
   imageAlt,
+  imageAspectRatio = DEFAULT_RESOURCE_CARD_IMAGE_ASPECT_RATIO,
   fallbackLabel,
   FallbackIcon,
   chips = [],
@@ -42,7 +47,11 @@ export const ResourceCard = ({
 
   const content = (
     <>
-      <Box sx={{ aspectRatio: "3 / 4", overflow: "hidden" }}>
+      <Box
+        data-testid="resource-card-image-frame"
+        data-aspect-ratio={imageAspectRatio}
+        sx={{ aspectRatio: imageAspectRatio, overflow: "hidden" }}
+      >
         <ResourceImage
           imageUrl={imageUrl}
           alt={imageAlt}

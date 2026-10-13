@@ -37,6 +37,28 @@ export const getWardrobeItemsApiPath = (wardrobeId: string): string => {
   return `${getWardrobeApiPath(wardrobeId)}/items`;
 };
 
+export type ListWardrobeItemsOptions = {
+  limit?: number;
+};
+
+/** Smallest page size the items list route accepts as a query param. */
+export const WARDROBE_COVER_ITEM_LIMIT = 1;
+
+export const getWardrobeItemsListApiPath = (
+  wardrobeId: string,
+  options: ListWardrobeItemsOptions = {},
+): string => {
+  const path = getWardrobeItemsApiPath(wardrobeId);
+  if (options.limit === undefined) {
+    return path;
+  }
+
+  const params = new URLSearchParams({
+    limit: String(options.limit),
+  });
+  return `${path}?${params.toString()}`;
+};
+
 export const getWardrobeItemApiPath = (
   wardrobeId: string,
   itemId: string,
@@ -68,7 +90,10 @@ export type ResourceApi = {
     wardrobeId: string,
     body: UpdateWardrobeRequest,
   ) => Promise<Wardrobe>;
-  listWardrobeItems: (wardrobeId: string) => Promise<ClothingItemList>;
+  listWardrobeItems: (
+    wardrobeId: string,
+    options?: ListWardrobeItemsOptions,
+  ) => Promise<ClothingItemList>;
   getItem: (itemId: string) => Promise<ClothingItem>;
   createItem: (
     wardrobeId: string,
@@ -116,8 +141,13 @@ export const createLiveResourceApi = (api: AuthenticatedApi): ResourceApi => {
     return api.request<Wardrobe>(getWardrobeApiPath(wardrobeId));
   };
 
-  const listWardrobeItems = (wardrobeId: string): Promise<ClothingItemList> => {
-    return api.request<ClothingItemList>(getWardrobeItemsApiPath(wardrobeId));
+  const listWardrobeItems = (
+    wardrobeId: string,
+    options?: ListWardrobeItemsOptions,
+  ): Promise<ClothingItemList> => {
+    return api.request<ClothingItemList>(
+      getWardrobeItemsListApiPath(wardrobeId, options),
+    );
   };
 
   const getItem = (itemId: string): Promise<ClothingItem> => {
