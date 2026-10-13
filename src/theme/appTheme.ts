@@ -32,7 +32,7 @@ export const appTheme = createTheme({
   },
   gradients: wardrobeGradients,
   typography: {
-    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+    fontFamily: '"Inter", "Helvetica", "Arial", sans-serif',
     h1: {
       fontSize: "2.5rem",
       fontWeight: 700,

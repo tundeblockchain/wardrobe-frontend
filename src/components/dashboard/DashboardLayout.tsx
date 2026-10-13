@@ -3,14 +3,13 @@ import { Box, useMediaQuery } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { Outlet } from "react-router-dom";
 import { SkipLink } from "../SkipLink";
+import { AppFooter } from "../../layout/AppFooter";
 import { AppMain } from "../../layout/AppMain";
 import { RouteFallback } from "../../routes/RouteFallback";
 import { AppSidebar } from "./AppSidebar";
 import { TopBar } from "./TopBar";
 import {
   readSidebarCollapsed,
-  SIDEBAR_WIDTH,
-  SIDEBAR_WIDTH_COLLAPSED,
   writeSidebarCollapsed,
 } from "./sidebarCollapsed";
 
@@ -19,7 +18,6 @@ export const DashboardLayout = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [collapsed, setCollapsed] = useState(readSidebarCollapsed);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const sidebarWidth = collapsed ? SIDEBAR_WIDTH_COLLAPSED : SIDEBAR_WIDTH;
 
   const handleToggleCollapsed = () => {
     const nextCollapsed = !collapsed;
@@ -68,16 +66,14 @@ export const DashboardLayout = () => {
         onCloseMobile={handleCloseMobileDrawer}
       />
       <Box
+        data-testid="dashboard-content"
         sx={{
           flexGrow: 1,
           display: "flex",
           flexDirection: "column",
           minWidth: 0,
-          ml: isMobile ? 0 : `${sidebarWidth}px`,
+          ml: 0,
           pt: { xs: 7, sm: 8 },
-          transition: theme.transitions.create("margin-left", {
-            duration: theme.transitions.duration.enteringScreen,
-          }),
         }}
       >
         <AppMain>
@@ -85,6 +81,7 @@ export const DashboardLayout = () => {
             <Outlet />
           </Suspense>
         </AppMain>
+        <AppFooter />
       </Box>
     </Box>
   );

@@ -26,6 +26,34 @@ const RouteLocation = () => {
   );
 };
 
+const expectLegalFooterLinks = () => {
+  const footer = screen.getByRole("contentinfo");
+  const legalNav = within(footer).getByRole("navigation", { name: "Legal" });
+
+  expect(
+    within(legalNav).getByRole("link", { name: "Terms of Service" }),
+  ).toHaveAttribute("href", appPaths.terms);
+  expect(
+    within(legalNav).getByRole("link", { name: "Privacy Policy" }),
+  ).toHaveAttribute("href", appPaths.privacy);
+  expect(
+    within(legalNav).getByRole("link", { name: "Contact us" }),
+  ).toHaveAttribute("href", appPaths.contact);
+};
+
+const expectHeaderHasNoLegalLinks = () => {
+  const header = screen.getByRole("banner");
+  expect(
+    within(header).queryByRole("link", { name: "Terms of Service" }),
+  ).not.toBeInTheDocument();
+  expect(
+    within(header).queryByRole("link", { name: "Privacy Policy" }),
+  ).not.toBeInTheDocument();
+  expect(
+    within(header).queryByRole("link", { name: "Contact us" }),
+  ).not.toBeInTheDocument();
+};
+
 const renderAppRoutes = (
   route?: string,
   auth?: { user?: { id: string } | null; loading?: boolean },
@@ -72,9 +100,8 @@ describe("AppRoutes", () => {
     expect(
       screen.getByRole("navigation", { name: "Primary" }),
     ).toBeInTheDocument();
-    expect(
-      screen.getByRole("navigation", { name: "Legal" }),
-    ).toBeInTheDocument();
+    expectHeaderHasNoLegalLinks();
+    expectLegalFooterLinks();
     expect(getApps()).toHaveLength(0);
   });
 
@@ -138,6 +165,28 @@ describe("AppRoutes", () => {
     expect(getApps()).toHaveLength(0);
   });
 
+  it("shows footer legal links on landing, login, and dashboard", async () => {
+    const { unmount: unmountLanding } = renderAppRoutes(appPaths.home);
+    expectHeaderHasNoLegalLinks();
+    expectLegalFooterLinks();
+    unmountLanding();
+
+    const { unmount: unmountLogin } = renderAppRoutes(appPaths.login);
+    expect(
+      await screen.findByRole("heading", { level: 1, name: "Sign in" }),
+    ).toBeInTheDocument();
+    expectHeaderHasNoLegalLinks();
+    expectLegalFooterLinks();
+    unmountLogin();
+
+    renderAppRoutes(appPaths.app, { user: { id: "user-1" } });
+    expect(
+      await screen.findByRole("heading", { level: 1, name: "Your closet" }),
+    ).toBeInTheDocument();
+    expectHeaderHasNoLegalLinks();
+    expectLegalFooterLinks();
+  });
+
   it("renders the public login page at /login without auth", async () => {
     renderAppRoutes(appPaths.login);
 
@@ -150,6 +199,8 @@ describe("AppRoutes", () => {
     expect(
       screen.getByRole("navigation", { name: "Primary" }),
     ).toBeInTheDocument();
+    expectHeaderHasNoLegalLinks();
+    expectLegalFooterLinks();
   });
 
   it("navigates from the landing footer to legal and contact pages", async () => {
@@ -250,9 +301,8 @@ describe("AppRoutes", () => {
     expect(
       screen.queryByRole("navigation", { name: "Primary" }),
     ).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole("navigation", { name: "Legal" }),
-    ).not.toBeInTheDocument();
+    expectHeaderHasNoLegalLinks();
+    expectLegalFooterLinks();
   });
 
   it("renders a nested /app path for a signed-in user", async () => {

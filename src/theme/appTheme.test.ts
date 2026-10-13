@@ -79,6 +79,10 @@ describe("wardrobePalette", () => {
 });
 
 describe("appTheme", () => {
+  it("uses Inter as the site font", () => {
+    expect(appTheme.typography.fontFamily).toContain("Inter");
+  });
+
   it("exposes the original light palette tokens on the MUI theme", () => {
     expect(appTheme.palette.mode).toBe("light");
     expect(appTheme.palette.background.default).toBe(
