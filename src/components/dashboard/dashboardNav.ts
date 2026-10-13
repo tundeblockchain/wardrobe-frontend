@@ -1,9 +1,9 @@
 import type { SvgIconComponent } from "@mui/icons-material";
-import CalendarMonthOutlined from "@mui/icons-material/CalendarMonthOutlined";
 import CheckroomOutlined from "@mui/icons-material/CheckroomOutlined";
 import AutoAwesomeOutlined from "@mui/icons-material/AutoAwesomeOutlined";
 import FaceRetouchingNaturalOutlined from "@mui/icons-material/FaceRetouchingNaturalOutlined";
 import HomeOutlined from "@mui/icons-material/HomeOutlined";
+import ManageAccountsOutlined from "@mui/icons-material/ManageAccountsOutlined";
 import StyleOutlined from "@mui/icons-material/StyleOutlined";
 import { appPaths } from "../../routes/paths";
 
@@ -48,9 +48,9 @@ export const dashboardNavItems: DashboardNavItem[] = [
     Icon: AutoAwesomeOutlined,
   },
   {
-    id: "plan",
-    label: "Plan",
-    path: appPaths.appPlan,
-    Icon: CalendarMonthOutlined,
+    id: "settings",
+    label: "Profile & Settings",
+    path: appPaths.appSettings,
+    Icon: ManageAccountsOutlined,
   },
 ];

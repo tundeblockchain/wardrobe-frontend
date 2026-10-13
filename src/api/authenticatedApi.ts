@@ -9,13 +9,16 @@ import {
 } from "./httpClient";
 import {
   ENTITLEMENT_STORES,
+  type AccountDeleteResult,
   type Entitlement,
   type EntitlementStore,
 } from "./resourceTypes";
 
+export const ME_PATH = "/me";
 export const ME_STORES = ENTITLEMENT_STORES;
 export type MeStore = EntitlementStore;
 export type MeResponse = Entitlement;
+export type { AccountDeleteResult };
 
 export type ApiAuth = Pick<AuthActions, "getIdToken" | "signOut">;
 
@@ -37,6 +40,7 @@ export type AuthenticatedApi = {
     options?: AuthenticatedRequestOptions,
   ) => Promise<T>;
   getMe: () => Promise<MeResponse>;
+  deleteAccount: () => Promise<AccountDeleteResult>;
 };
 
 const redirectToLogin = (navigate?: (path: string) => void) => {
@@ -120,11 +124,16 @@ export const createAuthenticatedApi = (
   };
 
   const getMe = (): Promise<MeResponse> => {
-    return send<MeResponse>("/me");
+    return send<MeResponse>(ME_PATH);
+  };
+
+  const deleteAccount = (): Promise<AccountDeleteResult> => {
+    return send<AccountDeleteResult>(ME_PATH, { method: "DELETE" });
   };
 
   return {
     request: send,
     getMe,
+    deleteAccount,
   };
 };

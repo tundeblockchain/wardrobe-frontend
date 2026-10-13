@@ -22,7 +22,8 @@ export const appPaths = {
   appVirtualProfileNew: `${APP_BASE_PATH}/virtual-profiles/new`,
   appVirtualProfileEdit: `${APP_BASE_PATH}/virtual-profiles/:id/edit`,
   appVirtualTryOn: `${APP_BASE_PATH}/virtual-try-on`,
-  appPlan: `${APP_BASE_PATH}/plan`,
+  appSettings: `${APP_BASE_PATH}/settings`,
+  appPlan: `${APP_BASE_PATH}/settings`,
 } as const;
 
 export const WARDROBE_ID_QUERY_PARAM = "wardrobeId";

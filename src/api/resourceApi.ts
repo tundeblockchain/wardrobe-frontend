@@ -3,6 +3,7 @@ import type { AuthenticatedApi } from "./authenticatedApi";
 import { ApiError, isApiError } from "./httpClient";
 import { createMockResourceApi } from "./mockResourceApi";
 import {
+  type AccountDeleteResult,
   type AiProfile,
   type AiProfileList,
   type AttachAiProfileReferenceImagesRequest,
@@ -118,6 +119,7 @@ export const getWardrobeOutfitRenderApiPath = (
 
 export type ResourceApi = {
   getMe: () => Promise<Entitlement>;
+  deleteAccount: () => Promise<AccountDeleteResult>;
   listWardrobes: () => Promise<WardrobeList>;
   getWardrobe: (wardrobeId: string) => Promise<Wardrobe>;
   createWardrobe: (body: CreateWardrobeRequest) => Promise<Wardrobe>;
@@ -201,6 +203,10 @@ const itemNotFoundError = (): ApiError => {
 export const createLiveResourceApi = (api: AuthenticatedApi): ResourceApi => {
   const getMe = (): Promise<Entitlement> => {
     return api.getMe();
+  };
+
+  const deleteAccount = (): Promise<AccountDeleteResult> => {
+    return api.deleteAccount();
   };
 
   const listWardrobes = (): Promise<WardrobeList> => {
@@ -440,6 +446,7 @@ export const createLiveResourceApi = (api: AuthenticatedApi): ResourceApi => {
 
   return {
     getMe,
+    deleteAccount,
     listWardrobes,
     getWardrobe,
     createWardrobe,

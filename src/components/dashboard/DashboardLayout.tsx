@@ -6,6 +6,7 @@ import { SkipLink } from "../SkipLink";
 import { AppFooter } from "../../layout/AppFooter";
 import { AppMain } from "../../layout/AppMain";
 import { RouteFallback } from "../../routes/RouteFallback";
+import { DashboardThemeProvider } from "../../theme/DashboardThemeProvider";
 import { AppSidebar } from "./AppSidebar";
 import { TopBar } from "./TopBar";
 import {
@@ -43,6 +44,7 @@ export const DashboardLayout = () => {
   };
 
   return (
+    <DashboardThemeProvider>
     <Box
       sx={{
         minHeight: "100vh",
@@ -84,5 +86,6 @@ export const DashboardLayout = () => {
         <AppFooter />
       </Box>
     </Box>
+    </DashboardThemeProvider>
   );
 };

@@ -217,6 +217,11 @@ export type EntitlementUsage = {
   outfits: number;
 };
 
+/** DELETE /me — Flutter WARDROBE-154 / backend account-delete contract. */
+export type AccountDeleteResult = {
+  deleted: boolean;
+};
+
 /** GET /me */
 export type Entitlement = {
   userId: string;

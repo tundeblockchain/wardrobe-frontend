@@ -305,6 +305,37 @@ describe("AppRoutes", () => {
     expectLegalFooterLinks();
   });
 
+  it("renders Profile & Settings and redirects /app/plan there", async () => {
+    const { unmount } = renderAppRoutes(appPaths.appSettings, {
+      user: { id: "user-1" },
+    });
+
+    expect(
+      await screen.findByRole("heading", {
+        level: 1,
+        name: "Profile & Settings",
+      }),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId("route-location")).toHaveTextContent(
+      appPaths.appSettings,
+    );
+    expect(
+      screen.queryByRole("link", { name: "Plan" }),
+    ).not.toBeInTheDocument();
+    unmount();
+
+    renderAppRoutes("/app/plan", { user: { id: "user-1" } });
+    expect(
+      await screen.findByRole("heading", {
+        level: 1,
+        name: "Profile & Settings",
+      }),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId("route-location")).toHaveTextContent(
+      appPaths.appSettings,
+    );
+  });
+
   it("renders a nested /app path for a signed-in user", async () => {
     renderAppRoutes(appPaths.appWardrobes, { user: { id: "user-1" } });
 

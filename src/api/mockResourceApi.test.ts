@@ -18,6 +18,7 @@ describe("createMockResourceApi", () => {
     const api = createMockResourceApi();
 
     await expect(api.getMe()).resolves.toEqual(mockEntitlement);
+    await expect(api.deleteAccount()).resolves.toEqual({ deleted: true });
     await expect(api.listWardrobes()).resolves.toEqual({
       wardrobes: mockWardrobes,
     });

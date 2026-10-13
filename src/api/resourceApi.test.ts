@@ -89,10 +89,12 @@ const aiProfile: AiProfile = {
 const createApi = (
   request: AuthenticatedApi["request"],
   getMe: AuthenticatedApi["getMe"] = vi.fn(),
+  deleteAccount: AuthenticatedApi["deleteAccount"] = vi.fn(),
 ): AuthenticatedApi => {
   return {
     request,
     getMe,
+    deleteAccount,
   };
 };
 
@@ -109,6 +111,14 @@ describe("createLiveResourceApi", () => {
 
     await expect(api.getMe()).resolves.toEqual(entitlement);
     expect(getMe).toHaveBeenCalledTimes(1);
+  });
+
+  it("deletes the account with DELETE /me", async () => {
+    const deleteAccount = vi.fn().mockResolvedValue({ deleted: true });
+    const api = createLiveResourceApi(createApi(vi.fn(), vi.fn(), deleteAccount));
+
+    await expect(api.deleteAccount()).resolves.toEqual({ deleted: true });
+    expect(deleteAccount).toHaveBeenCalledTimes(1);
   });
 
   it("calls GET /wardrobes and wardrobe detail plus items", async () => {

@@ -3,6 +3,7 @@ import { isAllowedUploadContentType } from "./catalogValidation";
 import { ApiError } from "./httpClient";
 import type { ListWardrobeItemsOptions, ResourceApi } from "./resourceApi";
 import type {
+  AccountDeleteResult,
   AiProfile,
   AttachAiProfileReferenceImagesRequest,
   ClothingItem,
@@ -387,6 +388,10 @@ export const createMockResourceApi = (
   const getMe = async () => {
     syncUsage();
     return delay(cloneEntitlement(entitlement));
+  };
+
+  const deleteAccount = async (): Promise<AccountDeleteResult> => {
+    return delay({ deleted: true });
   };
 
   const listWardrobes = async () => {
@@ -849,6 +854,7 @@ export const createMockResourceApi = (
 
   return {
     getMe,
+    deleteAccount,
     listWardrobes,
     getWardrobe,
     createWardrobe,
@@ -905,6 +911,7 @@ const rejectAll = (error: ApiError): ResourceApi => {
 
   return {
     getMe: reject,
+    deleteAccount: reject,
     listWardrobes: reject,
     getWardrobe: reject,
     createWardrobe: reject,
