@@ -1,7 +1,7 @@
 import { catalogLimitError, isAtCatalogLimit } from "./catalogLimits";
 import { isAllowedUploadContentType } from "./catalogValidation";
 import { ApiError } from "./httpClient";
-import type { ResourceApi } from "./resourceApi";
+import type { ListWardrobeItemsOptions, ResourceApi } from "./resourceApi";
 import type {
   AiProfile,
   AttachAiProfileReferenceImagesRequest,
@@ -206,8 +206,8 @@ const cloneItem = (item: ClothingItem): ClothingItem => {
   return {
     ...item,
     colours: item.colours ? [...item.colours] : undefined,
-    tags: item.tags ? [...item.tags] : undefined,
     image: item.image ? { ...item.image } : undefined,
+    ...(item.tags ? { tags: [...item.tags] } : {}),
   };
 };
 
@@ -430,12 +430,22 @@ export const createMockResourceApi = (
     return delay(cloneWardrobe(wardrobe));
   };
 
-  const listWardrobeItems = async (wardrobeId: string) => {
+  const listWardrobeItems = async (
+    wardrobeId: string,
+    options: ListWardrobeItemsOptions = {},
+  ) => {
     await getWardrobe(wardrobeId);
+    const wardrobeItems = items
+      .filter((item) => item.wardrobeId === wardrobeId)
+      .map(cloneItem);
+    const limit = options.limit;
+    const limitedItems =
+      typeof limit === "number" && Number.isFinite(limit) && limit >= 0
+        ? wardrobeItems.slice(0, limit)
+        : wardrobeItems;
+
     return delay({
-      items: items
-        .filter((item) => item.wardrobeId === wardrobeId)
-        .map(cloneItemWithRender),
+      items: limitedItems,
     });
   };
 

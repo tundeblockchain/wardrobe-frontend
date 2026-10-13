@@ -63,6 +63,19 @@ describe("createMockResourceApi", () => {
     });
   });
 
+  it("limits wardrobe item lists when a limit is provided", async () => {
+    const api = createMockResourceApi();
+
+    await expect(
+      api.listWardrobeItems("wd_weekend01", { limit: 1 }),
+    ).resolves.toEqual({
+      items: [mockItems[0]],
+    });
+    await expect(api.listWardrobeItems("wd_weekend01")).resolves.toEqual({
+      items: mockItems.filter((entry) => entry.wardrobeId === "wd_weekend01"),
+    });
+  });
+
   it("returns not-found errors for unknown detail ids", async () => {
     const api = createMockResourceApi();
 

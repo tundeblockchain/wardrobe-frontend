@@ -112,7 +112,7 @@ describe("AppHomePage", () => {
     );
   });
 
-  it("does not request wardrobe items for each card", async () => {
+  it("does not request wardrobe items when a card already has a photo", async () => {
     const listWardrobeItems = vi.fn(async () => ({ items: [] }));
     const getWardrobeDetail = vi.fn(async () => {
       throw new Error("should not load wardrobe items for home cards");
@@ -130,6 +130,84 @@ describe("AppHomePage", () => {
     ).toBeInTheDocument();
     expect(listWardrobeItems).not.toHaveBeenCalled();
     expect(getWardrobeDetail).not.toHaveBeenCalled();
+  });
+
+  it("falls back to the first item photo only when a wardrobe has no cover", async () => {
+    const listWardrobeItems = vi.fn(async (wardrobeId: string) => {
+      if (wardrobeId !== "wd_items") {
+        throw new Error(`unexpected items request for ${wardrobeId}`);
+      }
+
+      return {
+        items: [
+          {
+            itemId: "item_from_wardrobe",
+            wardrobeId,
+            name: "Navy tee",
+            category: "TOP" as const,
+            processingStatus: "READY" as const,
+            originalImageUrl: "https://cdn.example.com/item.jpg",
+            createdAt: "2026-09-03T18:40:00.000Z",
+            updatedAt: "2026-09-03T18:40:00.000Z",
+          },
+        ],
+      };
+    });
+
+    renderPage(
+      createMockResourceApi(
+        { listWardrobeItems },
+        {
+          wardrobes: [
+            wardrobe({
+              wardrobeId: "wd_image",
+              name: "With image",
+              imageUrl: "https://cdn.example.com/wardrobe.jpg",
+            }),
+            wardrobe({
+              wardrobeId: "wd_items",
+              name: "From item",
+            }),
+          ],
+        },
+      ),
+    );
+
+    expect(await screen.findByRole("img", { name: "With image" })).toHaveAttribute(
+      "src",
+      "https://cdn.example.com/wardrobe.jpg",
+    );
+    expect(screen.getByRole("img", { name: "From item" })).toHaveAttribute(
+      "src",
+      "https://cdn.example.com/item.jpg",
+    );
+    expect(listWardrobeItems).toHaveBeenCalledTimes(1);
+    expect(listWardrobeItems).toHaveBeenCalledWith("wd_items", { limit: 1 });
+  });
+
+  it("shows the placeholder when the items fallback fails", async () => {
+    const listWardrobeItems = vi.fn(async () => {
+      throw new Error("items unavailable");
+    });
+
+    renderPage(
+      createMockResourceApi(
+        { listWardrobeItems },
+        {
+          wardrobes: [wardrobe({ wardrobeId: "wd_empty", name: "No photo" })],
+        },
+      ),
+    );
+
+    expect(
+      await screen.findByRole("heading", { level: 1, name: "Your closet" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("img", { name: "No photo" })).not.toBeInTheDocument();
+    expect(screen.getByText("No photo for this wardrobe")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: "Couldn't load wardrobes" }),
+    ).not.toBeInTheDocument();
+    expect(listWardrobeItems).toHaveBeenCalledTimes(1);
   });
 
   it("renders an empty state when there are no wardrobes", async () => {
