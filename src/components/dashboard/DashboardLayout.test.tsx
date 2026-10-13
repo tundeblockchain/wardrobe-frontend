@@ -6,6 +6,7 @@ import { AppHomePage } from "../../pages/app/AppHomePage";
 import { OutfitsPage } from "../../pages/app/OutfitsPage";
 import { PlanPage } from "../../pages/app/PlanPage";
 import { VirtualProfilesPage } from "../../pages/app/VirtualProfilesPage";
+import { VirtualTryOnPage } from "../../pages/app/VirtualTryOnPage";
 import { WardrobesPage } from "../../pages/app/WardrobesPage";
 import { ProtectedRoute } from "../../routes/ProtectedRoute";
 import { appPaths } from "../../routes/paths";
@@ -49,6 +50,7 @@ const renderDashboard = (route = appPaths.app) => {
           <Route path="wardrobes" element={<WardrobesPage />} />
           <Route path="outfits" element={<OutfitsPage />} />
           <Route path="virtual-profiles" element={<VirtualProfilesPage />} />
+          <Route path="virtual-try-on" element={<VirtualTryOnPage />} />
           <Route path="plan" element={<PlanPage />} />
         </Route>
         <Route path={appPaths.login} element={<p>Sign in page</p>} />
@@ -95,6 +97,9 @@ describe("DashboardLayout", () => {
     expect(
       within(appNav).getByRole("link", { name: "Virtual Profiles" }),
     ).toHaveAttribute("href", appPaths.appVirtualProfiles);
+    expect(
+      within(appNav).getByRole("link", { name: "Virtual Try On" }),
+    ).toHaveAttribute("href", appPaths.appVirtualTryOn);
     expect(within(appNav).getByRole("link", { name: "Plan" })).toHaveAttribute(
       "href",
       appPaths.appPlan,

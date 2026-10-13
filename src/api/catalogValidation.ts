@@ -27,6 +27,11 @@ export type OutfitFormValues = {
   items: OutfitItem[];
 };
 
+export type VirtualProfileFormValues = {
+  label: string;
+  notes: string;
+};
+
 export type FieldErrors<T extends string> = Partial<Record<T, string>>;
 
 const ISO_DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
@@ -205,6 +210,28 @@ export const validateOutfitForm = (
       return errors;
     }
     seenUniqueSlots.add(entry.slot);
+  }
+
+  return errors;
+};
+
+export const validateVirtualProfileForm = (
+  values: VirtualProfileFormValues,
+  options: { requireImage: boolean; hasImage: boolean },
+): FieldErrors<"label" | "notes" | "image"> => {
+  const errors: FieldErrors<"label" | "notes" | "image"> = {};
+  const label = values.label.trim();
+  if (label.length > NAME_MAX_LENGTH) {
+    errors.label = `Name must be ${NAME_MAX_LENGTH} characters or fewer.`;
+  }
+
+  const notes = values.notes.trim();
+  if (notes.length > NAME_MAX_LENGTH) {
+    errors.notes = `Notes must be ${NAME_MAX_LENGTH} characters or fewer.`;
+  }
+
+  if (options.requireImage && !options.hasImage) {
+    errors.image = "A photo is required.";
   }
 
   return errors;

@@ -32,7 +32,10 @@ describe("createMockResourceApi", () => {
       outfits: [{ name: "Sunday brunch" }],
     });
     await expect(api.listAiProfiles()).resolves.toMatchObject({
-      aiProfiles: [{ label: "Weekday look" }, { label: "Catalog model" }],
+      aiProfiles: [{ label: "Weekday look" }],
+    });
+    await expect(api.listGenericAiProfiles()).resolves.toMatchObject({
+      aiProfiles: [{ label: "Catalog model" }],
     });
     expect(mockWardrobes[0]).toEqual(
       expect.objectContaining({
@@ -46,6 +49,18 @@ describe("createMockResourceApi", () => {
       }),
     );
     expect(mockWardrobes[1]).not.toHaveProperty("imageUrl");
+  });
+
+  it("deletes a clothing item from the nested wardrobe route", async () => {
+    const api = createMockResourceApi();
+
+    await expect(
+      api.deleteItem("wd_weekend01", "item_navytee01"),
+    ).resolves.toBeUndefined();
+    await expect(api.getItem("item_navytee01")).rejects.toMatchObject({
+      status: 404,
+      code: "ITEM_NOT_FOUND",
+    });
   });
 
   it("limits wardrobe item lists when a limit is provided", async () => {
