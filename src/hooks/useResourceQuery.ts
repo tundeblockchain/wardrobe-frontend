@@ -59,7 +59,10 @@ export const useResourceQuery = <T>(
     undefined,
   );
   const queryFnRef = useRef(queryFn);
-  queryFnRef.current = queryFn;
+
+  useEffect(() => {
+    queryFnRef.current = queryFn;
+  }, [queryFn]);
 
   const handleRetry = () => {
     setReloadCount((currentCount) => currentCount + 1);
