@@ -59,7 +59,12 @@ export const DashboardPage = ({
               >
                 {appName}
               </Typography>
-              <Typography id={headingId} variant="h1" component="h1">
+              <Typography
+                id={headingId}
+                variant="h1"
+                component="h1"
+                color="text.primary"
+              >
                 {title}
               </Typography>
               <Typography variant="body1" color="text.secondary">
