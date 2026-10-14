@@ -4,8 +4,8 @@ import type {
   ListJobEventsOptions,
 } from "./authenticatedApi";
 import {
-  BILLING_PORTAL_PATH,
   createCheckoutSession as requestCheckoutSession,
+  createPortalSession as requestPortalSession,
   type BillingInterval,
   type BillingSession,
   type CheckoutTier,
@@ -249,9 +249,7 @@ export const createLiveResourceApi = (api: AuthenticatedApi): ResourceApi => {
   };
 
   const createPortalSession = (): Promise<BillingSession> => {
-    return api.request<BillingSession>(BILLING_PORTAL_PATH, {
-      method: "POST",
-    });
+    return requestPortalSession(api);
   };
 
   const listWardrobes = (): Promise<WardrobeList> => {

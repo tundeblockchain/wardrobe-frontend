@@ -159,6 +159,14 @@ describe("createLiveResourceApi", () => {
     expect(request).toHaveBeenNthCalledWith(3, "/billing/portal-session", {
       method: "POST",
     });
+    expect(Object.keys(request.mock.calls[0]?.[1]?.body ?? {}).sort()).toEqual([
+      "interval",
+      "tier",
+    ]);
+    expect(request.mock.calls[2]?.[1]).not.toHaveProperty("body");
+    expect(JSON.stringify(request.mock.calls)).not.toMatch(
+      /success_url|cancel_url|return_url|successUrl|cancelUrl|returnUrl|location\.origin/i,
+    );
   });
 
   it("clears content and lists job events through the authenticated client", async () => {

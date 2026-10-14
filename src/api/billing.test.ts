@@ -108,6 +108,40 @@ describe("billing API", () => {
     });
   });
 
+  it("never sends success, cancel, or return URLs, or window.location.origin", async () => {
+    const request = vi.fn().mockResolvedValue({
+      url: "https://checkout.example.test/session/cs_from_server",
+    });
+    const api = createApi(request);
+
+    await createCheckoutSession(api, "basic", "monthly");
+    await createCheckoutSession(api, "premium", "yearly");
+    await createPortalSession(api);
+
+    const checkoutBodies = request.mock.calls
+      .filter((call) => call[0] === BILLING_CHECKOUT_PATH)
+      .map((call) => call[1]?.body);
+    const portalOptions = request.mock.calls.find(
+      (call) => call[0] === BILLING_PORTAL_PATH,
+    )?.[1];
+
+    expect(checkoutBodies).toEqual([
+      { tier: "basic", interval: "monthly" },
+      { tier: "premium", interval: "yearly" },
+    ]);
+    for (const body of checkoutBodies) {
+      expect(Object.keys(body).sort()).toEqual(["interval", "tier"]);
+    }
+    expect(portalOptions).toEqual({ method: "POST" });
+    expect(portalOptions).not.toHaveProperty("body");
+
+    const serialized = JSON.stringify(request.mock.calls);
+    expect(serialized).not.toMatch(/success_url|cancel_url|return_url/i);
+    expect(serialized).not.toMatch(/successUrl|cancelUrl|returnUrl/);
+    expect(serialized).not.toContain("location.origin");
+    expect(serialized).not.toContain("window.location");
+  });
+
   it("accepts http(s) billing redirect URLs and rejects others", () => {
     expect(
       readBillingSessionUrl({ url: "https://checkout.stripe.com/c/pay/cs" }),
