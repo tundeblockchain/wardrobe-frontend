@@ -11,6 +11,8 @@ import {
   getAppSettingsPlanPath,
   getAppWardrobeEditPath,
   getAppWardrobePath,
+  getAppWardrobeRecommendationDetailPath,
+  getAppWardrobeRecommendationsPath,
   getLoginPath,
   SETTINGS_PLAN_HASH,
   getLoginSignupPath,
@@ -64,6 +66,12 @@ describe("login and app paths", () => {
     expect(appPaths.appWardrobe).toBe("/app/wardrobes/:id");
     expect(appPaths.appWardrobeEdit).toBe("/app/wardrobes/:id/edit");
     expect(appPaths.appWardrobeItemNew).toBe("/app/wardrobes/:id/items/new");
+    expect(appPaths.appWardrobeRecommendations).toBe(
+      "/app/wardrobes/:id/recommendations",
+    );
+    expect(appPaths.appWardrobeRecommendationDetail).toBe(
+      "/app/wardrobes/:id/recommendations/detail",
+    );
     expect(appPaths.appItem).toBe("/app/items/:id");
     expect(appPaths.appItemEdit).toBe("/app/items/:id/edit");
     expect(appPaths.appOutfits).toBe("/app/outfits");
@@ -102,6 +110,12 @@ describe("login and app paths", () => {
     );
     expect(getAppItemNewPath("wd_weekend01")).toBe(
       "/app/wardrobes/wd_weekend01/items/new",
+    );
+    expect(getAppWardrobeRecommendationsPath("wd_weekend01")).toBe(
+      "/app/wardrobes/wd_weekend01/recommendations",
+    );
+    expect(getAppWardrobeRecommendationDetailPath("wd_weekend01")).toBe(
+      "/app/wardrobes/wd_weekend01/recommendations/detail",
     );
     expect(getAppItemPath("item_navytee01")).toBe("/app/items/item_navytee01");
     expect(getAppItemPath("item_navytee01", "wd_weekend01")).toBe(

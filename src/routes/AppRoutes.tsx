@@ -39,6 +39,16 @@ const WardrobeDetailPage = lazy(async () => {
   return { default: module.WardrobeDetailPage };
 });
 
+const RecommendationsPage = lazy(async () => {
+  const module = await import("../pages/app/RecommendationsPage");
+  return { default: module.RecommendationsPage };
+});
+
+const RecommendationDetailPage = lazy(async () => {
+  const module = await import("../pages/app/RecommendationDetailPage");
+  return { default: module.RecommendationDetailPage };
+});
+
 const ItemFormPage = lazy(async () => {
   const module = await import("../pages/app/ItemFormPage");
   return { default: module.ItemFormPage };
@@ -138,6 +148,14 @@ export const AppRoutes = () => {
         <Route
           path="wardrobes/:id/items/new"
           element={<ItemFormPage mode="create" />}
+        />
+        <Route
+          path="wardrobes/:id/recommendations/detail"
+          element={<RecommendationDetailPage />}
+        />
+        <Route
+          path="wardrobes/:id/recommendations"
+          element={<RecommendationsPage />}
         />
         <Route path="wardrobes/:id" element={<WardrobeDetailPage />} />
         <Route path="items/:id/edit" element={<ItemFormPage mode="edit" />} />

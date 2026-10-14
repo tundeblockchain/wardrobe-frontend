@@ -19,6 +19,7 @@ import {
   getWardrobeOutfitApiPath,
   getWardrobeOutfitRenderApiPath,
   getWardrobeOutfitsApiPath,
+  getWardrobeRecommendationsApiPath,
   isEntitlementAiRequiredError,
   isNotFoundError,
   itemCollectionPath,
@@ -246,6 +247,50 @@ describe("createLiveResourceApi", () => {
     await expect(api.getItem("item_1")).resolves.toEqual(item);
     expect(request).toHaveBeenCalledTimes(1);
     expect(request).toHaveBeenCalledWith("/items/item_1");
+  });
+
+  it("lists suggested outfits from GET /wardrobes/{id}/recommendations", async () => {
+    const recommendation = {
+      name: "Navy + cream look",
+      reason: "A weekend look from pieces you already own.",
+      items: [{ itemId: "item_1", slot: "TOP" as const }],
+    };
+    const request = vi.fn(async (path: string) => {
+      if (path === getWardrobeRecommendationsApiPath("wd_1")) {
+        return { recommendations: [recommendation] };
+      }
+      throw new Error(`unexpected path ${path}`);
+    });
+    const api = createLiveResourceApi(createApi(asRequest(request)));
+
+    await expect(api.listRecommendations("wd_1")).resolves.toEqual({
+      recommendations: [recommendation],
+    });
+    expect(request).toHaveBeenCalledWith("/wardrobes/wd_1/recommendations");
+  });
+
+  it("accepts a bare recommendations array and forwards an abort signal", async () => {
+    const recommendation = {
+      title: "Ivory maxi evening",
+      items: [{ itemId: "item_1", slot: "DRESS" as const }],
+    };
+    const abortController = new AbortController();
+    const request = vi.fn(async (path: string) => {
+      if (path === getWardrobeRecommendationsApiPath("wd_1")) {
+        return [recommendation];
+      }
+      throw new Error(`unexpected path ${path}`);
+    });
+    const api = createLiveResourceApi(createApi(asRequest(request)));
+
+    await expect(
+      api.listRecommendations("wd_1", { signal: abortController.signal }),
+    ).resolves.toEqual({
+      recommendations: [recommendation],
+    });
+    expect(request).toHaveBeenCalledWith("/wardrobes/wd_1/recommendations", {
+      signal: abortController.signal,
+    });
   });
 
   it("lists outfits from GET /outfits", async () => {

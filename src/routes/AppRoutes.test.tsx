@@ -426,6 +426,19 @@ describe("AppRoutes", () => {
     ).toBeInTheDocument();
   });
 
+  it("renders suggested outfits for a signed-in user", async () => {
+    renderAppRoutes("/app/wardrobes/wd_weekend01/recommendations", {
+      user: { id: "user-1" },
+    });
+
+    expect(screen.getByTestId("route-location")).toHaveTextContent(
+      "/app/wardrobes/wd_weekend01/recommendations",
+    );
+    expect(
+      await screen.findByRole("heading", { level: 1, name: "Suggested outfits" }),
+    ).toBeInTheDocument();
+  });
+
   it("renders wardrobe and item detail routes for a signed-in user", async () => {
     const { unmount } = renderAppRoutes("/app/wardrobes/wd_weekend01", {
       user: { id: "user-1" },

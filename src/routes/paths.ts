@@ -13,6 +13,8 @@ export const appPaths = {
   appWardrobe: `${APP_BASE_PATH}/wardrobes/:id`,
   appWardrobeEdit: `${APP_BASE_PATH}/wardrobes/:id/edit`,
   appWardrobeItemNew: `${APP_BASE_PATH}/wardrobes/:id/items/new`,
+  appWardrobeRecommendations: `${APP_BASE_PATH}/wardrobes/:id/recommendations`,
+  appWardrobeRecommendationDetail: `${APP_BASE_PATH}/wardrobes/:id/recommendations/detail`,
   appItem: `${APP_BASE_PATH}/items/:id`,
   appItemEdit: `${APP_BASE_PATH}/items/:id/edit`,
   appOutfits: `${APP_BASE_PATH}/outfits`,
@@ -87,6 +89,18 @@ export const getAppWardrobeEditPath = (wardrobeId: string): string => {
 
 export const getAppItemNewPath = (wardrobeId: string): string => {
   return `${getAppWardrobePath(wardrobeId)}/items/new`;
+};
+
+export const getAppWardrobeRecommendationsPath = (
+  wardrobeId: string,
+): string => {
+  return `${getAppWardrobePath(wardrobeId)}/recommendations`;
+};
+
+export const getAppWardrobeRecommendationDetailPath = (
+  wardrobeId: string,
+): string => {
+  return `${getAppWardrobeRecommendationsPath(wardrobeId)}/detail`;
 };
 
 const withWardrobeIdQuery = (path: string, wardrobeId?: string): string => {

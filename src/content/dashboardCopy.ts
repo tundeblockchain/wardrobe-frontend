@@ -185,6 +185,41 @@ export const dashboardCopy = {
       "This permanently deletes this wardrobe and all of its items, outfits, and photos. This cannot be undone.",
     deleteConfirmLabel: "Delete",
     deleteErrorFallback: "Could not delete this wardrobe.",
+    suggestedOutfitsLabel: "Suggested outfits",
+    suggestedOutfitsAriaLabel: "Suggested outfits for this wardrobe",
+  },
+  recommendations: {
+    title: "Suggested outfits",
+    description:
+      "Looks suggested from clothing items you already own. Refresh for a new set.",
+    loadingLabel: "Loading suggested outfits",
+    emptyTitle: "No suggested outfits yet",
+    emptyDescription:
+      "Add more clothing items to this wardrobe, then refresh to see suggested looks.",
+    errorTitle: "Couldn't load suggested outfits",
+    errorDescription:
+      "Try again in a moment. Your saved outfits were not changed.",
+    retryLabel: "Try loading suggested outfits again",
+    refreshLabel: "Refresh",
+    refreshAriaLabel: "Refresh suggested outfits",
+    backLabel: "Back to wardrobe",
+    backAriaLabel: "Back to wardrobe",
+    backToListLabel: "Back to suggested outfits",
+    backToListAriaLabel: "Back to suggested outfits",
+    listLabel: "Suggested outfits",
+    notFoundTitle: "Wardrobe not found",
+    notFoundDescription:
+      "This wardrobe is missing or you do not have access to it.",
+    detailFallbackTitle: "Suggested outfit",
+    detailDescription: "Review this suggested look and save it as an outfit.",
+    saveLabel: "Save as outfit",
+    saveAriaLabel: "Save this suggestion as an outfit",
+    savingLabel: "Saving outfit",
+    saveSuccess: "Saved as an outfit.",
+    saveErrorTitle: "Couldn't save this outfit",
+    saveErrorDescription:
+      "Try again in a moment. This suggestion was not saved.",
+    unnamedItem: "Item",
   },
   itemForm: {
     createTitle: "Add clothing item",
