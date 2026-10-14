@@ -15,15 +15,34 @@ export const needsWardrobeCoverFallback = (wardrobe: Wardrobe): boolean => {
   return getWardrobeImageUrl(wardrobe) === undefined;
 };
 
+const compareItemsByCreatedAtThenId = (
+  left: ClothingItemList["items"][number],
+  right: ClothingItemList["items"][number],
+): number => {
+  if (left.createdAt !== right.createdAt) {
+    return left.createdAt < right.createdAt ? -1 : 1;
+  }
+
+  if (left.itemId === right.itemId) {
+    return 0;
+  }
+
+  return left.itemId < right.itemId ? -1 : 1;
+};
+
 export const getFirstItemImageUrl = (
   items: ClothingItemList["items"],
 ): string | undefined => {
-  const firstItem = items[0];
-  if (!firstItem) {
-    return undefined;
+  const sortedItems = [...items].sort(compareItemsByCreatedAtThenId);
+
+  for (const item of sortedItems) {
+    const imageUrl = getItemImageUrl(item);
+    if (imageUrl) {
+      return imageUrl;
+    }
   }
 
-  return getItemImageUrl(firstItem);
+  return undefined;
 };
 
 export const resolveMissingWardrobeCoverUrls = async (

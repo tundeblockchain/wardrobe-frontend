@@ -70,6 +70,27 @@ describe("wardrobe cover fallback", () => {
     expect(getFirstItemImageUrl([])).toBeUndefined();
   });
 
+  it("skips an imageless first item and uses the oldest item that has a photo", () => {
+    expect(
+      getFirstItemImageUrl([
+        item({
+          itemId: "item_newer",
+          createdAt: "2026-09-04T18:40:00.000Z",
+          originalImageUrl: "https://cdn.example.com/newer.jpg",
+        }),
+        item({
+          itemId: "item_blank",
+          createdAt: "2026-09-01T18:40:00.000Z",
+        }),
+        item({
+          itemId: "item_oldest_photo",
+          createdAt: "2026-09-02T18:40:00.000Z",
+          originalImageUrl: "https://cdn.example.com/oldest-photo.jpg",
+        }),
+      ]),
+    ).toBe("https://cdn.example.com/oldest-photo.jpg");
+  });
+
   it("fetches the first item only for wardrobes without a cover", async () => {
     const listWardrobeItems = vi.fn(async (wardrobeId: string) => {
       return {

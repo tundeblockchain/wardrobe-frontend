@@ -8,6 +8,7 @@ export type ResourceImageProps = {
   alt: string;
   fallbackLabel: string;
   FallbackIcon?: SvgIconComponent;
+  onImageError?: () => void;
 };
 
 const ResourceImageFallback = ({
@@ -48,14 +49,20 @@ export const ResourceImage = ({
   alt,
   fallbackLabel,
   FallbackIcon = CheckroomOutlined,
+  onImageError,
 }: ResourceImageProps) => {
-  const [hasImageError, setHasImageError] = useState(false);
+  const [failedImageUrl, setFailedImageUrl] = useState<string | undefined>();
 
   const handleImageError = () => {
-    setHasImageError(true);
+    if (!imageUrl) {
+      return;
+    }
+
+    setFailedImageUrl(imageUrl);
+    onImageError?.();
   };
 
-  if (!imageUrl || hasImageError) {
+  if (!imageUrl || failedImageUrl === imageUrl) {
     return (
       <ResourceImageFallback
         alt={alt}
