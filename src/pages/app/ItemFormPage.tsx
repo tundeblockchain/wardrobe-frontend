@@ -1,7 +1,5 @@
 import { useMemo, useState } from "react";
-import { Button } from "@mui/material";
 import {
-  Link as RouterLink,
   useNavigate,
   useParams,
   useSearchParams,
@@ -239,9 +237,14 @@ const ItemFormReady = ({
   const [uploadFailed, setUploadFailed] = useState(false);
   const [blockedByLimit, setBlockedByLimit] = useState(false);
 
+  const formTitle = mode === "create" ? copy.createTitle : copy.editTitle;
   const cancelTo = item
     ? getAppItemPath(item.itemId, item.wardrobeId)
     : getAppWardrobePath(wardrobeId);
+
+  const handleCancel = () => {
+    navigate(cancelTo);
+  };
 
   const handleFileChange = (file: File | undefined) => {
     if (previewUrl && selectedFile) {
@@ -378,24 +381,13 @@ const ItemFormReady = ({
   return (
     <DashboardPage
       headingId="item-form-heading"
-      title={mode === "create" ? copy.createTitle : copy.editTitle}
+      title={formTitle}
       description={
         mode === "create" ? copy.createDescription : copy.editDescription
       }
-      actions={
-        <Button
-          component={RouterLink}
-          to={cancelTo}
-          variant="text"
-          color="secondary"
-          tabIndex={0}
-          aria-label="Cancel"
-        >
-          Cancel
-        </Button>
-      }
     >
       <ItemForm
+        title={formTitle}
         values={values}
         errors={errors}
         isSubmitting={isSubmitting}
@@ -411,6 +403,7 @@ const ItemFormReady = ({
             ? `${copy.uploadErrorTitle}. ${copy.uploadErrorDescription}`
             : formError
         }
+        onCancel={handleCancel}
         onValuesChange={setValues}
         onFileChange={handleFileChange}
         onSubmit={() => {

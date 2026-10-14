@@ -1,9 +1,9 @@
 import { useMemo, useState } from "react";
-import type { ChangeEvent, FormEvent } from "react";
+import type { ChangeEvent } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Alert,
   Box,
-  Button,
   FormControl,
   FormControlLabel,
   FormLabel,
@@ -42,6 +42,7 @@ import type {
 import { useResourceApi } from "../../api/useResourceApi";
 import { loadListedVirtualProfiles } from "../../api/virtualProfiles";
 import { DashboardPage } from "../../components/dashboard/DashboardPage";
+import { FormCard } from "../../components/dashboard/FormCard";
 import { ForbiddenUpgradePrompt } from "../../components/dashboard/ForbiddenUpgradePrompt";
 import { ResourceCardGrid } from "../../components/dashboard/ResourceCardGrid";
 import { ResourceEmptyState } from "../../components/dashboard/ResourceEmptyState";
@@ -51,6 +52,7 @@ import { ResourceLoadingState } from "../../components/dashboard/ResourceLoading
 import { SelectableResourceCard } from "../../components/dashboard/SelectableResourceCard";
 import { dashboardCopy } from "../../content/dashboardCopy";
 import { useResourceQuery } from "../../hooks/useResourceQuery";
+import { appPaths } from "../../routes/paths";
 
 export type VirtualTryOnPageProps = {
   resourceApi?: ResourceApi;
@@ -177,6 +179,7 @@ const VirtualTryOnReady = ({
   resourceApi,
   data,
 }: VirtualTryOnReadyProps) => {
+  const navigate = useNavigate();
   const copy = dashboardCopy.virtualTryOn;
   const [aiProfileId, setAiProfileId] = useState(
     data.profiles[0]?.aiProfileId ?? "",
@@ -240,8 +243,11 @@ const VirtualTryOnReady = ({
     setFieldError(undefined);
   };
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const handleCancel = () => {
+    navigate(appPaths.app);
+  };
+
+  const handleSubmit = async () => {
     if (isSubmitting) {
       return;
     }
@@ -335,12 +341,15 @@ const VirtualTryOnReady = ({
       description={copy.description}
     >
       <Stack spacing={4}>
-        <Stack
-          component="form"
-          spacing={2.5}
-          onSubmit={handleSubmit}
-          noValidate
-          aria-label={copy.submitLabel}
+        <FormCard
+          title={copy.title}
+          onCancel={handleCancel}
+          submitLabel={copy.submitLabel}
+          submittingLabel={copy.submittingLabel}
+          isSubmitting={isSubmitting}
+          onSubmit={() => {
+            void handleSubmit();
+          }}
         >
           {formError ? (
             <Alert severity="error" role="alert">
@@ -505,22 +514,12 @@ const VirtualTryOnReady = ({
               </ResourceCardGrid>
             </FormControl>
           )}
-          <Button
-            type="submit"
-            variant="contained"
-            color="primary"
-            disabled={isSubmitting}
-            tabIndex={0}
-            aria-label={isSubmitting ? copy.submittingLabel : copy.submitLabel}
-          >
-            {isSubmitting ? copy.submittingLabel : copy.submitLabel}
-          </Button>
-          {statusMessage ? (
-            <Typography variant="body2" color="text.secondary" role="status">
-              {statusMessage}
-            </Typography>
-          ) : null}
-        </Stack>
+        </FormCard>
+        {statusMessage ? (
+          <Typography variant="body2" color="text.secondary" role="status">
+            {statusMessage}
+          </Typography>
+        ) : null}
         <Stack spacing={2} component="section" aria-label={copy.galleryLabel}>
           <Typography variant="h2" component="h2">
             {copy.galleryLabel}

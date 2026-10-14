@@ -8,6 +8,10 @@ import {
   createErrorResourceApi,
   createMockResourceApi,
 } from "../../api/mockResourceApi";
+import {
+  expectFormInsideSharedCard,
+  expectSharedFormCardAbsent,
+} from "../../test/formCardTest";
 import { renderWithProviders } from "../../test/renderWithProviders";
 import { VirtualTryOnPage } from "./VirtualTryOnPage";
 
@@ -49,12 +53,14 @@ describe("VirtualTryOnPage", () => {
     expect(
       screen.getByRole("status", { name: "Loading Virtual Try On" }),
     ).toBeInTheDocument();
+    expectSharedFormCardAbsent();
   });
 
   it("renders own and preset Virtual Profile cards as a single-select picker", async () => {
     const user = userEvent.setup();
     renderPage(createMockResourceApi());
 
+    await expectFormInsideSharedCard("Start Virtual Try On");
     const ownCard = await screen.findByRole("button", { name: "Weekday look" });
     const presetCard = screen.getByRole("button", { name: "Catalog model" });
     expect(ownCard).toHaveAttribute("aria-pressed", "true");
@@ -135,9 +141,7 @@ describe("VirtualTryOnPage", () => {
     const renderItem = vi.fn().mockResolvedValue(renderedItem);
     renderPage(createMockResourceApi({ renderItem }));
 
-    expect(
-      await screen.findByRole("button", { name: "Start Virtual Try On" }),
-    ).toBeInTheDocument();
+    await expectFormInsideSharedCard("Start Virtual Try On");
     expect(
       screen.getByRole("heading", { level: 1, name: "Virtual Try On" }),
     ).toBeInTheDocument();

@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
-import { Button } from "@mui/material";
-import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   canUseAiTryOn,
   canUseOtherAi,
@@ -260,6 +259,12 @@ const VirtualProfileFormReady = ({
     ReturnType<typeof getForbiddenUpgradeKind>
   >(undefined);
 
+  const formTitle = mode === "create" ? copy.createTitle : copy.editTitle;
+
+  const handleCancel = () => {
+    navigate(appPaths.appVirtualProfiles);
+  };
+
   const handleFileChange = (file: File | undefined) => {
     if (previewUrl && selectedFile) {
       URL.revokeObjectURL(previewUrl);
@@ -384,24 +389,13 @@ const VirtualProfileFormReady = ({
   return (
     <DashboardPage
       headingId="virtual-profile-form-heading"
-      title={mode === "create" ? copy.createTitle : copy.editTitle}
+      title={formTitle}
       description={
         mode === "create" ? copy.createDescription : copy.editDescription
       }
-      actions={
-        <Button
-          component={RouterLink}
-          to={appPaths.appVirtualProfiles}
-          variant="text"
-          color="secondary"
-          tabIndex={0}
-          aria-label="Cancel"
-        >
-          Cancel
-        </Button>
-      }
     >
       <VirtualProfileForm
+        title={formTitle}
         values={values}
         errors={errors}
         isSubmitting={isSubmitting}
@@ -417,6 +411,7 @@ const VirtualProfileFormReady = ({
             ? `${copy.uploadErrorTitle}. ${copy.uploadErrorDescription}`
             : formError
         }
+        onCancel={handleCancel}
         onValuesChange={setValues}
         onFileChange={handleFileChange}
         onSubmit={() => {

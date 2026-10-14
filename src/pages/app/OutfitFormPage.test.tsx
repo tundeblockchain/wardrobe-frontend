@@ -63,7 +63,7 @@ describe("OutfitFormPage", () => {
 
     await expectFormInsideSharedCard("Save outfit");
     expect(
-      screen.getByRole("heading", { name: "Add outfit" }),
+      screen.getByRole("heading", { level: 1, name: "Add outfit" }),
     ).toBeInTheDocument();
   });
 
@@ -72,7 +72,7 @@ describe("OutfitFormPage", () => {
 
     await expectFormInsideSharedCard("Save changes");
     expect(
-      screen.getByRole("heading", { name: "Edit outfit" }),
+      screen.getByRole("heading", { level: 1, name: "Edit outfit" }),
     ).toBeInTheDocument();
   });
 
