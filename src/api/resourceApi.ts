@@ -4,8 +4,9 @@ import type {
   ListJobEventsOptions,
 } from "./authenticatedApi";
 import {
-  BILLING_CHECKOUT_PATH,
   BILLING_PORTAL_PATH,
+  createCheckoutSession as requestCheckoutSession,
+  type BillingInterval,
   type BillingSession,
   type CheckoutTier,
 } from "./billing";
@@ -135,7 +136,10 @@ export type ResourceApi = {
   deleteAccount: () => Promise<AccountDeleteResult>;
   clearContent: () => Promise<ContentWipeResult>;
   listJobEvents: (options?: ListJobEventsOptions) => Promise<JobEventList>;
-  createCheckoutSession: (tier: CheckoutTier) => Promise<BillingSession>;
+  createCheckoutSession: (
+    tier: CheckoutTier,
+    interval?: BillingInterval,
+  ) => Promise<BillingSession>;
   createPortalSession: () => Promise<BillingSession>;
   listWardrobes: () => Promise<WardrobeList>;
   getWardrobe: (wardrobeId: string) => Promise<Wardrobe>;
@@ -239,11 +243,9 @@ export const createLiveResourceApi = (api: AuthenticatedApi): ResourceApi => {
 
   const createCheckoutSession = (
     tier: CheckoutTier,
+    interval?: BillingInterval,
   ): Promise<BillingSession> => {
-    return api.request<BillingSession>(BILLING_CHECKOUT_PATH, {
-      method: "POST",
-      body: { tier },
-    });
+    return requestCheckoutSession(api, tier, interval);
   };
 
   const createPortalSession = (): Promise<BillingSession> => {

@@ -140,14 +140,23 @@ describe("createLiveResourceApi", () => {
     await expect(api.createCheckoutSession("basic")).resolves.toEqual({
       url: "https://checkout.stripe.com/c/pay/cs_test",
     });
+    await expect(api.createCheckoutSession("premium", "yearly")).resolves.toEqual(
+      {
+        url: "https://checkout.stripe.com/c/pay/cs_test",
+      },
+    );
     await expect(api.createPortalSession()).resolves.toEqual({
       url: "https://billing.stripe.com/p/session/test",
     });
     expect(request).toHaveBeenNthCalledWith(1, "/billing/checkout-session", {
       method: "POST",
-      body: { tier: "basic" },
+      body: { tier: "basic", interval: "monthly" },
     });
-    expect(request).toHaveBeenNthCalledWith(2, "/billing/portal-session", {
+    expect(request).toHaveBeenNthCalledWith(2, "/billing/checkout-session", {
+      method: "POST",
+      body: { tier: "premium", interval: "yearly" },
+    });
+    expect(request).toHaveBeenNthCalledWith(3, "/billing/portal-session", {
       method: "POST",
     });
   });

@@ -1,10 +1,12 @@
-import type { KeyboardEvent } from "react";
+import { useState, type KeyboardEvent } from "react";
 import { Alert, Button, Stack, Typography } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 import {
   canStartWebCheckout,
+  DEFAULT_BILLING_INTERVAL,
   isStoreManagedPaidTier,
   isStripeBasicPaidTier,
+  type BillingInterval,
   type CheckoutTier,
 } from "../../api/billing";
 import type { PaidTier } from "../../api/resourceTypes";
@@ -15,6 +17,7 @@ import {
   type StartCheckoutFn,
 } from "../../hooks/useCheckoutAction";
 import { appPaths } from "../../routes/paths";
+import { BillingIntervalToggle } from "./BillingIntervalToggle";
 
 export type CheckoutUpgradeActionProps = {
   checkoutTier: CheckoutTier;
@@ -44,6 +47,13 @@ export const CheckoutUpgradeAction = ({
     existingPaidTier,
     handleCheckout,
   } = useCheckoutAction({ startCheckout, getMe, assignLocation });
+  const [billingInterval, setBillingInterval] = useState<BillingInterval>(
+    DEFAULT_BILLING_INTERVAL,
+  );
+
+  const handleIntervalChange = (nextInterval: BillingInterval) => {
+    setBillingInterval(nextInterval);
+  };
 
   const resolvedPaidTier = existingPaidTier ?? paidTier ?? null;
 
@@ -96,7 +106,7 @@ export const CheckoutUpgradeAction = ({
   }
 
   const handleClick = () => {
-    void handleCheckout(checkoutTier);
+    void handleCheckout(checkoutTier, billingInterval);
   };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
@@ -120,6 +130,11 @@ export const CheckoutUpgradeAction = ({
           {error}
         </Alert>
       ) : null}
+      <BillingIntervalToggle
+        value={billingInterval}
+        onChange={handleIntervalChange}
+        disabled={isStarting}
+      />
       <Button
         type="button"
         variant="contained"

@@ -2,19 +2,24 @@ import { useRef, useState } from "react";
 import {
   assignBillingUrl,
   createCheckoutSession,
+  DEFAULT_BILLING_INTERVAL,
   getAlreadySubscribedMessage,
+  getBillingCheckoutErrorMessage,
   isAlreadySubscribedError,
   readBillingSessionUrl,
   resolvePaidTierSource,
+  type BillingInterval,
   type BillingSession,
   type CheckoutTier,
 } from "../api/billing";
-import { isApiError } from "../api/httpClient";
 import type { Entitlement, PaidTier } from "../api/resourceTypes";
 import { useApi } from "../api/useApi";
 import { dashboardCopy } from "../content/dashboardCopy";
 
-export type StartCheckoutFn = (tier: CheckoutTier) => Promise<BillingSession>;
+export type StartCheckoutFn = (
+  tier: CheckoutTier,
+  interval?: BillingInterval,
+) => Promise<BillingSession>;
 
 export type CheckoutGetMeFn = () => Promise<Pick<Entitlement, "paidTier">>;
 
@@ -32,18 +37,10 @@ export type CheckoutActionState = {
 };
 
 export type UseCheckoutActionResult = CheckoutActionState & {
-  handleCheckout: (tier: CheckoutTier) => Promise<void>;
-};
-
-const toCheckoutErrorMessage = (error: unknown): string => {
-  if (isApiError(error)) {
-    const serverMessage = error.message.trim();
-    if (serverMessage) {
-      return serverMessage;
-    }
-  }
-
-  return dashboardCopy.billing.errorFallback;
+  handleCheckout: (
+    tier: CheckoutTier,
+    interval?: BillingInterval,
+  ) => Promise<void>;
 };
 
 export const useCheckoutAction = (
@@ -56,7 +53,10 @@ export const useCheckoutAction = (
   const [alreadySubscribedMessage, setAlreadySubscribedMessage] = useState("");
   const [existingPaidTier, setExistingPaidTier] = useState<PaidTier>(null);
 
-  const handleCheckout = async (tier: CheckoutTier) => {
+  const handleCheckout = async (
+    tier: CheckoutTier,
+    interval: BillingInterval = DEFAULT_BILLING_INTERVAL,
+  ) => {
     if (isStartingRef.current) {
       return;
     }
@@ -69,11 +69,12 @@ export const useCheckoutAction = (
 
     const startCheckout =
       options.startCheckout ??
-      ((nextTier: CheckoutTier) => createCheckoutSession(api, nextTier));
+      ((nextTier: CheckoutTier, nextInterval?: BillingInterval) =>
+        createCheckoutSession(api, nextTier, nextInterval));
     const getMe = options.getMe ?? api.getMe;
 
     try {
-      const session = await startCheckout(tier);
+      const session = await startCheckout(tier, interval);
       const url = readBillingSessionUrl(session);
       if (options.assignLocation) {
         options.assignLocation(url);
@@ -99,7 +100,12 @@ export const useCheckoutAction = (
         return;
       }
 
-      setError(toCheckoutErrorMessage(caughtError));
+      setError(
+        getBillingCheckoutErrorMessage(
+          caughtError,
+          dashboardCopy.billing.errorFallback,
+        ),
+      );
     } finally {
       isStartingRef.current = false;
       setIsStarting(false);

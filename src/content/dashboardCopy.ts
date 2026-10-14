@@ -300,6 +300,11 @@ export const dashboardCopy = {
   billing: {
     startingLabel: "Starting checkout…",
     errorFallback: "Couldn't start checkout. Try again in a moment.",
+    intervalLabel: "Billing interval",
+    intervalMonthlyLabel: "Monthly",
+    intervalYearlyLabel: "Yearly",
+    intervalMonthlyAriaLabel: "Bill monthly",
+    intervalYearlyAriaLabel: "Bill yearly",
     storeManage:
       "Manage this plan in the App Store / Google Play.",
     stripeBasicManageLabel: "Manage plan",

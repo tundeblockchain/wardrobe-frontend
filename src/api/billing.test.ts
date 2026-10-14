@@ -5,19 +5,24 @@ import {
   assignBillingUrl,
   BILLING_CHECKOUT_PATH,
   BILLING_PORTAL_PATH,
+  BILLING_PRICE_NOT_FOUND_CODE,
   BILLING_REDIRECT_INVALID_CODE,
   canStartWebCheckout,
   createCheckoutSession,
   createPortalSession,
+  DEFAULT_BILLING_INTERVAL,
   getAlreadySubscribedMessage,
+  getBillingCheckoutErrorMessage,
   getPaidTierSourceLabel,
   isAlreadySubscribedError,
+  isBillingPriceNotFoundError,
   isNotStripePlanError,
   isStoreManagedPaidTier,
   isStripeBasicPaidTier,
   normalizePaidTierSource,
   NOT_STRIPE_PLAN_CODE,
   readBillingSessionUrl,
+  YEARLY_BILLING_UNAVAILABLE_MESSAGE,
 } from "./billing";
 import { ApiError } from "./httpClient";
 
@@ -43,7 +48,31 @@ describe("billing API", () => {
     });
     expect(request).toHaveBeenCalledWith(BILLING_CHECKOUT_PATH, {
       method: "POST",
-      body: { tier: "premium" },
+      body: { tier: "premium", interval: DEFAULT_BILLING_INTERVAL },
+    });
+  });
+
+  it("sends monthly by default and yearly when selected for both tiers", async () => {
+    const request = vi.fn().mockResolvedValue({
+      url: "https://checkout.example.test/session/cs_test",
+    });
+    const api = createApi(request);
+
+    await createCheckoutSession(api, "basic");
+    await createCheckoutSession(api, "premium", "yearly");
+    await createCheckoutSession(api, "basic", "yearly");
+
+    expect(request).toHaveBeenNthCalledWith(1, BILLING_CHECKOUT_PATH, {
+      method: "POST",
+      body: { tier: "basic", interval: "monthly" },
+    });
+    expect(request).toHaveBeenNthCalledWith(2, BILLING_CHECKOUT_PATH, {
+      method: "POST",
+      body: { tier: "premium", interval: "yearly" },
+    });
+    expect(request).toHaveBeenNthCalledWith(3, BILLING_CHECKOUT_PATH, {
+      method: "POST",
+      body: { tier: "basic", interval: "yearly" },
     });
   });
 
@@ -58,7 +87,7 @@ describe("billing API", () => {
     });
     expect(request).toHaveBeenCalledWith(BILLING_CHECKOUT_PATH, {
       method: "POST",
-      body: { tier: "basic" },
+      body: { tier: "basic", interval: "monthly" },
     });
     expect(JSON.stringify(request.mock.calls[0])).not.toContain("pk_live");
     expect(JSON.stringify(request.mock.calls[0])).not.toContain("pk_test");
@@ -129,6 +158,32 @@ describe("billing API", () => {
     expect(
       isAlreadySubscribedError(new ApiError({ status: 400, code: "BAD_TIER" })),
     ).toBe(false);
+  });
+
+  it("maps 503 BILLING_PRICE_NOT_FOUND to the yearly unavailable message", () => {
+    const missingYearlyPrice = new ApiError({
+      status: 503,
+      code: BILLING_PRICE_NOT_FOUND_CODE,
+      message: "No Stripe price for this interval.",
+    });
+
+    expect(isBillingPriceNotFoundError(missingYearlyPrice)).toBe(true);
+    expect(
+      getBillingCheckoutErrorMessage(
+        missingYearlyPrice,
+        "Couldn't start checkout. Try again.",
+      ),
+    ).toBe(YEARLY_BILLING_UNAVAILABLE_MESSAGE);
+    expect(
+      getBillingCheckoutErrorMessage(
+        new ApiError({
+          status: 400,
+          code: "INVALID_INTERVAL",
+          message: "Unsupported billing interval.",
+        }),
+        "Couldn't start checkout. Try again.",
+      ),
+    ).toBe("Unsupported billing interval.");
   });
 });
 
