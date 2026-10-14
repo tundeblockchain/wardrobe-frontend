@@ -62,22 +62,30 @@ export const createDashboardTheme = (mode: ResolvedThemeMode) => {
             textTransform: "none",
             fontWeight: 600,
           },
-          containedPrimary: {
-            backgroundColor: wardrobeDarkPalette.containedPrimaryBackground,
-            color: wardrobeDarkPalette.containedPrimaryText,
-            "&:hover": {
-              backgroundColor: wardrobeDarkPalette.containedPrimaryHover,
+        },
+        variants: [
+          {
+            props: { variant: "contained", color: "primary" },
+            style: {
+              backgroundColor: wardrobeDarkPalette.containedPrimaryBackground,
+              color: wardrobeDarkPalette.containedPrimaryText,
+              "&:hover": {
+                backgroundColor: wardrobeDarkPalette.containedPrimaryHover,
+              },
             },
           },
-        },
+        ],
       },
       MuiChip: {
-        styleOverrides: {
-          filledPrimary: {
-            backgroundColor: wardrobeDarkPalette.containedPrimaryBackground,
-            color: wardrobeDarkPalette.containedPrimaryText,
+        variants: [
+          {
+            props: { variant: "filled", color: "primary" },
+            style: {
+              backgroundColor: wardrobeDarkPalette.containedPrimaryBackground,
+              color: wardrobeDarkPalette.containedPrimaryText,
+            },
           },
-        },
+        ],
       },
       MuiBadge: {
         styleOverrides: {
