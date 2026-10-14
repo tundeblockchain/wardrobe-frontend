@@ -15,6 +15,8 @@ export type DashboardNavItem = {
   end?: boolean;
 };
 
+export const dashboardLogOutLabel = "Log out";
+
 export const dashboardNavItems: DashboardNavItem[] = [
   {
     id: "home",

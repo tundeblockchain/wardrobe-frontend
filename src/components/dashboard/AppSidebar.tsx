@@ -1,4 +1,5 @@
 import type { KeyboardEvent } from "react";
+import LogoutOutlined from "@mui/icons-material/LogoutOutlined";
 import {
   Box,
   Drawer,
@@ -10,11 +11,25 @@ import {
   Tooltip,
 } from "@mui/material";
 import { NavLink } from "react-router-dom";
-import { dashboardNavItems } from "./dashboardNav";
+import { useLogOut } from "../../auth/useLogOut";
+import { dashboardLogOutLabel, dashboardNavItems } from "./dashboardNav";
 import {
   SIDEBAR_WIDTH,
   SIDEBAR_WIDTH_COLLAPSED,
 } from "./sidebarCollapsed";
+
+const getNavItemButtonSx = (hideLabels: boolean) => ({
+  width: "100%",
+  minHeight: 48,
+  justifyContent: hideLabels ? "center" : "flex-start",
+  px: hideLabels ? 1.5 : 2,
+});
+
+const getNavItemIconSx = (hideLabels: boolean) => ({
+  minWidth: hideLabels ? 0 : 40,
+  justifyContent: "center",
+  color: "text.secondary",
+});
 
 export type AppSidebarProps = {
   collapsed: boolean;
@@ -40,6 +55,7 @@ export const AppSidebar = ({
 }: AppSidebarProps) => {
   const hideLabels = collapsed && !isMobile;
   const drawerWidth = hideLabels ? SIDEBAR_WIDTH_COLLAPSED : SIDEBAR_WIDTH;
+  const { isLoggingOut, handleLogOut } = useLogOut();
 
   const handleNavClick = () => {
     if (isMobile) {
@@ -54,6 +70,43 @@ export const AppSidebar = ({
 
     handleNavClick();
   };
+
+  const handleLogOutClick = () => {
+    if (isMobile) {
+      onCloseMobile();
+    }
+
+    void handleLogOut();
+  };
+
+  const handleLogOutKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
+    if (event.key !== "Enter" && event.key !== " ") {
+      return;
+    }
+
+    event.preventDefault();
+    handleLogOutClick();
+  };
+
+  const logOutButton = (
+    <ListItemButton
+      component="button"
+      type="button"
+      tabIndex={0}
+      aria-label={dashboardLogOutLabel}
+      disabled={isLoggingOut}
+      onClick={handleLogOutClick}
+      onKeyDown={handleLogOutKeyDown}
+      sx={getNavItemButtonSx(hideLabels)}
+    >
+      <ListItemIcon sx={getNavItemIconSx(hideLabels)}>
+        <LogoutOutlined />
+      </ListItemIcon>
+      {hideLabels ? null : (
+        <ListItemText primary={dashboardLogOutLabel} />
+      )}
+    </ListItemButton>
+  );
 
   const drawerContent = (
     <Box
@@ -79,9 +132,7 @@ export const AppSidebar = ({
               onClick={handleNavClick}
               onKeyDown={handleNavKeyDown}
               sx={{
-                minHeight: 48,
-                justifyContent: hideLabels ? "center" : "flex-start",
-                px: hideLabels ? 1.5 : 2,
+                ...getNavItemButtonSx(hideLabels),
                 "&.active": {
                   bgcolor: "action.selected",
                   color: "primary.main",
@@ -91,13 +142,7 @@ export const AppSidebar = ({
                 },
               }}
             >
-              <ListItemIcon
-                sx={{
-                  minWidth: hideLabels ? 0 : 40,
-                  justifyContent: "center",
-                  color: "text.secondary",
-                }}
-              >
+              <ListItemIcon sx={getNavItemIconSx(hideLabels)}>
                 <Icon />
               </ListItemIcon>
               {hideLabels ? null : <ListItemText primary={item.label} />}
@@ -116,6 +161,17 @@ export const AppSidebar = ({
             </ListItem>
           );
         })}
+      </List>
+      <List disablePadding sx={{ mt: "auto" }}>
+        <ListItem disablePadding sx={{ display: "block" }}>
+          {hideLabels ? (
+            <Tooltip title={dashboardLogOutLabel} placement="right">
+              {logOutButton}
+            </Tooltip>
+          ) : (
+            logOutButton
+          )}
+        </ListItem>
       </List>
     </Box>
   );

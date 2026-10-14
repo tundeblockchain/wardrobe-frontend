@@ -106,6 +106,9 @@ describe("DashboardLayout", () => {
     expect(
       within(appNav).queryByRole("link", { name: "Plan" }),
     ).not.toBeInTheDocument();
+    expect(
+      within(appNav).getByRole("button", { name: "Log out" }),
+    ).toBeInTheDocument();
 
     await user.click(within(appNav).getByRole("link", { name: "Wardrobes" }));
     expect(

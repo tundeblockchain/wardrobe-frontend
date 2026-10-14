@@ -8,6 +8,31 @@ export const CATALOG_LIST_QUERY_KEYS = {
   virtualProfile: "virtual-profile",
 } as const;
 
+export const SESSION_QUERY_CACHE_KEYS = {
+  me: "me",
+  wardrobes: "wardrobes",
+  plan: "plan",
+  presets: "presets",
+  billingInterval: "billingInterval",
+} as const;
+
+const cachedQueries = new Map<string, unknown>();
+
+export const getCachedResourceQuery = (queryKey: string): unknown => {
+  return cachedQueries.get(queryKey);
+};
+
+export const setCachedResourceQuery = (
+  queryKey: string,
+  value: unknown,
+): void => {
+  cachedQueries.set(queryKey, value);
+};
+
+export const clearResourceQueryCache = (): void => {
+  cachedQueries.clear();
+};
+
 export const WARDROBE_DELETE_INVALIDATION_KEYS = [
   CATALOG_LIST_QUERY_KEYS.wardrobes,
   CATALOG_LIST_QUERY_KEYS.outfits,

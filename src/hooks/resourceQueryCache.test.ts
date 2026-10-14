@@ -1,14 +1,22 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   CATALOG_LIST_QUERY_KEYS,
+  clearResourceQueryCache,
+  getCachedResourceQuery,
   invalidateCatalogLists,
   invalidateResourceQueries,
   resourceQueryKeyMatches,
+  SESSION_QUERY_CACHE_KEYS,
+  setCachedResourceQuery,
   subscribeResourceQueryInvalidation,
   WARDROBE_DELETE_INVALIDATION_KEYS,
 } from "./resourceQueryCache";
 
 describe("resourceQueryCache", () => {
+  afterEach(() => {
+    clearResourceQueryCache();
+  });
+
   it("matches wardrobe, outfit, and item list query keys", () => {
     expect(resourceQueryKeyMatches("wardrobes", ["wardrobes"])).toBe(true);
     expect(resourceQueryKeyMatches("home-wardrobes", ["wardrobes"])).toBe(true);
@@ -47,5 +55,47 @@ describe("resourceQueryCache", () => {
     unsubscribe();
     invalidateResourceQueries(["wardrobes"]);
     expect(listener).toHaveBeenCalledTimes(1);
+  });
+
+  it("stores and clears cached /me, wardrobes, plan, presets, and billing interval", () => {
+    setCachedResourceQuery(SESSION_QUERY_CACHE_KEYS.me, { id: "user-1" });
+    setCachedResourceQuery(SESSION_QUERY_CACHE_KEYS.wardrobes, [{ id: "w1" }]);
+    setCachedResourceQuery(SESSION_QUERY_CACHE_KEYS.plan, {
+      paidTier: { tier: "basic" },
+    });
+    setCachedResourceQuery(SESSION_QUERY_CACHE_KEYS.presets, [
+      { aiProfileId: "preset-1" },
+    ]);
+    setCachedResourceQuery(SESSION_QUERY_CACHE_KEYS.billingInterval, "yearly");
+
+    expect(getCachedResourceQuery(SESSION_QUERY_CACHE_KEYS.me)).toEqual({
+      id: "user-1",
+    });
+    expect(getCachedResourceQuery(SESSION_QUERY_CACHE_KEYS.wardrobes)).toEqual([
+      { id: "w1" },
+    ]);
+    expect(getCachedResourceQuery(SESSION_QUERY_CACHE_KEYS.plan)).toEqual({
+      paidTier: { tier: "basic" },
+    });
+    expect(getCachedResourceQuery(SESSION_QUERY_CACHE_KEYS.presets)).toEqual([
+      { aiProfileId: "preset-1" },
+    ]);
+    expect(getCachedResourceQuery(SESSION_QUERY_CACHE_KEYS.billingInterval)).toBe(
+      "yearly",
+    );
+
+    clearResourceQueryCache();
+
+    expect(getCachedResourceQuery(SESSION_QUERY_CACHE_KEYS.me)).toBeUndefined();
+    expect(
+      getCachedResourceQuery(SESSION_QUERY_CACHE_KEYS.wardrobes),
+    ).toBeUndefined();
+    expect(getCachedResourceQuery(SESSION_QUERY_CACHE_KEYS.plan)).toBeUndefined();
+    expect(
+      getCachedResourceQuery(SESSION_QUERY_CACHE_KEYS.presets),
+    ).toBeUndefined();
+    expect(
+      getCachedResourceQuery(SESSION_QUERY_CACHE_KEYS.billingInterval),
+    ).toBeUndefined();
   });
 });
