@@ -9,6 +9,10 @@ import {
   createOtherAiOffResourceApi,
 } from "../../api/mockResourceApi";
 import type { ResourceApi } from "../../api/resourceApi";
+import {
+  expectFormInsideSharedCard,
+  expectSharedFormCardAbsent,
+} from "../../test/formCardTest";
 import { appPaths } from "../../routes/paths";
 import { renderWithProviders } from "../../test/renderWithProviders";
 import { VirtualProfileFormPage } from "./VirtualProfileFormPage";
@@ -47,6 +51,25 @@ describe("VirtualProfileFormPage", () => {
 
     expect(
       screen.getByRole("status", { name: "Loading Virtual Profile" }),
+    ).toBeInTheDocument();
+    expectSharedFormCardAbsent();
+  });
+
+  it("renders the add Virtual Profile form inside the shared card", async () => {
+    renderCreate(createMockResourceApi());
+
+    await expectFormInsideSharedCard("Save Virtual Profile");
+    expect(
+      screen.getByRole("heading", { name: "Add Virtual Profile" }),
+    ).toBeInTheDocument();
+  });
+
+  it("renders the edit Virtual Profile form inside the shared card", async () => {
+    renderEdit("aip_personal01", createMockResourceApi());
+
+    await expectFormInsideSharedCard("Save changes");
+    expect(
+      screen.getByRole("heading", { name: "Edit Virtual Profile" }),
     ).toBeInTheDocument();
   });
 

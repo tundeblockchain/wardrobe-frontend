@@ -10,6 +10,10 @@ import {
   mockFreeAtLimitEntitlement,
 } from "../../api/mockResourceApi";
 import type { ResourceApi } from "../../api/resourceApi";
+import {
+  expectFormInsideSharedCard,
+  expectSharedFormCardAbsent,
+} from "../../test/formCardTest";
 import { appPaths, getAppWardrobeEditPath } from "../../routes/paths";
 import { renderWithProviders } from "../../test/renderWithProviders";
 import { WardrobeFormPage } from "./WardrobeFormPage";
@@ -53,6 +57,25 @@ describe("WardrobeFormPage", () => {
 
     expect(
       screen.getByRole("status", { name: "Loading wardrobe" }),
+    ).toBeInTheDocument();
+    expectSharedFormCardAbsent();
+  });
+
+  it("renders the add wardrobe form inside the shared card", async () => {
+    renderCreate(createMockResourceApi());
+
+    await expectFormInsideSharedCard("Save wardrobe");
+    expect(
+      screen.getByRole("heading", { name: "Add wardrobe" }),
+    ).toBeInTheDocument();
+  });
+
+  it("renders the edit wardrobe form inside the shared card", async () => {
+    renderEdit("wd_weekend01", createMockResourceApi());
+
+    await expectFormInsideSharedCard("Save changes");
+    expect(
+      screen.getByRole("heading", { name: "Edit wardrobe" }),
     ).toBeInTheDocument();
   });
 

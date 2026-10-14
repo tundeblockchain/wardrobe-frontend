@@ -9,7 +9,11 @@ import {
   createMockResourceApi,
 } from "../../api/mockResourceApi";
 import type { ResourceApi } from "../../api/resourceApi";
-import { appPaths } from "../../routes/paths";
+import {
+  expectFormInsideSharedCard,
+  expectSharedFormCardAbsent,
+} from "../../test/formCardTest";
+import { appPaths, getAppOutfitEditPath } from "../../routes/paths";
 import { renderWithProviders } from "../../test/renderWithProviders";
 import {
   createUnstableFreeAtLimitGetMeApi,
@@ -26,6 +30,21 @@ const renderCreate = (resourceApi: ResourceApi) => {
   );
 };
 
+const renderEdit = (outfitId: string, resourceApi: ResourceApi) => {
+  return renderWithProviders(
+    <Routes>
+      <Route
+        path={appPaths.appOutfitEdit}
+        element={<OutfitFormPage mode="edit" resourceApi={resourceApi} />}
+      />
+    </Routes>,
+    {
+      route: getAppOutfitEditPath(outfitId, "wd_weekend01"),
+      auth: { user: { id: "user-1" } },
+    },
+  );
+};
+
 describe("OutfitFormPage", () => {
   it("renders a loading state", () => {
     renderCreate(
@@ -36,6 +55,25 @@ describe("OutfitFormPage", () => {
 
     expect(
       screen.getByRole("status", { name: "Loading outfit" }),
+    ).toBeInTheDocument();
+    expectSharedFormCardAbsent();
+  });
+
+  it("renders the add outfit form inside the shared card", async () => {
+    renderCreate(createMockResourceApi());
+
+    await expectFormInsideSharedCard("Save outfit");
+    expect(
+      screen.getByRole("heading", { name: "Add outfit" }),
+    ).toBeInTheDocument();
+  });
+
+  it("renders the edit outfit form inside the shared card", async () => {
+    renderEdit("outfit_brunch01", createMockResourceApi());
+
+    await expectFormInsideSharedCard("Save changes");
+    expect(
+      screen.getByRole("heading", { name: "Edit outfit" }),
     ).toBeInTheDocument();
   });
 
