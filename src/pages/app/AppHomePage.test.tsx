@@ -193,6 +193,52 @@ describe("AppHomePage", () => {
     expect(listWardrobeItems).toHaveBeenCalledWith("wd_items", { limit: 1 });
   });
 
+  it("refreshes the list once for an expired coverImageUrl and then renders the image", async () => {
+    const listWardrobes = vi
+      .fn()
+      .mockResolvedValueOnce({
+        wardrobes: [
+          wardrobe({
+            wardrobeId: "wd_mine",
+            name: "My wardrobe",
+            coverImageUrl: "https://cdn.example.com/expired.jpg",
+          }),
+        ],
+      })
+      .mockResolvedValue({
+        wardrobes: [
+          wardrobe({
+            wardrobeId: "wd_mine",
+            name: "My wardrobe",
+            coverImageUrl: "https://cdn.example.com/fresh.jpg",
+          }),
+        ],
+      });
+
+    renderPage(
+      createMockResourceApi({
+        listWardrobes,
+        listWardrobeItems: async () => ({ items: [] }),
+      }),
+    );
+
+    const expiredImage = await screen.findByRole("img", { name: "My wardrobe" });
+    expect(expiredImage).toHaveAttribute(
+      "src",
+      "https://cdn.example.com/expired.jpg",
+    );
+
+    fireEvent.error(expiredImage);
+
+    expect(
+      await screen.findByRole("img", { name: "My wardrobe" }),
+    ).toHaveAttribute("src", "https://cdn.example.com/fresh.jpg");
+    expect(listWardrobes).toHaveBeenCalledTimes(2);
+    expect(
+      screen.queryByText("No photo for this wardrobe"),
+    ).not.toBeInTheDocument();
+  });
+
   it("refetches the wardrobe list once when a cover image fails", async () => {
     const listWardrobes = vi
       .fn()
