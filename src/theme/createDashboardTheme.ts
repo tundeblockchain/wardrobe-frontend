@@ -34,6 +34,9 @@ export const createDashboardTheme = (mode: ResolvedThemeMode) => {
         secondary: wardrobeDarkPalette.textSecondary,
       },
       divider: wardrobeDarkPalette.divider,
+      action: {
+        selected: wardrobeDarkPalette.actionSelected,
+      },
     },
     gradients: appTheme.gradients,
     typography: appTheme.typography,

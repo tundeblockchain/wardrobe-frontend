@@ -28,6 +28,7 @@ describe("createDashboardTheme", () => {
       primaryMain,
       primaryContrast,
       uiBorder,
+      actionSelected,
     } = wardrobeDarkPalette;
 
     expect(contrastRatio(textPrimary, backgroundDefault)).toBeGreaterThanOrEqual(
@@ -57,6 +58,18 @@ describe("createDashboardTheme", () => {
     expect(contrastRatio(uiBorder, backgroundPaper)).toBeGreaterThanOrEqual(
       AA_UI_COMPONENT,
     );
+    expect(contrastRatio(primaryMain, backgroundPaper)).toBeGreaterThanOrEqual(
+      AA_UI_COMPONENT,
+    );
+    expect(contrastRatio(primaryMain, actionSelected)).toBeGreaterThanOrEqual(
+      AA_UI_COMPONENT,
+    );
+    expect(contrastRatio(textPrimary, actionSelected)).toBeGreaterThanOrEqual(
+      AA_BODY_AND_UI_TEXT,
+    );
+    expect(contrastRatio(textSecondary, actionSelected)).toBeGreaterThanOrEqual(
+      AA_BODY_AND_UI_TEXT,
+    );
   });
 
   it("wires the dark tokens into palette and selected-state overrides", () => {
@@ -77,6 +90,9 @@ describe("createDashboardTheme", () => {
     );
     expect(theme.palette.secondary.dark).toBe(wardrobeDarkPalette.secondaryDark);
     expect(theme.palette.divider).toBe(wardrobeDarkPalette.divider);
+    expect(theme.palette.action.selected).toBe(
+      wardrobeDarkPalette.actionSelected,
+    );
 
     expect(theme.components?.MuiAppBar?.styleOverrides).toMatchObject({
       root: {

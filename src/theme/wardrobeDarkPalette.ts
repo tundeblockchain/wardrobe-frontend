@@ -24,6 +24,7 @@ export const wardrobeDarkPalette = {
   appBarBorder: "#3A2A30",
   toggleSelectedBackground: "#5C3342",
   toggleSelectedText: "#F6EDF0",
+  actionSelected: "#5C3342",
 } as const;
 
 export type WardrobeDarkPalette = typeof wardrobeDarkPalette;
