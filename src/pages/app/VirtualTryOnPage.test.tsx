@@ -1,8 +1,9 @@
-import { screen } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import {
   createAiTryOnOffResourceApi,
+  createEmptyResourceApi,
   createEntitlementAiRequiredResourceApi,
   createErrorResourceApi,
   createMockResourceApi,
@@ -18,6 +19,25 @@ const renderPage = (
   });
 };
 
+const renderedItem = {
+  itemId: "item_navytee01",
+  wardrobeId: "wd_weekend01",
+  name: "Navy tee",
+  category: "TOP" as const,
+  processingStatus: "READY" as const,
+  createdAt: "2026-09-03T18:40:00.000Z",
+  updatedAt: "2026-10-13T12:00:00.000Z",
+  renderImageUrls: ["/screenshots/try-on-started.jpg"],
+  renderHistory: [
+    {
+      imageKey: "users/user-1/renders/rend_new.png",
+      createdAt: "2026-10-13T18:00:00.000Z",
+      aiProfileId: "aip_personal01",
+      imageUrl: "/screenshots/try-on-started.jpg",
+    },
+  ],
+};
+
 describe("VirtualTryOnPage", () => {
   it("renders a loading state", () => {
     renderPage(
@@ -31,26 +51,88 @@ describe("VirtualTryOnPage", () => {
     ).toBeInTheDocument();
   });
 
-  it("starts a Virtual Try On render for selected items and shows the gallery", async () => {
+  it("renders own and preset Virtual Profile cards as a single-select picker", async () => {
     const user = userEvent.setup();
-    const renderItem = vi.fn().mockResolvedValue({
-      itemId: "item_navytee01",
-      wardrobeId: "wd_weekend01",
-      name: "Navy tee",
-      category: "TOP",
-      processingStatus: "READY",
-      createdAt: "2026-09-03T18:40:00.000Z",
-      updatedAt: "2026-10-13T12:00:00.000Z",
-      renderImageUrls: ["/screenshots/try-on-started.jpg"],
-      renderHistory: [
-        {
-          imageKey: "users/user-1/renders/rend_new.png",
-          createdAt: "2026-10-13T18:00:00.000Z",
-          aiProfileId: "aip_personal01",
-          imageUrl: "/screenshots/try-on-started.jpg",
-        },
-      ],
+    renderPage(createMockResourceApi());
+
+    const ownCard = await screen.findByRole("button", { name: "Weekday look" });
+    const presetCard = screen.getByRole("button", { name: "Catalog model" });
+    expect(ownCard).toHaveAttribute("aria-pressed", "true");
+    expect(presetCard).toHaveAttribute("aria-pressed", "false");
+    expect(screen.getByText("Personal")).toBeInTheDocument();
+    expect(screen.getByText("Preset")).toBeInTheDocument();
+    expect(
+      screen.getByRole("img", { name: "Weekday look" }),
+    ).toHaveAttribute("src", "/screenshots/try-on-blue-mini-390.jpg");
+    expect(
+      screen.getByRole("img", { name: "Catalog model" }),
+    ).toHaveAttribute("src", "/screenshots/try-on-rust-floral-390.jpg");
+
+    await user.click(presetCard);
+
+    expect(ownCard).toHaveAttribute("aria-pressed", "false");
+    expect(presetCard).toHaveAttribute("aria-pressed", "true");
+    expect(
+      screen.queryByRole("combobox", { name: "Virtual Profile" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("toggles clothing-item cards as a multi-select picker", async () => {
+    const user = userEvent.setup();
+    renderPage(createMockResourceApi());
+
+    const navyTee = await screen.findByRole("checkbox", { name: "Navy tee" });
+    const ivoryMaxi = screen.getByRole("checkbox", { name: "Ivory maxi" });
+    expect(navyTee).toHaveAttribute("aria-checked", "false");
+    expect(ivoryMaxi).toHaveAttribute("aria-checked", "false");
+    expect(screen.getByRole("img", { name: "Navy tee" })).toBeInTheDocument();
+
+    await user.click(navyTee);
+    await user.click(ivoryMaxi);
+
+    expect(navyTee).toHaveAttribute("aria-checked", "true");
+    expect(ivoryMaxi).toHaveAttribute("aria-checked", "true");
+
+    await user.click(navyTee);
+    expect(navyTee).toHaveAttribute("aria-checked", "false");
+    expect(ivoryMaxi).toHaveAttribute("aria-checked", "true");
+  });
+
+  it("toggles item cards from the keyboard", async () => {
+    const user = userEvent.setup();
+    renderPage(createMockResourceApi());
+
+    const navyTee = await screen.findByRole("checkbox", { name: "Navy tee" });
+    navyTee.focus();
+    await user.keyboard(" ");
+
+    expect(navyTee).toHaveAttribute("aria-checked", "true");
+    await user.keyboard("{Enter}");
+    expect(navyTee).toHaveAttribute("aria-checked", "false");
+  });
+
+  it("renders saved outfits as selectable photo cards", async () => {
+    const user = userEvent.setup();
+    renderPage(createMockResourceApi());
+
+    await user.click(await screen.findByLabelText("Saved outfit"));
+
+    const outfitCard = await screen.findByRole("button", {
+      name: "Sunday brunch",
     });
+    expect(outfitCard).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("img", { name: "Sunday brunch" })).toHaveAttribute(
+      "src",
+      "/screenshots/try-on-ivory-maxi-390.jpg",
+    );
+    expect(
+      screen.queryByRole("combobox", { name: "Outfit" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("sends the same Virtual Try On payload for an own profile", async () => {
+    const user = userEvent.setup();
+    const renderItem = vi.fn().mockResolvedValue(renderedItem);
     renderPage(createMockResourceApi({ renderItem }));
 
     expect(
@@ -63,7 +145,7 @@ describe("VirtualTryOnPage", () => {
       screen.getByRole("img", { name: "Virtual Try On render 1" }),
     ).toHaveAttribute("src", "/screenshots/try-on-ivory-maxi-390.jpg");
 
-    await user.click(screen.getByLabelText("Navy tee"));
+    await user.click(screen.getByRole("checkbox", { name: "Navy tee" }));
     await user.click(
       screen.getByRole("button", { name: "Start Virtual Try On" }),
     );
@@ -71,9 +153,42 @@ describe("VirtualTryOnPage", () => {
     expect(renderItem).toHaveBeenCalledWith("wd_weekend01", "item_navytee01", {
       aiProfileId: "aip_personal01",
     });
+    expect(renderItem).toHaveBeenCalledTimes(1);
+    expect(renderItem.mock.calls[0]?.[2]).toEqual({
+      aiProfileId: "aip_personal01",
+    });
     expect(
       await screen.findByRole("img", { name: "Virtual Try On render 1" }),
     ).toHaveAttribute("src", "/screenshots/try-on-started.jpg");
+  });
+
+  it("sends the same Virtual Try On payload for a preset profile", async () => {
+    const user = userEvent.setup();
+    const renderItem = vi.fn().mockResolvedValue({
+      ...renderedItem,
+      renderHistory: [
+        {
+          ...renderedItem.renderHistory[0],
+          aiProfileId: "aip_model01",
+        },
+      ],
+    });
+    renderPage(createMockResourceApi({ renderItem }));
+
+    await user.click(
+      await screen.findByRole("button", { name: "Catalog model" }),
+    );
+    await user.click(screen.getByRole("checkbox", { name: "Navy tee" }));
+    await user.click(
+      screen.getByRole("button", { name: "Start Virtual Try On" }),
+    );
+
+    expect(renderItem).toHaveBeenCalledWith("wd_weekend01", "item_navytee01", {
+      aiProfileId: "aip_model01",
+    });
+    expect(renderItem.mock.calls[0]?.[2]).toEqual({
+      aiProfileId: "aip_model01",
+    });
   });
 
   it("starts a Virtual Try On render for a selected outfit", async () => {
@@ -90,6 +205,7 @@ describe("VirtualTryOnPage", () => {
     renderPage(createMockResourceApi({ renderOutfit }));
 
     await user.click(await screen.findByLabelText("Saved outfit"));
+    await user.click(screen.getByRole("button", { name: "Sunday brunch" }));
     await user.click(
       screen.getByRole("button", { name: "Start Virtual Try On" }),
     );
@@ -99,6 +215,22 @@ describe("VirtualTryOnPage", () => {
       "outfit_brunch01",
       { aiProfileId: "aip_personal01" },
     );
+    expect(renderOutfit.mock.calls[0]?.[2]).toEqual({
+      aiProfileId: "aip_personal01",
+    });
+  });
+
+  it("renders an empty picker when there are no Virtual Profiles", async () => {
+    renderPage(createEmptyResourceApi());
+
+    expect(
+      await screen.findByText(
+        "Add a Virtual Profile or choose a preset to continue.",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Weekday look" }),
+    ).not.toBeInTheDocument();
   });
 
   it("renders an upgrade prompt when /me features.aiTryOn is false", async () => {
@@ -137,5 +269,24 @@ describe("VirtualTryOnPage", () => {
         name: "Couldn't load Virtual Try On",
       }),
     ).toBeInTheDocument();
+  });
+
+  it("keeps the Virtual Profile picker keyboard accessible", async () => {
+    const user = userEvent.setup();
+    renderPage(createMockResourceApi());
+
+    const profileGrid = await screen.findByRole("list", {
+      name: "Virtual Profile",
+    });
+    const presetCard = within(profileGrid).getByRole("button", {
+      name: "Catalog model",
+    });
+    presetCard.focus();
+    await user.keyboard("{Enter}");
+
+    expect(presetCard).toHaveAttribute("aria-pressed", "true");
+    expect(
+      within(profileGrid).getByRole("button", { name: "Weekday look" }),
+    ).toHaveAttribute("aria-pressed", "false");
   });
 });

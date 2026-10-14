@@ -1021,6 +1021,7 @@ export const createEmptyResourceApi = (): ResourceApi => {
     listWardrobes: async () => ({ wardrobes: [] }),
     listOutfits: async () => ({ outfits: [] }),
     listAiProfiles: async () => ({ aiProfiles: [] }),
+    listGenericAiProfiles: async () => ({ aiProfiles: [] }),
     getWardrobeDetail: async (wardrobeId: string) => {
       const wardrobe = mockWardrobes.find(
         (entry) => entry.wardrobeId === wardrobeId,

@@ -15,7 +15,10 @@ import {
 } from "../../api/catalogValidation";
 import { isApiError } from "../../api/httpClient";
 import { isNotFoundError, type ResourceApi } from "../../api/resourceApi";
-import { getAiProfileImageUrl } from "../../api/resourceDisplay";
+import {
+  getAiProfileImageUrl,
+  isOwnedPersonalVirtualProfile,
+} from "../../api/resourceDisplay";
 import type { AiProfile, Entitlement } from "../../api/resourceTypes";
 import { uploadAiProfileImage } from "../../api/uploadAiProfileImage";
 import { putFileToPresignedUrl } from "../../api/uploadToPresignedUrl";
@@ -196,6 +199,21 @@ export const VirtualProfileFormPage = ({
       ? profileQuery.data
       : undefined;
 
+  if (mode === "edit" && profile && !isOwnedPersonalVirtualProfile(profile)) {
+    return (
+      <DashboardPage
+        headingId="virtual-profile-form-heading"
+        title={copy.notFoundTitle}
+        description={copy.notFoundDescription}
+      >
+        <ResourceEmptyState
+          title={copy.notFoundTitle}
+          description={copy.notFoundDescription}
+        />
+      </DashboardPage>
+    );
+  }
+
   return (
     <VirtualProfileFormReady
       mode={mode}
@@ -301,7 +319,7 @@ const VirtualProfileFormReady = ({
         return;
       }
 
-      if (!profile) {
+      if (!profile || !isOwnedPersonalVirtualProfile(profile)) {
         return;
       }
 

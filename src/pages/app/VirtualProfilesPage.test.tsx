@@ -34,7 +34,7 @@ describe("VirtualProfilesPage", () => {
     ).toBeInTheDocument();
   });
 
-  it("renders Virtual Profiles and Virtual Try On copy from the mock API", async () => {
+  it("renders own Virtual Profiles next to presets", async () => {
     renderPage(createMockResourceApi());
 
     expect(
@@ -48,16 +48,41 @@ describe("VirtualProfilesPage", () => {
         /Browse Virtual Profiles and preview looks with Virtual Try On/,
       ),
     ).toBeInTheDocument();
-    expect(
-      screen.getByRole("heading", { name: "Weekday look" }),
-    ).toBeInTheDocument();
     expect(screen.getByText("Used for Virtual Try On on weekdays.")).toBeInTheDocument();
+    expect(screen.getByText("Preset")).toBeInTheDocument();
+    expect(screen.getByText("Personal")).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Catalog model" }),
+    ).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: "Add a Virtual Profile" }),
     ).toHaveAttribute("href", appPaths.appVirtualProfileNew);
     expect(
       screen.getByRole("img", { name: "Weekday look" }),
     ).toHaveAttribute("src", "/screenshots/try-on-blue-mini-390.jpg");
+    expect(
+      screen.getByRole("img", { name: "Catalog model" }),
+    ).toHaveAttribute("src", "/screenshots/try-on-rust-floral-390.jpg");
+  });
+
+  it("hides edit and delete controls on presets", async () => {
+    renderPage(createMockResourceApi());
+
+    expect(
+      await screen.findByRole("heading", { name: "Catalog model" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Delete Weekday look" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Edit Weekday look" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Delete Catalog model" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: "Edit Catalog model" }),
+    ).not.toBeInTheDocument();
   });
 
   it("renders an empty Virtual Profiles state", async () => {
@@ -71,6 +96,24 @@ describe("VirtualProfilesPage", () => {
         /Add a Virtual Profile to preview looks with Virtual Try On/,
       ),
     ).toBeInTheDocument();
+  });
+
+  it("keeps presets when the user has no personal Virtual Profiles", async () => {
+    renderPage(
+      createMockResourceApi({
+        listAiProfiles: async () => ({ aiProfiles: [] }),
+      }),
+    );
+
+    expect(
+      await screen.findByRole("heading", { name: "Catalog model" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: "No Virtual Profiles yet" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: "Weekday look" }),
+    ).not.toBeInTheDocument();
   });
 
   it("renders an error state", async () => {
@@ -131,7 +174,13 @@ describe("VirtualProfilesPage", () => {
       await screen.findByRole("heading", { name: "Weekday look" }),
     ).toBeInTheDocument();
     expect(
+      screen.getByRole("heading", { name: "Catalog model" }),
+    ).toBeInTheDocument();
+    expect(
       screen.queryByRole("link", { name: "Add a Virtual Profile" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Delete Weekday look" }),
     ).not.toBeInTheDocument();
   });
 

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import FaceRetouchingNaturalOutlined from "@mui/icons-material/FaceRetouchingNaturalOutlined";
 import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack, Typography } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
@@ -6,6 +6,7 @@ import {
   getAiProfileDisplayName,
   getAiProfileImageUrl,
   getAiProfileTypeLabel,
+  isOwnedPersonalVirtualProfile,
 } from "../../api/resourceDisplay";
 import {
   canUseAiTryOn,
@@ -17,6 +18,7 @@ import { isApiError } from "../../api/httpClient";
 import { type ResourceApi } from "../../api/resourceApi";
 import type { AiProfile, Entitlement } from "../../api/resourceTypes";
 import { useResourceApi } from "../../api/useResourceApi";
+import { loadListedVirtualProfiles } from "../../api/virtualProfiles";
 import { DashboardPage } from "../../components/dashboard/DashboardPage";
 import { ForbiddenUpgradePrompt } from "../../components/dashboard/ForbiddenUpgradePrompt";
 import { ResourceCard } from "../../components/dashboard/ResourceCard";
@@ -39,10 +41,11 @@ export const VirtualProfilesPage = ({
   const resourceApi = resourceApiProp ?? defaultResourceApi;
   const copy = dashboardCopy.virtualProfiles;
   const meQuery = useResourceQuery("me", resourceApi.getMe);
-  const profilesQuery = useResourceQuery(
-    "virtual-profiles",
-    resourceApi.listAiProfiles,
+  const loadProfiles = useMemo(
+    () => () => loadListedVirtualProfiles(resourceApi),
+    [resourceApi],
   );
+  const profilesQuery = useResourceQuery("virtual-profiles", loadProfiles);
 
   if (meQuery.status === "loading") {
     return (
@@ -154,7 +157,7 @@ export const VirtualProfilesPage = ({
     <VirtualProfilesReady
       resourceApi={resourceApi}
       entitlement={meQuery.data}
-      profiles={profilesQuery.data.aiProfiles}
+      profiles={profilesQuery.data}
       onReload={profilesQuery.handleRetry}
     />
   );
@@ -307,7 +310,7 @@ const VirtualProfilesReady = ({
                   "Use this Virtual Profile for Virtual Try On."
                 }
               >
-                {canWrite && profile.type === "PERSONAL" ? (
+                {canWrite && isOwnedPersonalVirtualProfile(profile) ? (
                   <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: "wrap" }}>
                     <Button
                       component={RouterLink}

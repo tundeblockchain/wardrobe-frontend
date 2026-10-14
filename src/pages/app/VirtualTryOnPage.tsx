@@ -4,10 +4,8 @@ import {
   Alert,
   Box,
   Button,
-  Checkbox,
   FormControl,
   FormControlLabel,
-  FormGroup,
   FormLabel,
   MenuItem,
   Radio,
@@ -16,14 +14,22 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import CheckroomOutlined from "@mui/icons-material/CheckroomOutlined";
+import FaceRetouchingNaturalOutlined from "@mui/icons-material/FaceRetouchingNaturalOutlined";
+import StyleOutlined from "@mui/icons-material/StyleOutlined";
 import {
   canUseAiTryOn,
   getCatalogKindForLimitCode,
   getForbiddenUpgradeKind,
-  isEntitlementAiRequiredError,
 } from "../../api/entitlementGating";
 import { isApiError } from "../../api/httpClient";
-import { getAiProfileDisplayName } from "../../api/resourceDisplay";
+import {
+  getAiProfileDisplayName,
+  getAiProfileImageUrl,
+  getAiProfileTypeLabel,
+  getItemImageUrl,
+  getOutfitImageUrl,
+} from "../../api/resourceDisplay";
 import { mapRenderGalleryNewestFirst } from "../../api/renderImages";
 import type { ResourceApi } from "../../api/resourceApi";
 import type {
@@ -34,12 +40,15 @@ import type {
   Wardrobe,
 } from "../../api/resourceTypes";
 import { useResourceApi } from "../../api/useResourceApi";
+import { loadListedVirtualProfiles } from "../../api/virtualProfiles";
 import { DashboardPage } from "../../components/dashboard/DashboardPage";
 import { ForbiddenUpgradePrompt } from "../../components/dashboard/ForbiddenUpgradePrompt";
+import { ResourceCardGrid } from "../../components/dashboard/ResourceCardGrid";
 import { ResourceEmptyState } from "../../components/dashboard/ResourceEmptyState";
 import { ResourceErrorState } from "../../components/dashboard/ResourceErrorState";
 import { ResourceImage } from "../../components/dashboard/ResourceImage";
 import { ResourceLoadingState } from "../../components/dashboard/ResourceLoadingState";
+import { SelectableResourceCard } from "../../components/dashboard/SelectableResourceCard";
 import { dashboardCopy } from "../../content/dashboardCopy";
 import { useResourceQuery } from "../../hooks/useResourceQuery";
 
@@ -60,22 +69,12 @@ type VirtualTryOnData = {
 const loadVirtualTryOnData = async (
   resourceApi: ResourceApi,
 ): Promise<VirtualTryOnData> => {
-  const [entitlement, wardrobeList, outfitList, generic] = await Promise.all([
+  const [entitlement, wardrobeList, outfitList, profiles] = await Promise.all([
     resourceApi.getMe(),
     resourceApi.listWardrobes(),
     resourceApi.listOutfits(),
-    resourceApi.listGenericAiProfiles(),
+    loadListedVirtualProfiles(resourceApi),
   ]);
-
-  let personalProfiles: AiProfile[] = [];
-  try {
-    const personal = await resourceApi.listAiProfiles();
-    personalProfiles = personal.aiProfiles;
-  } catch (error) {
-    if (!isEntitlementAiRequiredError(error)) {
-      throw error;
-    }
-  }
 
   const itemLists = await Promise.all(
     wardrobeList.wardrobes.map((wardrobe) =>
@@ -85,7 +84,7 @@ const loadVirtualTryOnData = async (
 
   return {
     entitlement,
-    profiles: [...personalProfiles, ...generic.aiProfiles],
+    profiles,
     wardrobes: wardrobeList.wardrobes,
     outfits: outfitList.outfits,
     items: itemLists.flatMap((list) => list.items),
@@ -220,6 +219,11 @@ const VirtualTryOnReady = ({
     setFormError(undefined);
   };
 
+  const handleProfileSelect = (profileId: string) => {
+    setAiProfileId(profileId);
+    setFieldError(undefined);
+  };
+
   const handleItemToggle = (itemId: string) => {
     setSelectedItemIds((currentIds) => {
       if (currentIds.includes(itemId)) {
@@ -228,6 +232,11 @@ const VirtualTryOnReady = ({
 
       return [...currentIds, itemId];
     });
+    setFieldError(undefined);
+  };
+
+  const handleOutfitSelect = (nextOutfitId: string) => {
+    setOutfitId(nextOutfitId);
     setFieldError(undefined);
   };
 
@@ -343,33 +352,45 @@ const VirtualTryOnReady = ({
               {fieldError}
             </Alert>
           ) : null}
-          <TextField
-            id="virtual-try-on-profile"
-            name="aiProfileId"
-            label={copy.profileLabel}
-            value={aiProfileId}
-            onChange={(event) => {
-              setAiProfileId(event.target.value);
-              setFieldError(undefined);
-            }}
-            select
-            required
-            slotProps={{
-              htmlInput: { "aria-label": copy.profileLabel },
-            }}
-          >
+          <FormControl component="fieldset" variant="standard">
+            <FormLabel component="legend" id="virtual-try-on-profile-label">
+              {copy.profileLabel}
+            </FormLabel>
             {data.profiles.length === 0 ? (
-              <MenuItem value="" disabled>
+              <Typography variant="body2" color="text.secondary">
                 {copy.profileEmpty}
-              </MenuItem>
+              </Typography>
             ) : (
-              data.profiles.map((profile) => (
-                <MenuItem key={profile.aiProfileId} value={profile.aiProfileId}>
-                  {getAiProfileDisplayName(profile)}
-                </MenuItem>
-              ))
+              <ResourceCardGrid label={copy.profileLabel}>
+                {data.profiles.map((profile) => {
+                  const title = getAiProfileDisplayName(profile);
+                  const titleId = `virtual-try-on-profile-${profile.aiProfileId}-title`;
+                  return (
+                    <Box
+                      key={profile.aiProfileId}
+                      component="li"
+                      sx={{ minWidth: 0 }}
+                    >
+                      <SelectableResourceCard
+                        title={title}
+                        titleId={titleId}
+                        imageUrl={getAiProfileImageUrl(profile)}
+                        imageAlt={title}
+                        fallbackLabel="No photo for this Virtual Profile"
+                        FallbackIcon={FaceRetouchingNaturalOutlined}
+                        chips={[getAiProfileTypeLabel(profile.type)]}
+                        selected={aiProfileId === profile.aiProfileId}
+                        selection="single"
+                        onSelect={() => {
+                          handleProfileSelect(profile.aiProfileId);
+                        }}
+                      />
+                    </Box>
+                  );
+                })}
+              </ResourceCardGrid>
             )}
-          </TextField>
+          </FormControl>
           <FormControl>
             <FormLabel id="virtual-try-on-source-label">
               {copy.sourceLabel}
@@ -425,23 +446,28 @@ const VirtualTryOnReady = ({
                   {copy.itemsEmpty}
                 </Typography>
               ) : (
-                <FormGroup>
-                  {wardrobeItems.map((item) => (
-                    <FormControlLabel
-                      key={item.itemId}
-                      control={
-                        <Checkbox
-                          checked={selectedItemIds.includes(item.itemId)}
-                          onChange={() => {
+                <ResourceCardGrid label={copy.itemsLabel}>
+                  {wardrobeItems.map((item) => {
+                    const titleId = `virtual-try-on-item-${item.itemId}-title`;
+                    return (
+                      <Box key={item.itemId} component="li" sx={{ minWidth: 0 }}>
+                        <SelectableResourceCard
+                          title={item.name}
+                          titleId={titleId}
+                          imageUrl={getItemImageUrl(item)}
+                          imageAlt={item.name}
+                          fallbackLabel="No photo for this clothing item"
+                          FallbackIcon={CheckroomOutlined}
+                          selected={selectedItemIds.includes(item.itemId)}
+                          selection="multi"
+                          onSelect={() => {
                             handleItemToggle(item.itemId);
                           }}
-                          tabIndex={0}
                         />
-                      }
-                      label={item.name}
-                    />
-                  ))}
-                </FormGroup>
+                      </Box>
+                    );
+                  })}
+                </ResourceCardGrid>
               )}
             </FormControl>
           ) : wardrobeOutfits.length === 0 ? (
@@ -449,26 +475,35 @@ const VirtualTryOnReady = ({
               {copy.outfitsEmpty}
             </Typography>
           ) : (
-            <TextField
-              id="virtual-try-on-outfit"
-              name="outfitId"
-              label={copy.outfitsLabel}
-              value={outfitId}
-              onChange={(event) => {
-                setOutfitId(event.target.value);
-                setFieldError(undefined);
-              }}
-              select
-              slotProps={{
-                htmlInput: { "aria-label": copy.outfitsLabel },
-              }}
-            >
-              {wardrobeOutfits.map((outfit) => (
-                <MenuItem key={outfit.outfitId} value={outfit.outfitId}>
-                  {outfit.name}
-                </MenuItem>
-              ))}
-            </TextField>
+            <FormControl component="fieldset" variant="standard">
+              <FormLabel component="legend">{copy.outfitsLabel}</FormLabel>
+              <ResourceCardGrid label={copy.outfitsLabel}>
+                {wardrobeOutfits.map((outfit) => {
+                  const titleId = `virtual-try-on-outfit-${outfit.outfitId}-title`;
+                  return (
+                    <Box
+                      key={outfit.outfitId}
+                      component="li"
+                      sx={{ minWidth: 0 }}
+                    >
+                      <SelectableResourceCard
+                        title={outfit.name}
+                        titleId={titleId}
+                        imageUrl={getOutfitImageUrl(outfit)}
+                        imageAlt={outfit.name}
+                        fallbackLabel="No photo for this outfit"
+                        FallbackIcon={StyleOutlined}
+                        selected={outfitId === outfit.outfitId}
+                        selection="single"
+                        onSelect={() => {
+                          handleOutfitSelect(outfit.outfitId);
+                        }}
+                      />
+                    </Box>
+                  );
+                })}
+              </ResourceCardGrid>
+            </FormControl>
           )}
           <Button
             type="submit"
