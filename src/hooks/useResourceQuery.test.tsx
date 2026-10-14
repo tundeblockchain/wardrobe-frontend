@@ -140,4 +140,52 @@ describe("useResourceQuery", () => {
     });
     expect(queryFn).toHaveBeenCalledTimes(2);
   });
+
+  it("does not enter a refetch loop or repeat GET /me when queryFn is unstable", async () => {
+    const queryFn = vi.fn<() => Promise<string>>().mockResolvedValue("ready");
+    const UnstableMeProbe = () => {
+      const query = useResourceQuery("me", () => queryFn());
+
+      if (query.status !== "ready") {
+        return <p>loading</p>;
+      }
+
+      return <p>{query.data}</p>;
+    };
+
+    renderWithProviders(<UnstableMeProbe />, {
+      auth: { user: { id: "user-1" } },
+    });
+
+    expect(await screen.findByText("ready")).toBeInTheDocument();
+    await new Promise<void>((resolve) => {
+      setTimeout(resolve, 50);
+    });
+    expect(queryFn.mock.calls.length).toBeGreaterThan(0);
+    expect(queryFn.mock.calls.length).toBeLessThanOrEqual(2);
+  });
+
+  it("does not enter a refetch loop for settings-plan when queryFn is unstable", async () => {
+    const queryFn = vi.fn<() => Promise<string>>().mockResolvedValue("premium");
+    const UnstablePlanProbe = () => {
+      const query = useResourceQuery("settings-plan", () => queryFn());
+
+      if (query.status !== "ready") {
+        return <p>loading</p>;
+      }
+
+      return <p>{query.data}</p>;
+    };
+
+    renderWithProviders(<UnstablePlanProbe />, {
+      auth: { user: { id: "user-1" } },
+    });
+
+    expect(await screen.findByText("premium")).toBeInTheDocument();
+    await new Promise<void>((resolve) => {
+      setTimeout(resolve, 50);
+    });
+    expect(queryFn.mock.calls.length).toBeGreaterThan(0);
+    expect(queryFn.mock.calls.length).toBeLessThanOrEqual(2);
+  });
 });

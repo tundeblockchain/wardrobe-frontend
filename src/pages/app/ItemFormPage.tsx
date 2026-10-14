@@ -31,7 +31,10 @@ import { ResourceEmptyState } from "../../components/dashboard/ResourceEmptyStat
 import { ResourceErrorState } from "../../components/dashboard/ResourceErrorState";
 import { ResourceLoadingState } from "../../components/dashboard/ResourceLoadingState";
 import { dashboardCopy } from "../../content/dashboardCopy";
-import { useResourceQuery } from "../../hooks/useResourceQuery";
+import {
+  loadUnusedResource,
+  useResourceQuery,
+} from "../../hooks/useResourceQuery";
 import { useResourceApi } from "../../api/useResourceApi";
 import {
   getAppItemPath,
@@ -91,7 +94,7 @@ export const ItemFormPage = ({
   );
   const itemQuery = useResourceQuery(
     mode === "edit" ? `item:${itemId}` : "item:new",
-    mode === "edit" ? loadItem : async () => undefined,
+    mode === "edit" ? loadItem : loadUnusedResource,
   );
 
   if (meQuery.status === "loading" || itemQuery.status === "loading") {

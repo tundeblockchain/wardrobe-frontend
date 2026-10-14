@@ -17,7 +17,10 @@ import { ResourceErrorState } from "../../components/dashboard/ResourceErrorStat
 import { ResourceLoadingState } from "../../components/dashboard/ResourceLoadingState";
 import { WardrobeForm } from "../../components/dashboard/WardrobeForm";
 import { dashboardCopy } from "../../content/dashboardCopy";
-import { useResourceQuery } from "../../hooks/useResourceQuery";
+import {
+  loadUnusedResource,
+  useResourceQuery,
+} from "../../hooks/useResourceQuery";
 import {
   appPaths,
   getAppWardrobePath,
@@ -48,7 +51,7 @@ export const WardrobeFormPage = ({
   );
   const wardrobeQuery = useResourceQuery(
     mode === "edit" ? `wardrobe:${wardrobeId}` : "wardrobe:new",
-    mode === "edit" ? loadWardrobe : async () => undefined,
+    mode === "edit" ? loadWardrobe : loadUnusedResource,
   );
 
   if (meQuery.status === "loading" || wardrobeQuery.status === "loading") {
