@@ -9,10 +9,12 @@ export const wardrobeDarkPalette = {
   textPrimary: "#F6EDF0",
   textSecondary: "#CDB8C0",
   divider: "#3A2A30",
+  uiBorder: "#8A6270",
   primaryMain: "#E8A8BA",
   primaryDark: "#2B1A20",
   primaryLight: "#F3C5D0",
-  primaryContrast: "#F6EDF0",
+  primaryContrast: "#2A121C",
+  primaryHover: "#C87890",
   secondaryMain: "#D7A9C0",
   secondaryDark: "#E6B7C8",
   secondaryLight: "#E8C8D6",
@@ -22,9 +24,6 @@ export const wardrobeDarkPalette = {
   appBarBorder: "#3A2A30",
   toggleSelectedBackground: "#5C3342",
   toggleSelectedText: "#F6EDF0",
-  containedPrimaryBackground: "#9A4E66",
-  containedPrimaryText: "#F6EDF0",
-  containedPrimaryHover: "#8B3A54",
 } as const;
 
 export type WardrobeDarkPalette = typeof wardrobeDarkPalette;

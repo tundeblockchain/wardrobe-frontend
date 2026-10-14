@@ -1,3 +1,4 @@
+import { switchClasses } from "@mui/material/Switch";
 import { toggleButtonClasses } from "@mui/material/ToggleButton";
 import { alpha, createTheme } from "@mui/material/styles";
 import { appTheme } from "./appTheme";
@@ -62,27 +63,63 @@ export const createDashboardTheme = (mode: ResolvedThemeMode) => {
             textTransform: "none",
             fontWeight: 600,
           },
+          outlined: {
+            borderColor: wardrobeDarkPalette.uiBorder,
+          },
         },
         variants: [
           {
             props: { variant: "contained", color: "primary" },
             style: {
-              backgroundColor: wardrobeDarkPalette.containedPrimaryBackground,
-              color: wardrobeDarkPalette.containedPrimaryText,
+              backgroundColor: wardrobeDarkPalette.primaryMain,
+              color: wardrobeDarkPalette.primaryContrast,
               "&:hover": {
-                backgroundColor: wardrobeDarkPalette.containedPrimaryHover,
+                backgroundColor: wardrobeDarkPalette.primaryHover,
               },
             },
           },
         ],
       },
+      MuiFab: {
+        variants: [
+          {
+            props: { color: "primary" },
+            style: {
+              backgroundColor: wardrobeDarkPalette.primaryMain,
+              color: wardrobeDarkPalette.primaryContrast,
+              "&:hover": {
+                backgroundColor: wardrobeDarkPalette.primaryHover,
+              },
+            },
+          },
+        ],
+      },
+      MuiSwitch: {
+        styleOverrides: {
+          switchBase: {
+            [`&.${switchClasses.checked}`]: {
+              color: wardrobeDarkPalette.primaryMain,
+            },
+          },
+          colorPrimary: {
+            [`&.${switchClasses.checked}`]: {
+              color: wardrobeDarkPalette.primaryMain,
+            },
+          },
+        },
+      },
       MuiChip: {
+        styleOverrides: {
+          outlined: {
+            borderColor: wardrobeDarkPalette.uiBorder,
+          },
+        },
         variants: [
           {
             props: { variant: "filled", color: "primary" },
             style: {
-              backgroundColor: wardrobeDarkPalette.containedPrimaryBackground,
-              color: wardrobeDarkPalette.containedPrimaryText,
+              backgroundColor: wardrobeDarkPalette.primaryMain,
+              color: wardrobeDarkPalette.primaryContrast,
             },
           },
         ],
@@ -90,8 +127,8 @@ export const createDashboardTheme = (mode: ResolvedThemeMode) => {
       MuiBadge: {
         styleOverrides: {
           colorPrimary: {
-            backgroundColor: wardrobeDarkPalette.containedPrimaryBackground,
-            color: wardrobeDarkPalette.containedPrimaryText,
+            backgroundColor: wardrobeDarkPalette.primaryMain,
+            color: wardrobeDarkPalette.primaryContrast,
           },
         },
       },
@@ -99,12 +136,12 @@ export const createDashboardTheme = (mode: ResolvedThemeMode) => {
         styleOverrides: {
           root: {
             color: wardrobeDarkPalette.textSecondary,
-            borderColor: wardrobeDarkPalette.divider,
+            borderColor: wardrobeDarkPalette.uiBorder,
             [`&.${toggleButtonClasses.selected}`]: {
               color: wardrobeDarkPalette.toggleSelectedText,
               backgroundColor: wardrobeDarkPalette.toggleSelectedBackground,
               "&:hover": {
-                backgroundColor: wardrobeDarkPalette.containedPrimaryHover,
+                backgroundColor: wardrobeDarkPalette.primaryHover,
               },
             },
           },

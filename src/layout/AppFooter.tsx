@@ -16,7 +16,10 @@ export const AppFooter = () => {
         px: 2,
         py: 4,
         bgcolor: "primary.dark",
-        color: "primary.contrastText",
+        color: (theme) =>
+          theme.palette.mode === "dark"
+            ? theme.palette.text.primary
+            : theme.palette.primary.contrastText,
       }}
     >
       <Stack spacing={2} sx={{ alignItems: "center" }}>
