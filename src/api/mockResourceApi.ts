@@ -65,10 +65,6 @@ export const mockEntitlement: Entitlement = {
     expiresAt: "2027-10-01T09:12:00.000Z",
   },
   updatedAt: "2026-10-01T09:12:00.000Z",
-  paidTier: {
-    tier: "premium",
-    source: "stripe",
-  },
 };
 
 export const mockFreeAtLimitEntitlement: Entitlement = {
@@ -92,7 +88,6 @@ export const mockFreeAtLimitEntitlement: Entitlement = {
   },
   paidTier: null,
   updatedAt: "2026-10-01T09:12:00.000Z",
-  paidTier: null,
 };
 
 export const mockWardrobes: Wardrobe[] = [
