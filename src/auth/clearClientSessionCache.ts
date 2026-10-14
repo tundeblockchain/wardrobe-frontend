@@ -1,5 +1,6 @@
 import { invalidateResourceQueries as invalidateAllResourceQueries } from "../hooks/resourceQueryInvalidation";
 import {
+  CATALOG_LIST_QUERY_KEYS,
   clearResourceQueryCache,
   invalidateResourceQueries,
   SESSION_QUERY_CACHE_KEYS,
@@ -17,6 +18,7 @@ const SESSION_INVALIDATION_KEYS = [
   "generic-ai-profiles",
   "interval",
   ...WARDROBE_DELETE_INVALIDATION_KEYS,
+  CATALOG_LIST_QUERY_KEYS.recommendations,
 ] as const;
 
 export const clearClientSessionCache = (): void => {

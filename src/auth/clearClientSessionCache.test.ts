@@ -53,6 +53,7 @@ describe("clearClientSessionCache", () => {
         SESSION_QUERY_CACHE_KEYS.presets,
         SESSION_QUERY_CACHE_KEYS.billingInterval,
         "paidTier",
+        "recommendations",
       ]),
     );
 

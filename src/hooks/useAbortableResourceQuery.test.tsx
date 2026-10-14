@@ -1,9 +1,13 @@
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
+import { clearClientSessionCache } from "../auth/clearClientSessionCache";
 import { ApiError } from "../api/httpClient";
 import { renderWithProviders } from "../test/renderWithProviders";
-import { invalidateCatalogLists } from "./resourceQueryCache";
+import {
+  CATALOG_LIST_QUERY_KEYS,
+  invalidateResourceQueries,
+} from "./resourceQueryCache";
 import { useAbortableResourceQuery } from "./useAbortableResourceQuery";
 
 const QueryProbe = ({
@@ -41,7 +45,7 @@ describe("useAbortableResourceQuery", () => {
     );
 
     expect(await screen.findByText("first")).toBeInTheDocument();
-    invalidateCatalogLists();
+    invalidateResourceQueries([CATALOG_LIST_QUERY_KEYS.outfits]);
     await new Promise<void>((resolve) => {
       setTimeout(resolve, 30);
     });
@@ -51,6 +55,25 @@ describe("useAbortableResourceQuery", () => {
     await user.click(screen.getByRole("button", { name: "retry" }));
     await waitFor(() => {
       expect(screen.getByText("second")).toBeInTheDocument();
+    });
+    expect(queryFn).toHaveBeenCalledTimes(2);
+  });
+
+  it("refetches when logout keyed invalidation covers recommendation queries", async () => {
+    const queryFn = vi
+      .fn<(signal: AbortSignal) => Promise<string>>()
+      .mockResolvedValueOnce("stale")
+      .mockResolvedValueOnce("fresh");
+
+    renderWithProviders(
+      <QueryProbe queryKey="recommendations:wd_1" queryFn={queryFn} />,
+      { auth: { user: { id: "user-1" } } },
+    );
+
+    expect(await screen.findByText("stale")).toBeInTheDocument();
+    clearClientSessionCache();
+    await waitFor(() => {
+      expect(screen.getByText("fresh")).toBeInTheDocument();
     });
     expect(queryFn).toHaveBeenCalledTimes(2);
   });

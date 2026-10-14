@@ -1,5 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { ApiError, isApiError } from "../api/httpClient";
+import {
+  resourceQueryKeyMatches,
+  subscribeResourceQueryInvalidation,
+} from "./resourceQueryCache";
 import type {
   ResourceQueryState,
   UseResourceQueryResult,
@@ -45,7 +49,8 @@ const isAbortError = (error: unknown): boolean => {
 
 /**
  * Fetch once per visit or Refresh. Abort in-flight work on unmount.
- * Does not subscribe to catalog invalidation — recommendations are not cached.
+ * Subscribes to keyed invalidation so logout (and wardrobe delete) drop
+ * recommendation results without refetching on unrelated keys like outfits.
  */
 export const useAbortableResourceQuery = <T>(
   queryKey: string,
@@ -64,6 +69,16 @@ export const useAbortableResourceQuery = <T>(
   const handleRetry = () => {
     setReloadCount((currentCount) => currentCount + 1);
   };
+
+  useEffect(() => {
+    const unsubscribe = subscribeResourceQueryInvalidation((keys) => {
+      if (resourceQueryKeyMatches(queryKey, keys)) {
+        setReloadCount((currentCount) => currentCount + 1);
+      }
+    });
+
+    return unsubscribe;
+  }, [queryKey]);
 
   useEffect(() => {
     const abortController = new AbortController();

@@ -6,6 +6,7 @@ export const CATALOG_LIST_QUERY_KEYS = {
   virtualProfiles: "virtual-profiles",
   virtualTryOn: "virtual-try-on",
   virtualProfile: "virtual-profile",
+  recommendations: "recommendations",
 } as const;
 
 export const SESSION_QUERY_CACHE_KEYS = {
@@ -41,6 +42,7 @@ export const WARDROBE_DELETE_INVALIDATION_KEYS = [
   CATALOG_LIST_QUERY_KEYS.virtualProfiles,
   CATALOG_LIST_QUERY_KEYS.virtualTryOn,
   CATALOG_LIST_QUERY_KEYS.virtualProfile,
+  CATALOG_LIST_QUERY_KEYS.recommendations,
 ] as const;
 
 type ResourceQueryInvalidationListener = (keys: readonly string[]) => void;
