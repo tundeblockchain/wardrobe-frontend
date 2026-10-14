@@ -1,6 +1,7 @@
-import { screen } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { resetWardrobeCoverImageRetries } from "../../components/dashboard/wardrobeCoverImageReload";
 import {
   createEmptyResourceApi,
   createErrorResourceApi,
@@ -36,6 +37,10 @@ const wardrobe = (overrides: Partial<Wardrobe>): Wardrobe => {
 };
 
 describe("AppHomePage", () => {
+  beforeEach(() => {
+    resetWardrobeCoverImageRetries();
+  });
+
   it("renders a loading state", () => {
     renderPage(pendingApi);
 
@@ -186,6 +191,69 @@ describe("AppHomePage", () => {
     );
     expect(listWardrobeItems).toHaveBeenCalledTimes(1);
     expect(listWardrobeItems).toHaveBeenCalledWith("wd_items", { limit: 1 });
+  });
+
+  it("refetches the wardrobe list once when a cover image fails", async () => {
+    const listWardrobes = vi
+      .fn()
+      .mockResolvedValueOnce({
+        wardrobes: [
+          wardrobe({
+            wardrobeId: "wd_mine",
+            name: "My wardrobe",
+            coverImageUrl: "https://cdn.example.com/expired.jpg",
+          }),
+        ],
+      })
+      .mockResolvedValueOnce({
+        wardrobes: [
+          wardrobe({
+            wardrobeId: "wd_mine",
+            name: "My wardrobe",
+            coverImageUrl: "https://cdn.example.com/fresh.jpg",
+          }),
+        ],
+      })
+      .mockResolvedValue({
+        wardrobes: [
+          wardrobe({
+            wardrobeId: "wd_mine",
+            name: "My wardrobe",
+            coverImageUrl: "https://cdn.example.com/still-bad.jpg",
+          }),
+        ],
+      });
+
+    renderPage(
+      createMockResourceApi({
+        listWardrobes,
+        listWardrobeItems: async () => ({ items: [] }),
+      }),
+    );
+
+    const expiredImage = await screen.findByRole("img", { name: "My wardrobe" });
+    expect(expiredImage).toHaveAttribute(
+      "src",
+      "https://cdn.example.com/expired.jpg",
+    );
+
+    fireEvent.error(expiredImage);
+
+    const freshImage = await screen.findByRole("img", { name: "My wardrobe" });
+    expect(freshImage).toHaveAttribute(
+      "src",
+      "https://cdn.example.com/fresh.jpg",
+    );
+    expect(listWardrobes).toHaveBeenCalledTimes(2);
+
+    fireEvent.error(freshImage);
+
+    await waitFor(() => {
+      expect(
+        screen.getByText("No photo for this wardrobe"),
+      ).toBeInTheDocument();
+    });
+    expect(listWardrobes).toHaveBeenCalledTimes(2);
   });
 
   it("shows the placeholder when the items fallback fails", async () => {

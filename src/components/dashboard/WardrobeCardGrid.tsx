@@ -5,6 +5,7 @@ import type { Wardrobe } from "../../api/resourceTypes";
 import { getAppWardrobePath } from "../../routes/paths";
 import { ResourceCard, WARDROBE_CARD_IMAGE_ASPECT_RATIO } from "./ResourceCard";
 import { ResourceCardGrid } from "./ResourceCardGrid";
+import { handleWardrobeCoverImageError } from "./wardrobeCoverImageReload";
 
 export type WardrobeCardGridProps = {
   wardrobes: Wardrobe[];
@@ -26,6 +27,9 @@ export const WardrobeCardGrid = ({ wardrobes }: WardrobeCardGridProps) => {
               imageAspectRatio={WARDROBE_CARD_IMAGE_ASPECT_RATIO}
               fallbackLabel="No photo for this wardrobe"
               FallbackIcon={CheckroomOutlined}
+              onImageError={() => {
+                handleWardrobeCoverImageError(wardrobe.wardrobeId);
+              }}
               description="Open this wardrobe to see its clothing items."
             />
           </Box>

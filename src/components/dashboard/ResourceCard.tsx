@@ -16,6 +16,7 @@ export type ResourceCardProps = {
   imageAspectRatio?: string;
   fallbackLabel: string;
   FallbackIcon?: SvgIconComponent;
+  onImageError?: () => void;
   chips?: string[];
   description?: string;
   children?: ReactNode;
@@ -30,6 +31,7 @@ export const ResourceCard = ({
   imageAspectRatio = DEFAULT_RESOURCE_CARD_IMAGE_ASPECT_RATIO,
   fallbackLabel,
   FallbackIcon,
+  onImageError,
   chips = [],
   description,
   children,
@@ -57,6 +59,7 @@ export const ResourceCard = ({
           alt={imageAlt}
           fallbackLabel={fallbackLabel}
           FallbackIcon={FallbackIcon}
+          onImageError={onImageError}
         />
       </Box>
       <Stack spacing={1} sx={{ p: 2 }}>
