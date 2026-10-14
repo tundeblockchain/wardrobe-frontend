@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
-import { Button } from "@mui/material";
-import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { isAtCatalogLimit, isCatalogLimitError } from "../../api/catalogLimits";
 import {
   validateWardrobeForm,
@@ -182,10 +181,15 @@ const WardrobeFormReady = ({
   const [formError, setFormError] = useState<string | undefined>();
   const [blockedByLimit, setBlockedByLimit] = useState(false);
 
+  const formTitle = mode === "create" ? copy.createTitle : copy.editTitle;
   const cancelTo =
     mode === "edit" && wardrobe
       ? getAppWardrobePath(wardrobe.wardrobeId)
       : appPaths.appWardrobes;
+
+  const handleCancel = () => {
+    navigate(cancelTo);
+  };
 
   const handleSubmit = async () => {
     const nextErrors = validateWardrobeForm(values);
@@ -247,30 +251,20 @@ const WardrobeFormReady = ({
   return (
     <DashboardPage
       headingId="wardrobe-form-heading"
-      title={mode === "create" ? copy.createTitle : copy.editTitle}
+      title={formTitle}
       description={
         mode === "create" ? copy.createDescription : copy.editDescription
       }
-      actions={
-        <Button
-          component={RouterLink}
-          to={cancelTo}
-          variant="text"
-          color="secondary"
-          tabIndex={0}
-          aria-label="Cancel"
-        >
-          Cancel
-        </Button>
-      }
     >
       <WardrobeForm
+        title={formTitle}
         values={values}
         errors={errors}
         isSubmitting={isSubmitting}
         submitLabel={mode === "create" ? copy.submitCreateLabel : copy.submitEditLabel}
         submittingLabel={copy.submittingLabel}
         formError={formError}
+        onCancel={handleCancel}
         onValuesChange={setValues}
         onSubmit={() => {
           void handleSubmit();

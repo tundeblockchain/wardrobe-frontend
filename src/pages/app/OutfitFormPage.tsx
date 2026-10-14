@@ -1,7 +1,5 @@
 import { useMemo, useState } from "react";
-import { Button } from "@mui/material";
 import {
-  Link as RouterLink,
   useNavigate,
   useParams,
   useSearchParams,
@@ -244,6 +242,12 @@ const OutfitFormReady = ({
     loadItems,
   );
 
+  const formTitle = mode === "create" ? copy.createTitle : copy.editTitle;
+
+  const handleCancel = () => {
+    navigate(appPaths.appOutfits);
+  };
+
   const handleSubmit = async () => {
     const nextErrors = validateOutfitForm(values);
     setErrors(nextErrors);
@@ -306,21 +310,9 @@ const OutfitFormReady = ({
   return (
     <DashboardPage
       headingId="outfit-form-heading"
-      title={mode === "create" ? copy.createTitle : copy.editTitle}
+      title={formTitle}
       description={
         mode === "create" ? copy.createDescription : copy.editDescription
-      }
-      actions={
-        <Button
-          component={RouterLink}
-          to={appPaths.appOutfits}
-          variant="text"
-          color="secondary"
-          tabIndex={0}
-          aria-label="Cancel"
-        >
-          Cancel
-        </Button>
       }
     >
       {itemsQuery.status === "error" ? (
@@ -332,6 +324,7 @@ const OutfitFormReady = ({
         />
       ) : (
         <OutfitForm
+          title={formTitle}
           values={values}
           errors={errors}
           wardrobes={wardrobes}
@@ -345,6 +338,7 @@ const OutfitFormReady = ({
           }
           submittingLabel={copy.submittingLabel}
           formError={formError}
+          onCancel={handleCancel}
           onValuesChange={setValues}
           onSubmit={() => {
             void handleSubmit();

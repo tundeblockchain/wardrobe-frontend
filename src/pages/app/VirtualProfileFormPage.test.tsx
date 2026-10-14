@@ -60,7 +60,7 @@ describe("VirtualProfileFormPage", () => {
 
     await expectFormInsideSharedCard("Save Virtual Profile");
     expect(
-      screen.getByRole("heading", { name: "Add Virtual Profile" }),
+      screen.getByRole("heading", { level: 1, name: "Add Virtual Profile" }),
     ).toBeInTheDocument();
   });
 
@@ -69,7 +69,7 @@ describe("VirtualProfileFormPage", () => {
 
     await expectFormInsideSharedCard("Save changes");
     expect(
-      screen.getByRole("heading", { name: "Edit Virtual Profile" }),
+      screen.getByRole("heading", { level: 1, name: "Edit Virtual Profile" }),
     ).toBeInTheDocument();
   });
 
