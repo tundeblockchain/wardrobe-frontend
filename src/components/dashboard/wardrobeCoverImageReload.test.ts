@@ -24,10 +24,15 @@ describe("wardrobe cover image reload", () => {
     vi.mocked(invalidateResourceQueries).mockClear();
   });
 
-  it("invalidates the wardrobe list once per wardrobe", () => {
+  it("invalidates the wardrobe list once per wardrobe per session", () => {
     expect(handleWardrobeCoverImageError("wd_1")).toBe(true);
-    expect(handleWardrobeCoverImageError("wd_1")).toBe(false);
+
+    for (let attempt = 0; attempt < 8; attempt += 1) {
+      expect(handleWardrobeCoverImageError("wd_1")).toBe(false);
+    }
+
     expect(handleWardrobeCoverImageError("wd_2")).toBe(true);
+    expect(handleWardrobeCoverImageError("wd_2")).toBe(false);
 
     expect(invalidateResourceQueries).toHaveBeenCalledTimes(2);
     expect(invalidateResourceQueries).toHaveBeenNthCalledWith(1, [
