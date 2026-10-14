@@ -141,7 +141,7 @@ describe("useResourceQuery", () => {
     expect(queryFn).toHaveBeenCalledTimes(2);
   });
 
-  it("does not refetch /me when the caller passes a new queryFn each render", async () => {
+  it("does not enter a refetch loop or repeat GET /me when queryFn is unstable", async () => {
     const queryFn = vi.fn<() => Promise<string>>().mockResolvedValue("ready");
     const UnstableMeProbe = () => {
       const query = useResourceQuery("me", () => queryFn());
@@ -165,7 +165,7 @@ describe("useResourceQuery", () => {
     expect(queryFn.mock.calls.length).toBeLessThanOrEqual(2);
   });
 
-  it("does not refetch settings-plan when the caller passes a new queryFn each render", async () => {
+  it("does not enter a refetch loop for settings-plan when queryFn is unstable", async () => {
     const queryFn = vi.fn<() => Promise<string>>().mockResolvedValue("premium");
     const UnstablePlanProbe = () => {
       const query = useResourceQuery("settings-plan", () => queryFn());
