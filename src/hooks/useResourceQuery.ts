@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ApiError, isApiError } from "../api/httpClient";
 import {
   resourceQueryKeyMatches,
@@ -45,6 +45,11 @@ const isCachedForRequest = <T>(
   return cached.queryKey === queryKey && cached.reloadCount === reloadCount;
 };
 
+/** Stable no-op loader for create-mode queries that do not read a resource. */
+export const loadUnusedResource = async (): Promise<undefined> => {
+  return undefined;
+};
+
 export const useResourceQuery = <T>(
   queryKey: string,
   queryFn: () => Promise<T>,
@@ -53,6 +58,8 @@ export const useResourceQuery = <T>(
   const [cached, setCached] = useState<CachedResourceQuery<T> | undefined>(
     undefined,
   );
+  const queryFnRef = useRef(queryFn);
+  queryFnRef.current = queryFn;
 
   const handleRetry = () => {
     setReloadCount((currentCount) => currentCount + 1);
@@ -81,7 +88,7 @@ export const useResourceQuery = <T>(
 
     const loadResource = async () => {
       try {
-        const data = await queryFn();
+        const data = await queryFnRef.current();
         if (isCancelled) {
           return;
         }
@@ -109,7 +116,7 @@ export const useResourceQuery = <T>(
     return () => {
       isCancelled = true;
     };
-  }, [queryFn, queryKey, reloadCount]);
+  }, [queryKey, reloadCount]);
 
   if (!isCachedForRequest(cached, queryKey, reloadCount)) {
     return {

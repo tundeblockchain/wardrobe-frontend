@@ -22,7 +22,10 @@ import { ResourceEmptyState } from "../../components/dashboard/ResourceEmptyStat
 import { ResourceErrorState } from "../../components/dashboard/ResourceErrorState";
 import { ResourceLoadingState } from "../../components/dashboard/ResourceLoadingState";
 import { dashboardCopy } from "../../content/dashboardCopy";
-import { useResourceQuery } from "../../hooks/useResourceQuery";
+import {
+  loadUnusedResource,
+  useResourceQuery,
+} from "../../hooks/useResourceQuery";
 import { useResourceApi } from "../../api/useResourceApi";
 import { appPaths, WARDROBE_ID_QUERY_PARAM } from "../../routes/paths";
 
@@ -80,7 +83,7 @@ export const OutfitFormPage = ({
   );
   const outfitQuery = useResourceQuery(
     mode === "edit" ? `outfit:${outfitId}:${wardrobeIdFromQuery}` : "outfit:new",
-    mode === "edit" ? loadSelectedOutfit : async () => undefined,
+    mode === "edit" ? loadSelectedOutfit : loadUnusedResource,
   );
 
   if (

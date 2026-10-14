@@ -16,6 +16,10 @@ import { ContactPage } from "../ContactPage";
 import { ProtectedRoute } from "../../routes/ProtectedRoute";
 import { appPaths, getContactPath } from "../../routes/paths";
 import { renderWithProviders } from "../../test/renderWithProviders";
+import {
+  createUnstableGetMeApi,
+  expectBoundedGetMeFetches,
+} from "../../test/unstableGetMeApi";
 import { DashboardThemeProvider } from "../../theme/DashboardThemeProvider";
 import { THEME_PREFERENCE_STORAGE_KEY } from "../../theme/themePreference";
 import { InboxPage } from "./InboxPage";
@@ -116,6 +120,26 @@ describe("SettingsPage", () => {
     authProviderMocks.getIdToken.mockResolvedValue("test-id-token");
     authProviderMocks.signOutUser.mockResolvedValue(undefined);
     window.localStorage.removeItem(THEME_PREFERENCE_STORAGE_KEY);
+  });
+
+  it("renders View plan without refetching GET /me in a loop", async () => {
+    const getMe = vi.fn().mockResolvedValue(mockEntitlement);
+    renderSettings(createUnstableGetMeApi(getMe));
+
+    expect(
+      await screen.findByRole("heading", {
+        level: 1,
+        name: "Profile & Settings",
+      }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Plan" })).toBeInTheDocument();
+    expect(screen.getAllByText("Premium").length).toBeGreaterThan(0);
+    expect(
+      screen.getByText(
+        "This plan was bought on the web. Payment management is not available here.",
+      ),
+    ).toBeInTheDocument();
+    await expectBoundedGetMeFetches(getMe);
   });
 
   it("shows account details and the Firebase sign-in provider", async () => {

@@ -1,5 +1,6 @@
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { Route, Routes } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 import { catalogLimitError } from "../../api/catalogLimits";
 import {
@@ -10,6 +11,12 @@ import {
 import type { ResourceApi } from "../../api/resourceApi";
 import { appPaths } from "../../routes/paths";
 import { renderWithProviders } from "../../test/renderWithProviders";
+import {
+  createUnstableFreeAtLimitGetMeApi,
+  createUnstableGetMeApi,
+  expectBoundedGetMeFetches,
+} from "../../test/unstableGetMeApi";
+import { SettingsPage } from "./SettingsPage";
 import { OutfitFormPage } from "./OutfitFormPage";
 
 const renderCreate = (resourceApi: ResourceApi) => {
@@ -139,5 +146,65 @@ describe("OutfitFormPage", () => {
         name: "Couldn't save this outfit",
       }),
     ).toBeInTheDocument();
+  });
+
+  it("renders Add outfit without refetching GET /me in a loop", async () => {
+    const getMe = vi.fn().mockImplementation(createMockResourceApi().getMe);
+    renderCreate(createUnstableGetMeApi(getMe));
+
+    expect(
+      await screen.findByRole("textbox", { name: "Name" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { level: 1, name: "Add outfit" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("combobox", { name: "Wardrobe" }),
+    ).toBeInTheDocument();
+    await expectBoundedGetMeFetches(getMe);
+  });
+
+  it("opens View plan from Add outfit without refetching GET /me in a loop", async () => {
+    const user = userEvent.setup();
+    const getMe = vi
+      .fn()
+      .mockImplementation(createFreeAtLimitResourceApi().getMe);
+    const resourceApi = createUnstableFreeAtLimitGetMeApi(getMe);
+
+    renderWithProviders(
+      <Routes>
+        <Route
+          path={appPaths.appOutfitNew}
+          element={<OutfitFormPage mode="create" resourceApi={resourceApi} />}
+        />
+        <Route
+          path={appPaths.appSettings}
+          element={<SettingsPage resourceApi={resourceApi} />}
+        />
+      </Routes>,
+      {
+        route: appPaths.appOutfitNew,
+        auth: { user: { id: "user-1" } },
+      },
+    );
+
+    expect(
+      await screen.findByRole("heading", { name: "Outfit limit reached" }),
+    ).toBeInTheDocument();
+    await user.click(
+      screen.getByRole("link", { name: "View plan to add more outfits" }),
+    );
+
+    expect(
+      await screen.findByRole("heading", {
+        level: 1,
+        name: "Profile & Settings",
+      }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Free")).toBeInTheDocument();
+    expect(
+      screen.getByText("The Free plan is included with the account."),
+    ).toBeInTheDocument();
+    await expectBoundedGetMeFetches(getMe);
   });
 });

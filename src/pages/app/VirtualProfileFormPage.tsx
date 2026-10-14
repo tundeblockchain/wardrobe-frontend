@@ -26,7 +26,10 @@ import { ResourceErrorState } from "../../components/dashboard/ResourceErrorStat
 import { ResourceLoadingState } from "../../components/dashboard/ResourceLoadingState";
 import { VirtualProfileForm } from "../../components/dashboard/VirtualProfileForm";
 import { dashboardCopy } from "../../content/dashboardCopy";
-import { useResourceQuery } from "../../hooks/useResourceQuery";
+import {
+  loadUnusedResource,
+  useResourceQuery,
+} from "../../hooks/useResourceQuery";
 import { useResourceApi } from "../../api/useResourceApi";
 import { appPaths } from "../../routes/paths";
 
@@ -67,7 +70,7 @@ export const VirtualProfileFormPage = ({
   );
   const profileQuery = useResourceQuery(
     mode === "edit" ? `virtual-profile:${aiProfileId}` : "virtual-profile:new",
-    mode === "edit" ? loadProfile : async () => undefined,
+    mode === "edit" ? loadProfile : loadUnusedResource,
   );
   const copy = dashboardCopy.virtualProfileForm;
 
