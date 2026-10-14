@@ -3,6 +3,8 @@ import {
   getAiProfileDisplayName,
   getAiProfileImageUrl,
   getAiProfileTypeLabel,
+  isOwnedPersonalVirtualProfile,
+  isPresetVirtualProfile,
   getClothingCategoryLabel,
   getColourLabel,
   getColourSwatchHex,
@@ -37,7 +39,12 @@ describe("resource display helpers", () => {
     expect(getItemDisplayName({ name: "  " })).toBe("Item");
     expect(getProcessingStatusLabel("PROCESSING")).toBe("Processing");
     expect(getAiProfileTypeLabel("PERSONAL")).toBe("Personal");
-    expect(getAiProfileTypeLabel("GENERIC_MODEL")).toBe("Catalog");
+    expect(getAiProfileTypeLabel("GENERIC_MODEL")).toBe("Preset");
+    expect(isPresetVirtualProfile({ type: "GENERIC_MODEL" })).toBe(true);
+    expect(isOwnedPersonalVirtualProfile({ type: "PERSONAL" })).toBe(true);
+    expect(isOwnedPersonalVirtualProfile({ type: "GENERIC_MODEL" })).toBe(
+      false,
+    );
   });
 
   it("prefers processed item image URLs from the API", () => {

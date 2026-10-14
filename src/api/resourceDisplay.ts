@@ -74,9 +74,19 @@ export const getProcessingStatusLabel = (status: ProcessingStatus): string => {
   return formatToken(status);
 };
 
+export const isPresetVirtualProfile = (profile: Pick<AiProfile, "type">): boolean => {
+  return profile.type === "GENERIC_MODEL";
+};
+
+export const isOwnedPersonalVirtualProfile = (
+  profile: Pick<AiProfile, "type">,
+): boolean => {
+  return profile.type === "PERSONAL";
+};
+
 export const getAiProfileTypeLabel = (type: AiProfileType): string => {
   if (type === "GENERIC_MODEL") {
-    return "Catalog";
+    return "Preset";
   }
 
   return "Personal";

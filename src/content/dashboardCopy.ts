@@ -391,7 +391,7 @@ export const dashboardCopy = {
       "Try again in a moment. Your Virtual Try On renders were not changed.",
     retryLabel: "Try loading Virtual Try On again",
     profileLabel: "Virtual Profile",
-    profileEmpty: "Add a Virtual Profile or choose a catalog model to continue.",
+    profileEmpty: "Add a Virtual Profile or choose a preset to continue.",
     sourceLabel: "Try on",
     sourceItemsLabel: "Clothing items",
     sourceOutfitLabel: "Saved outfit",

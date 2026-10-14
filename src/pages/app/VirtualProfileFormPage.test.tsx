@@ -147,6 +147,21 @@ describe("VirtualProfileFormPage", () => {
     ).toBeInTheDocument();
   });
 
+  it("does not offer an edit form for a preset Virtual Profile", async () => {
+    renderEdit("aip_model01", createMockResourceApi());
+
+    expect(
+      await screen.findByRole("heading", {
+        level: 1,
+        name: "Virtual Profile not found",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Save changes" }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Photo")).not.toBeInTheDocument();
+  });
+
   it("edits an existing Virtual Profile", async () => {
     const user = userEvent.setup();
     const updateAiProfile = vi.fn().mockResolvedValue({
