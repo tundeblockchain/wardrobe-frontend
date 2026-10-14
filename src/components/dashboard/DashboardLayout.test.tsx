@@ -4,8 +4,9 @@ import { Route, Routes, useLocation } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AppHomePage } from "../../pages/app/AppHomePage";
 import { OutfitsPage } from "../../pages/app/OutfitsPage";
-import { PlanPage } from "../../pages/app/PlanPage";
+import { SettingsPage } from "../../pages/app/SettingsPage";
 import { VirtualProfilesPage } from "../../pages/app/VirtualProfilesPage";
+import { VirtualTryOnPage } from "../../pages/app/VirtualTryOnPage";
 import { WardrobesPage } from "../../pages/app/WardrobesPage";
 import { ProtectedRoute } from "../../routes/ProtectedRoute";
 import { appPaths } from "../../routes/paths";
@@ -49,7 +50,8 @@ const renderDashboard = (route = appPaths.app) => {
           <Route path="wardrobes" element={<WardrobesPage />} />
           <Route path="outfits" element={<OutfitsPage />} />
           <Route path="virtual-profiles" element={<VirtualProfilesPage />} />
-          <Route path="plan" element={<PlanPage />} />
+          <Route path="virtual-try-on" element={<VirtualTryOnPage />} />
+          <Route path="settings" element={<SettingsPage />} />
         </Route>
         <Route path={appPaths.login} element={<p>Sign in page</p>} />
       </Routes>
@@ -95,10 +97,15 @@ describe("DashboardLayout", () => {
     expect(
       within(appNav).getByRole("link", { name: "Virtual Profiles" }),
     ).toHaveAttribute("href", appPaths.appVirtualProfiles);
-    expect(within(appNav).getByRole("link", { name: "Plan" })).toHaveAttribute(
-      "href",
-      appPaths.appPlan,
-    );
+    expect(
+      within(appNav).getByRole("link", { name: "Virtual Try On" }),
+    ).toHaveAttribute("href", appPaths.appVirtualTryOn);
+    expect(
+      within(appNav).getByRole("link", { name: "Profile & Settings" }),
+    ).toHaveAttribute("href", appPaths.appSettings);
+    expect(
+      within(appNav).queryByRole("link", { name: "Plan" }),
+    ).not.toBeInTheDocument();
 
     await user.click(within(appNav).getByRole("link", { name: "Wardrobes" }));
     expect(
@@ -146,6 +153,26 @@ describe("DashboardLayout", () => {
     ).toBeInTheDocument();
   });
 
+  it("opens Profile & Settings from the account menu", async () => {
+    const user = userEvent.setup();
+    renderDashboard();
+
+    await user.click(screen.getByRole("button", { name: "Account menu" }));
+    await user.click(
+      screen.getByRole("menuitem", { name: "Profile & Settings" }),
+    );
+
+    expect(
+      await screen.findByRole("heading", {
+        level: 1,
+        name: "Profile & Settings",
+      }),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId("route-location")).toHaveTextContent(
+      appPaths.appSettings,
+    );
+  });
+
   it("signs out from the top-bar account menu", async () => {
     const user = userEvent.setup();
     renderDashboard();
@@ -153,6 +180,9 @@ describe("DashboardLayout", () => {
     await user.click(screen.getByRole("button", { name: "Account menu" }));
     expect(
       screen.getByRole("menuitem", { name: "Signed in as user@example.com" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("menuitem", { name: "Profile & Settings" }),
     ).toBeInTheDocument();
 
     await user.click(screen.getByRole("menuitem", { name: "Sign out" }));

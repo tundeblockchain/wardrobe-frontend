@@ -19,7 +19,12 @@ export const appPaths = {
   appOutfitNew: `${APP_BASE_PATH}/outfits/new`,
   appOutfitEdit: `${APP_BASE_PATH}/outfits/:id/edit`,
   appVirtualProfiles: `${APP_BASE_PATH}/virtual-profiles`,
-  appPlan: `${APP_BASE_PATH}/plan`,
+  appVirtualProfileNew: `${APP_BASE_PATH}/virtual-profiles/new`,
+  appVirtualProfileEdit: `${APP_BASE_PATH}/virtual-profiles/:id/edit`,
+  appVirtualTryOn: `${APP_BASE_PATH}/virtual-try-on`,
+  appSettings: `${APP_BASE_PATH}/settings`,
+  appPlan: `${APP_BASE_PATH}/settings`,
+  appInbox: `${APP_BASE_PATH}/inbox`,
 } as const;
 
 export const WARDROBE_ID_QUERY_PARAM = "wardrobeId";
@@ -29,6 +34,9 @@ export type AppPath = (typeof appPaths)[keyof typeof appPaths];
 export const LOGIN_NEXT_QUERY_PARAM = "next";
 export const LOGIN_MODE_QUERY_PARAM = "mode";
 export const LOGIN_SIGNUP_MODE = "signup";
+export const CONTACT_TYPE_QUERY_PARAM = "type";
+export const CONTACT_BUG_TYPE = "bug";
+export const CONTACT_BUG_SUBJECT = "Report a bug";
 
 const SHARE_PATH_PATTERN = /^\/share\/([^/]+)$/;
 
@@ -118,6 +126,10 @@ export const getAppOutfitEditPath = (
   );
 };
 
+export const getAppVirtualProfileEditPath = (aiProfileId: string): string => {
+  return `${appPaths.appVirtualProfiles}/${encodeURIComponent(aiProfileId)}/edit`;
+};
+
 export const getAppPath = (subPath = ""): string => {
   const trimmedSubPath = subPath.trim();
   if (trimmedSubPath === "" || trimmedSubPath === "/") {
@@ -138,6 +150,23 @@ export const isAppPath = (pathname: string): boolean => {
     normalizedPath === appPaths.app ||
     normalizedPath.startsWith(`${appPaths.app}/`)
   );
+};
+
+export const getContactPath = (type?: string): string => {
+  if (type !== CONTACT_BUG_TYPE) {
+    return appPaths.contact;
+  }
+
+  const searchParams = new URLSearchParams({
+    [CONTACT_TYPE_QUERY_PARAM]: CONTACT_BUG_TYPE,
+  });
+  return `${appPaths.contact}?${searchParams.toString()}`;
+};
+
+export const isContactBugType = (
+  type: string | null | undefined,
+): boolean => {
+  return type === CONTACT_BUG_TYPE;
 };
 
 export const getLoginPath = (nextPath?: string, mode?: string): string => {

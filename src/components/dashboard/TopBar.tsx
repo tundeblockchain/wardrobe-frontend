@@ -240,6 +240,15 @@ export const TopBar = ({
               </MenuItem>
             ) : null}
             <MenuItem
+              component={RouterLink}
+              to={appPaths.appSettings}
+              onClick={handleCloseMenu}
+              tabIndex={0}
+              aria-label="Profile & Settings"
+            >
+              Profile & Settings
+            </MenuItem>
+            <MenuItem
               onClick={handleSignOut}
               onKeyDown={handleSignOutKeyDown}
               tabIndex={0}

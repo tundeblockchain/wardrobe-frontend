@@ -226,6 +226,9 @@ describe("WardrobeDetailPage", () => {
       "outfits",
       "items",
       "me",
+      "virtual-profiles",
+      "virtual-try-on",
+      "virtual-profile",
     ]);
     expect(
       await screen.findByRole("heading", { level: 1, name: "Your closet" }),

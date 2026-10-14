@@ -6,6 +6,7 @@ import { ResourceEmptyState } from "./ResourceEmptyState";
 import { ResourceErrorState } from "./ResourceErrorState";
 import { ResourceLoadingState } from "./ResourceLoadingState";
 import { CatalogLimitPrompt } from "./CatalogLimitPrompt";
+import { ForbiddenUpgradePrompt } from "./ForbiddenUpgradePrompt";
 import { ResourceUpgradeState } from "./ResourceUpgradeState";
 
 describe("dashboard resource states", () => {
@@ -54,7 +55,7 @@ describe("dashboard resource states", () => {
         title="Virtual Try On is a Premium feature"
         description="Upgrade to browse Virtual Profiles."
         actionLabel="View plan"
-        actionTo="/app/plan"
+        actionTo="/app/settings"
         actionAriaLabel="View plan for Virtual Try On"
       />,
     );
@@ -66,7 +67,7 @@ describe("dashboard resource states", () => {
     ).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: "View plan for Virtual Try On" }),
-    ).toHaveAttribute("href", "/app/plan");
+    ).toHaveAttribute("href", "/app/settings");
   });
 
   it("links catalog limit prompts to Plan", () => {
@@ -77,7 +78,7 @@ describe("dashboard resource states", () => {
     ).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: "View plan to add more wardrobes" }),
-    ).toHaveAttribute("href", "/app/plan");
+    ).toHaveAttribute("href", "/app/settings");
   });
 
   it("renders catalog limit copy from non-default /me limits", () => {
@@ -108,6 +109,23 @@ describe("dashboard resource states", () => {
       screen.getByText(
         "The Free plan includes 20 outfits. Upgrade your plan to add another.",
       ),
+    ).toBeInTheDocument();
+  });
+
+  it("maps 403 codes to Basic or Premium upgrade prompts", () => {
+    const { unmount } = renderWithProviders(
+      <ForbiddenUpgradePrompt kind="basic" catalogKind="item" />,
+    );
+    expect(
+      screen.getByRole("heading", { name: "Clothing item limit reached" }),
+    ).toBeInTheDocument();
+    unmount();
+
+    renderWithProviders(<ForbiddenUpgradePrompt kind="premium" />);
+    expect(
+      screen.getByRole("heading", {
+        name: "Virtual Try On is a Premium feature",
+      }),
     ).toBeInTheDocument();
   });
 

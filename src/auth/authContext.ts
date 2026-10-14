@@ -1,9 +1,11 @@
 import { createContext } from "react";
+import type { AuthProviderName } from "./authProviderLabel";
 
 export type AuthUser = {
   id: string;
   email?: string | null;
   displayName?: string | null;
+  provider?: AuthProviderName;
 };
 
 export type AuthState = {

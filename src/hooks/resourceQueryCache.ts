@@ -3,6 +3,9 @@ export const CATALOG_LIST_QUERY_KEYS = {
   outfits: "outfits",
   items: "items",
   me: "me",
+  virtualProfiles: "virtual-profiles",
+  virtualTryOn: "virtual-try-on",
+  virtualProfile: "virtual-profile",
 } as const;
 
 export const WARDROBE_DELETE_INVALIDATION_KEYS = [
@@ -10,6 +13,9 @@ export const WARDROBE_DELETE_INVALIDATION_KEYS = [
   CATALOG_LIST_QUERY_KEYS.outfits,
   CATALOG_LIST_QUERY_KEYS.items,
   CATALOG_LIST_QUERY_KEYS.me,
+  CATALOG_LIST_QUERY_KEYS.virtualProfiles,
+  CATALOG_LIST_QUERY_KEYS.virtualTryOn,
+  CATALOG_LIST_QUERY_KEYS.virtualProfile,
 ] as const;
 
 type ResourceQueryInvalidationListener = (keys: readonly string[]) => void;

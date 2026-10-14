@@ -2,8 +2,9 @@ import { useEffect, useState } from "react";
 import { ApiError, isApiError } from "../api/httpClient";
 import {
   resourceQueryKeyMatches,
-  subscribeResourceQueryInvalidation,
+  subscribeResourceQueryInvalidation as subscribeKeyedInvalidation,
 } from "./resourceQueryCache";
+import { subscribeResourceQueryInvalidation as subscribeAllInvalidation } from "./resourceQueryInvalidation";
 
 export type ResourceQueryState<T> =
   | { status: "loading" }
@@ -58,11 +59,21 @@ export const useResourceQuery = <T>(
   };
 
   useEffect(() => {
-    return subscribeResourceQueryInvalidation((keys) => {
+    const handleInvalidate = () => {
+      setReloadCount((currentCount) => currentCount + 1);
+    };
+
+    const unsubscribeAll = subscribeAllInvalidation(handleInvalidate);
+    const unsubscribeKeyed = subscribeKeyedInvalidation((keys) => {
       if (resourceQueryKeyMatches(queryKey, keys)) {
-        setReloadCount((currentCount) => currentCount + 1);
+        handleInvalidate();
       }
     });
+
+    return () => {
+      unsubscribeAll();
+      unsubscribeKeyed();
+    };
   }, [queryKey]);
 
   useEffect(() => {

@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import { ApiError } from "../api/httpClient";
 import { renderWithProviders } from "../test/renderWithProviders";
 import { invalidateCatalogLists } from "./resourceQueryCache";
+import { invalidateResourceQueries } from "./resourceQueryInvalidation";
 import { useResourceQuery } from "./useResourceQuery";
 
 const QueryProbe = ({
@@ -96,6 +97,46 @@ describe("useResourceQuery", () => {
 
     await waitFor(() => {
       expect(screen.getByText("used-1")).toBeInTheDocument();
+    });
+    expect(queryFn).toHaveBeenCalledTimes(2);
+  });
+
+  it("refetches Virtual Profiles after wardrobe-delete cache invalidation", async () => {
+    const queryFn = vi
+      .fn()
+      .mockResolvedValueOnce("stale-profiles")
+      .mockResolvedValueOnce("fresh-profiles");
+
+    renderWithProviders(
+      <QueryProbe queryKey="virtual-profiles" queryFn={queryFn} />,
+      { auth: { user: { id: "user-1" } } },
+    );
+
+    expect(await screen.findByText("stale-profiles")).toBeInTheDocument();
+
+    invalidateCatalogLists();
+
+    await waitFor(() => {
+      expect(screen.getByText("fresh-profiles")).toBeInTheDocument();
+    });
+    expect(queryFn).toHaveBeenCalledTimes(2);
+  });
+
+  it("refetches when resource queries are invalidated", async () => {
+    const queryFn = vi
+      .fn()
+      .mockResolvedValueOnce("first")
+      .mockResolvedValueOnce("second");
+
+    renderWithProviders(
+      <QueryProbe queryKey="probe" queryFn={queryFn} />,
+      { auth: { user: { id: "user-1" } } },
+    );
+
+    expect(await screen.findByText("first")).toBeInTheDocument();
+    invalidateResourceQueries();
+    await waitFor(() => {
+      expect(screen.getByText("second")).toBeInTheDocument();
     });
     expect(queryFn).toHaveBeenCalledTimes(2);
   });

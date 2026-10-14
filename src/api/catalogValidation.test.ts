@@ -4,6 +4,7 @@ import {
   validateImageFile,
   validateItemForm,
   validateOutfitForm,
+  validateVirtualProfileForm,
   validateWardrobeForm,
 } from "./catalogValidation";
 
@@ -84,6 +85,25 @@ describe("catalog validation", () => {
           { itemId: "item_3", slot: "ACCESSORY" },
         ],
       }),
+    ).toEqual({});
+  });
+
+  it("validates Virtual Profile label, notes, and a required photo on create", () => {
+    expect(
+      validateVirtualProfileForm(
+        { label: "a".repeat(101), notes: "b".repeat(101) },
+        { requireImage: true, hasImage: false },
+      ),
+    ).toMatchObject({
+      label: expect.stringContaining("100 characters"),
+      notes: expect.stringContaining("100 characters"),
+      image: "A photo is required.",
+    });
+    expect(
+      validateVirtualProfileForm(
+        { label: "Weekday look", notes: "Natural light" },
+        { requireImage: true, hasImage: true },
+      ),
     ).toEqual({});
   });
 

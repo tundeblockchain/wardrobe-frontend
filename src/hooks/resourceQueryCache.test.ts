@@ -15,6 +15,15 @@ describe("resourceQueryCache", () => {
     expect(resourceQueryKeyMatches("outfits", ["outfits"])).toBe(true);
     expect(resourceQueryKeyMatches("wardrobe-items:wd_1", ["items"])).toBe(true);
     expect(resourceQueryKeyMatches("me", ["me"])).toBe(true);
+    expect(resourceQueryKeyMatches("virtual-profiles", ["virtual-profiles"])).toBe(
+      true,
+    );
+    expect(resourceQueryKeyMatches("virtual-try-on", ["virtual-try-on"])).toBe(
+      true,
+    );
+    expect(
+      resourceQueryKeyMatches("virtual-profile:aip_1", ["virtual-profile"]),
+    ).toBe(true);
     expect(resourceQueryKeyMatches("me", ["wardrobes"])).toBe(false);
   });
 
@@ -30,6 +39,9 @@ describe("resourceQueryCache", () => {
       CATALOG_LIST_QUERY_KEYS.outfits,
       CATALOG_LIST_QUERY_KEYS.items,
       CATALOG_LIST_QUERY_KEYS.me,
+      CATALOG_LIST_QUERY_KEYS.virtualProfiles,
+      CATALOG_LIST_QUERY_KEYS.virtualTryOn,
+      CATALOG_LIST_QUERY_KEYS.virtualProfile,
     ]);
 
     unsubscribe();

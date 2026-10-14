@@ -6,6 +6,7 @@ import {
   getAppItemPath,
   getAppOutfitEditPath,
   getAppOutfitNewPath,
+  getAppVirtualProfileEditPath,
   getAppPath,
   getAppWardrobeEditPath,
   getAppWardrobePath,
@@ -15,7 +16,9 @@ import {
   isLoginSignupMode,
   getSafeInternalPath,
   getSharePath,
+  getContactPath,
   isAppPath,
+  isContactBugType,
   isSharePreviewPath,
   parseShareTokenFromPath,
 } from "./paths";
@@ -65,7 +68,18 @@ describe("login and app paths", () => {
     expect(appPaths.appOutfitNew).toBe("/app/outfits/new");
     expect(appPaths.appOutfitEdit).toBe("/app/outfits/:id/edit");
     expect(appPaths.appVirtualProfiles).toBe("/app/virtual-profiles");
-    expect(appPaths.appPlan).toBe("/app/plan");
+    expect(appPaths.appVirtualProfileNew).toBe("/app/virtual-profiles/new");
+    expect(appPaths.appVirtualProfileEdit).toBe(
+      "/app/virtual-profiles/:id/edit",
+    );
+    expect(appPaths.appVirtualTryOn).toBe("/app/virtual-try-on");
+    expect(appPaths.appSettings).toBe("/app/settings");
+    expect(appPaths.appPlan).toBe("/app/settings");
+    expect(appPaths.appInbox).toBe("/app/inbox");
+    expect(getContactPath()).toBe("/contact");
+    expect(getContactPath("bug")).toBe("/contact?type=bug");
+    expect(isContactBugType("bug")).toBe(true);
+    expect(isContactBugType("support")).toBe(false);
   });
 
   it("builds /app and nested /app/* paths", () => {
@@ -94,6 +108,9 @@ describe("login and app paths", () => {
     );
     expect(getAppOutfitEditPath("outfit_brunch01", "wd_weekend01")).toBe(
       "/app/outfits/outfit_brunch01/edit?wardrobeId=wd_weekend01",
+    );
+    expect(getAppVirtualProfileEditPath("aip_personal01")).toBe(
+      "/app/virtual-profiles/aip_personal01/edit",
     );
   });
 

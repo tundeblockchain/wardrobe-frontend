@@ -2,16 +2,22 @@ import { describe, expect, it, vi } from "vitest";
 import type { AuthenticatedApi } from "./authenticatedApi";
 import { ApiError } from "./httpClient";
 import {
+  aiProfileModelsPath,
   aiProfilesPath,
   createLiveResourceApi,
   createResourceApi,
+  getAiProfileApiPath,
+  getAiProfileReferenceImagesApiPath,
+  getAiProfileUploadsApiPath,
   getItemApiPath,
   getWardrobeApiPath,
   getWardrobeItemApiPath,
+  getWardrobeItemRenderApiPath,
   getWardrobeItemsApiPath,
   getWardrobeItemsListApiPath,
   WARDROBE_COVER_ITEM_LIMIT,
   getWardrobeOutfitApiPath,
+  getWardrobeOutfitRenderApiPath,
   getWardrobeOutfitsApiPath,
   isEntitlementAiRequiredError,
   isNotFoundError,
@@ -21,7 +27,13 @@ import {
   wardrobeCollectionPath,
 } from "./resourceApi";
 import { isCatalogLimitError } from "./catalogLimits";
-import type { ClothingItem, Entitlement, Outfit, Wardrobe } from "./resourceTypes";
+import type {
+  AiProfile,
+  ClothingItem,
+  Entitlement,
+  Outfit,
+  Wardrobe,
+} from "./resourceTypes";
 
 const entitlement: Entitlement = {
   userId: "user-1",
@@ -64,13 +76,29 @@ const outfit: Outfit = {
   updatedAt: "2026-09-20T14:00:00.000Z",
 };
 
+const aiProfile: AiProfile = {
+  aiProfileId: "aip_1",
+  type: "PERSONAL",
+  referenceImages: [],
+  status: "READY",
+  createdAt: "2026-09-01T12:00:00.000Z",
+  updatedAt: "2026-09-01T12:00:00.000Z",
+  label: "Weekday look",
+};
+
 const createApi = (
   request: AuthenticatedApi["request"],
   getMe: AuthenticatedApi["getMe"] = vi.fn(),
+  deleteAccount: AuthenticatedApi["deleteAccount"] = vi.fn(),
+  clearContent: AuthenticatedApi["clearContent"] = vi.fn(),
+  listJobEvents: AuthenticatedApi["listJobEvents"] = vi.fn(),
 ): AuthenticatedApi => {
   return {
     request,
     getMe,
+    deleteAccount,
+    clearContent,
+    listJobEvents,
   };
 };
 
@@ -87,6 +115,39 @@ describe("createLiveResourceApi", () => {
 
     await expect(api.getMe()).resolves.toEqual(entitlement);
     expect(getMe).toHaveBeenCalledTimes(1);
+  });
+
+  it("deletes the account with DELETE /me", async () => {
+    const deleteAccount = vi.fn().mockResolvedValue({ deleted: true });
+    const api = createLiveResourceApi(createApi(vi.fn(), vi.fn(), deleteAccount));
+
+    await expect(api.deleteAccount()).resolves.toEqual({ deleted: true });
+    expect(deleteAccount).toHaveBeenCalledTimes(1);
+  });
+
+  it("clears content and lists job events through the authenticated client", async () => {
+    const wipe = {
+      keepAccount: true,
+      deletedWardrobes: 1,
+      deletedItems: 1,
+      deletedOutfits: 0,
+      deletedAiProfiles: 0,
+      deletedS3Objects: 1,
+      s3Failures: 0,
+    };
+    const events = { events: [], unreadCount: 0 };
+    const clearContent = vi.fn().mockResolvedValue(wipe);
+    const listJobEvents = vi.fn().mockResolvedValue(events);
+    const api = createLiveResourceApi(
+      createApi(vi.fn(), vi.fn(), vi.fn(), clearContent, listJobEvents),
+    );
+
+    await expect(api.clearContent()).resolves.toEqual(wipe);
+    await expect(api.listJobEvents({ unreadOnly: false })).resolves.toEqual(
+      events,
+    );
+    expect(clearContent).toHaveBeenCalledTimes(1);
+    expect(listJobEvents).toHaveBeenCalledWith({ unreadOnly: false });
   });
 
   it("calls GET /wardrobes and wardrobe detail plus items", async () => {
@@ -174,6 +235,12 @@ describe("createLiveResourceApi", () => {
         return { ...item, name: "Updated tee" };
       }
       if (
+        path === getWardrobeItemApiPath("wd_1", "item_1") &&
+        options?.method === "DELETE"
+      ) {
+        return undefined;
+      }
+      if (
         path === getWardrobeOutfitsApiPath("wd_1") &&
         options?.method === "POST"
       ) {
@@ -212,6 +279,7 @@ describe("createLiveResourceApi", () => {
     await expect(
       api.updateItem("wd_1", "item_1", { name: "Updated tee" }),
     ).resolves.toMatchObject({ name: "Updated tee" });
+    await expect(api.deleteItem("wd_1", "item_1")).resolves.toBeUndefined();
     await expect(
       api.createOutfit("wd_1", {
         name: "New look",
@@ -242,6 +310,9 @@ describe("createLiveResourceApi", () => {
         category: "TOP",
         imageKey: "users/user-1/uploads/upl_1.jpg",
       },
+    });
+    expect(request).toHaveBeenCalledWith("/wardrobes/wd_1/items/item_1", {
+      method: "DELETE",
     });
     expect(request).toHaveBeenCalledWith("/uploads", {
       method: "POST",
@@ -279,6 +350,143 @@ describe("createLiveResourceApi", () => {
 
     await expect(api.listAiProfiles()).resolves.toEqual({ aiProfiles: [] });
     expect(request).toHaveBeenCalledWith("/ai-profiles");
+  });
+
+  it("writes Virtual Profiles and starts Virtual Try On on the nested routes", async () => {
+    const request = vi.fn(async (path: string, options?: { method?: string; body?: unknown }) => {
+      if (path === aiProfilesPath && options?.method === "POST") {
+        return { ...aiProfile, label: "Home look" };
+      }
+      if (path === getAiProfileApiPath("aip_1") && options?.method === "PATCH") {
+        return { ...aiProfile, label: "Updated look" };
+      }
+      if (path === getAiProfileApiPath("aip_1") && options?.method === "DELETE") {
+        return undefined;
+      }
+      if (path === getAiProfileApiPath("aip_1")) {
+        return aiProfile;
+      }
+      if (path === aiProfileModelsPath) {
+        return { aiProfiles: [] };
+      }
+      if (
+        path === getAiProfileUploadsApiPath("aip_1") &&
+        options?.method === "POST"
+      ) {
+        return {
+          uploadUrl: "https://uploads.example.com/presigned/profile.jpg",
+          objectKey: "users/user-1/ai-profiles/aip_1/upl_1.jpg",
+          expiresIn: 900,
+        };
+      }
+      if (
+        path === getAiProfileReferenceImagesApiPath("aip_1") &&
+        options?.method === "POST"
+      ) {
+        return {
+          ...aiProfile,
+          referenceImages: ["users/user-1/ai-profiles/aip_1/upl_1.jpg"],
+        };
+      }
+      if (
+        path === getWardrobeItemRenderApiPath("wd_1", "item_1") &&
+        options?.method === "POST"
+      ) {
+        return {
+          ...item,
+          render: { status: "PENDING", aiProfileId: "aip_1" },
+        };
+      }
+      if (
+        path === getWardrobeOutfitRenderApiPath("wd_1", "outfit_1") &&
+        options?.method === "POST"
+      ) {
+        return {
+          ...outfit,
+          render: { status: "PENDING", aiProfileId: "aip_1" },
+        };
+      }
+      if (path === getWardrobeItemRenderApiPath("wd_1", "item_1")) {
+        return { status: "READY", aiProfileId: "aip_1" };
+      }
+      if (path === getWardrobeOutfitRenderApiPath("wd_1", "outfit_1")) {
+        return { status: "READY", aiProfileId: "aip_1" };
+      }
+      throw new Error(`unexpected ${options?.method ?? "GET"} ${path}`);
+    });
+    const api = createLiveResourceApi(createApi(asRequest(request)));
+
+    await expect(
+      api.createAiProfile({ type: "PERSONAL", label: "Home look" }),
+    ).resolves.toMatchObject({ label: "Home look" });
+    await expect(api.getAiProfile("aip_1")).resolves.toEqual(aiProfile);
+    await expect(
+      api.updateAiProfile("aip_1", { label: "Updated look" }),
+    ).resolves.toMatchObject({ label: "Updated look" });
+    await expect(api.deleteAiProfile("aip_1")).resolves.toBeUndefined();
+    await expect(api.listGenericAiProfiles()).resolves.toEqual({
+      aiProfiles: [],
+    });
+    await expect(
+      api.createAiProfileUpload("aip_1", {
+        contentType: "image/jpeg",
+        purpose: "AI_PROFILE_REFERENCE",
+        contentLength: 12,
+      }),
+    ).resolves.toMatchObject({
+      objectKey: "users/user-1/ai-profiles/aip_1/upl_1.jpg",
+    });
+    await expect(
+      api.attachAiProfileReferenceImages("aip_1", {
+        objectKey: "users/user-1/ai-profiles/aip_1/upl_1.jpg",
+        setAsMain: true,
+      }),
+    ).resolves.toMatchObject({
+      referenceImages: ["users/user-1/ai-profiles/aip_1/upl_1.jpg"],
+    });
+    await expect(
+      api.renderItem("wd_1", "item_1", { aiProfileId: "aip_1" }),
+    ).resolves.toMatchObject({
+      render: { status: "PENDING", aiProfileId: "aip_1" },
+    });
+    await expect(
+      api.renderOutfit("wd_1", "outfit_1", { aiProfileId: "aip_1" }),
+    ).resolves.toMatchObject({
+      render: { status: "PENDING", aiProfileId: "aip_1" },
+    });
+    await expect(api.getItemRender("wd_1", "item_1")).resolves.toMatchObject({
+      status: "READY",
+    });
+    await expect(api.getOutfitRender("wd_1", "outfit_1")).resolves.toMatchObject({
+      status: "READY",
+    });
+
+    expect(request).toHaveBeenCalledWith("/ai-profiles", {
+      method: "POST",
+      body: { type: "PERSONAL", label: "Home look" },
+    });
+    expect(request).toHaveBeenCalledWith("/ai-profiles/aip_1/uploads", {
+      method: "POST",
+      body: {
+        contentType: "image/jpeg",
+        purpose: "AI_PROFILE_REFERENCE",
+        contentLength: 12,
+      },
+    });
+    expect(request).toHaveBeenCalledWith(
+      "/wardrobes/wd_1/items/item_1/render",
+      {
+        method: "POST",
+        body: { aiProfileId: "aip_1" },
+      },
+    );
+    expect(request).toHaveBeenCalledWith(
+      "/wardrobes/wd_1/outfits/outfit_1/render",
+      {
+        method: "POST",
+        body: { aiProfileId: "aip_1" },
+      },
+    );
   });
 
   it("surfaces 404 from GET /items/{itemId} for another user's item", async () => {
