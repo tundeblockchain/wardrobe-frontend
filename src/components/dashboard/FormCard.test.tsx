@@ -1,8 +1,11 @@
-import { screen, within } from "@testing-library/react";
+import { CssBaseline, ThemeProvider } from "@mui/material";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { expectOnlySharedFormCardComponent } from "../../test/formCardTest";
 import { renderWithProviders } from "../../test/renderWithProviders";
+import { createDashboardTheme } from "../../theme/createDashboardTheme";
+import { wardrobeDarkPalette } from "../../theme/wardrobeDarkPalette";
 import {
   FORM_CARD_CANCEL_TEST_ID,
   FORM_CARD_HEADER_TEST_ID,
@@ -118,6 +121,49 @@ describe("FormCard", () => {
     const submit = screen.getByRole("button", { name: "Save changes" });
     expect(submit).toBeDisabled();
     expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it("uses WARDROBE-199 dashboard theme tokens in dark mode", () => {
+    const theme = createDashboardTheme("dark");
+    const onCancel = vi.fn();
+    const onSubmit = vi.fn();
+
+    render(
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <FormCard
+          title="Edit wardrobe"
+          onCancel={onCancel}
+          submitLabel="Save changes"
+          onSubmit={onSubmit}
+        >
+          <p>Form fields</p>
+        </FormCard>
+      </ThemeProvider>,
+    );
+
+    const card = screen.getByTestId(FORM_CARD_TEST_ID);
+    const title = screen.getByRole("heading", {
+      level: 2,
+      name: "Edit wardrobe",
+    });
+    const submit = screen.getByRole("button", { name: "Save changes" });
+
+    expect(theme.palette.background.paper).toBe(
+      wardrobeDarkPalette.backgroundPaper,
+    );
+    expect(theme.palette.divider).toBe(wardrobeDarkPalette.divider);
+    expect(theme.palette.text.primary).toBe(wardrobeDarkPalette.textPrimary);
+    expect(card).toHaveStyle({
+      backgroundColor: "rgb(28, 21, 24)",
+      borderColor: "rgb(58, 42, 48)",
+      color: "rgb(246, 237, 240)",
+    });
+    expect(title).toHaveStyle({ color: "rgb(246, 237, 240)" });
+    expect(submit).toHaveStyle({
+      backgroundColor: "rgb(232, 168, 186)",
+      color: "rgb(42, 18, 28)",
+    });
   });
 
   it("is the only form-card component", () => {

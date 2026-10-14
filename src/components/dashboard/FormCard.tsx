@@ -63,16 +63,17 @@ export const FormCard = ({
     <Paper
       elevation={0}
       data-testid={FORM_CARD_TEST_ID}
-      sx={{
+      sx={(theme) => ({
         width: "100%",
         maxWidth: FORM_CARD_MAX_WIDTH,
         mx: "auto",
         boxSizing: "border-box",
         p: { xs: 2.5, sm: 3 },
         border: 1,
-        borderColor: "divider",
-        bgcolor: "background.paper",
-      }}
+        borderColor: theme.palette.divider,
+        bgcolor: theme.palette.background.paper,
+        color: theme.palette.text.primary,
+      })}
     >
       <Stack
         component="form"
@@ -93,7 +94,10 @@ export const FormCard = ({
           <Typography
             variant="h3"
             component="h2"
-            sx={{ minWidth: 0, color: "text.primary" }}
+            sx={(theme) => ({
+              minWidth: 0,
+              color: theme.palette.text.primary,
+            })}
           >
             {title}
           </Typography>
