@@ -10,6 +10,11 @@ const hexToSrgb = (hex: string): [number, number, number] => {
   return [channel(0), channel(2), channel(4)];
 };
 
+/**
+ * WCAG 2 relative luminance: sRGB channel linearisation, then
+ * 0.2126 R + 0.7152 G + 0.0722 B.
+ * https://www.w3.org/TR/WCAG21/#dfn-relative-luminance
+ */
 const linearize = (channel: number) =>
   channel <= 0.03928 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
 
@@ -19,6 +24,10 @@ export const relativeLuminance = (hex: string): number => {
   return 0.2126 * red + 0.7152 * green + 0.0722 * blue;
 };
 
+/**
+ * WCAG 2 contrast ratio: (L1 + 0.05) / (L2 + 0.05), L1 the lighter
+ * relative luminance. https://www.w3.org/TR/WCAG21/#dfn-contrast-ratio
+ */
 export const contrastRatio = (foreground: string, background: string): number => {
   const lighter = Math.max(
     relativeLuminance(foreground),

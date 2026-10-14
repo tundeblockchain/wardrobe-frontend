@@ -10,10 +10,11 @@ import {
 } from "./colorContrast";
 
 describe("colorContrast", () => {
-  it("treats white as full luminance and black as none", () => {
+  it("uses the WCAG 2 relative luminance formula (sRGB linearisation)", () => {
     expect(relativeLuminance("#FFFFFF")).toBeCloseTo(1, 5);
     expect(relativeLuminance("#000000")).toBeCloseTo(0, 5);
-    expect(contrastRatio("#000000", "#FFFFFF")).toBeCloseTo(21, 5);
+    expect(contrastRatio("#000000", "#FFFFFF")).toBe(21);
+    expect(contrastRatio("#000000", "#ffffff")).toBe(21);
   });
 
   it("classifies the original burgundy-plum hues and rejects unrelated hues", () => {

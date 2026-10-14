@@ -128,7 +128,6 @@ export const TopBar = ({
     <>
       <AppBar
         position="fixed"
-        color="primary"
         component="header"
         sx={{
           zIndex: (theme) => theme.zIndex.drawer + 1,
