@@ -47,6 +47,9 @@ describe("WardrobesPage", () => {
     expect(
       screen.getByRole("link", { name: "Add a wardrobe" }),
     ).toHaveAttribute("href", "/app/wardrobes/new");
+    expect(
+      screen.queryByRole("button", { name: /delete/i }),
+    ).not.toBeInTheDocument();
   });
 
   it("renders an empty state when there are no wardrobes", async () => {

@@ -170,6 +170,13 @@ export const dashboardCopy = {
     editAriaLabel: "Edit this wardrobe",
     addItemLabel: "Add item",
     addItemAriaLabel: "Add a clothing item to this wardrobe",
+    deleteLabel: "Delete",
+    deleteAriaLabel: "Delete this wardrobe",
+    deleteConfirmTitle: "Delete wardrobe?",
+    deleteConfirmDescription:
+      "This permanently deletes this wardrobe and all of its items, outfits, and photos. This cannot be undone.",
+    deleteConfirmLabel: "Delete",
+    deleteErrorFallback: "Could not delete this wardrobe.",
   },
   itemForm: {
     createTitle: "Add clothing item",

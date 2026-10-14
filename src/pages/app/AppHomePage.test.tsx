@@ -60,6 +60,9 @@ describe("AppHomePage", () => {
       "href",
       getAppWardrobePath("wd_work02"),
     );
+    expect(
+      screen.queryByRole("button", { name: /delete/i }),
+    ).not.toBeInTheDocument();
   });
 
   it("uses the wardrobe image, then coverImageUrl as img src, then a placeholder", async () => {

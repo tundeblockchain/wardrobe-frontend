@@ -324,6 +324,21 @@ describe("createLiveResourceApi", () => {
     });
   });
 
+  it("deletes a wardrobe with DELETE /wardrobes/{id}", async () => {
+    const request = vi.fn(async (path: string, options?: { method?: string }) => {
+      if (path === getWardrobeApiPath("wd_1") && options?.method === "DELETE") {
+        return undefined;
+      }
+      throw new Error(`unexpected ${options?.method} ${path}`);
+    });
+    const api = createLiveResourceApi(createApi(asRequest(request)));
+
+    await expect(api.deleteWardrobe("wd_1")).resolves.toBeUndefined();
+    expect(request).toHaveBeenCalledWith("/wardrobes/wd_1", {
+      method: "DELETE",
+    });
+  });
+
   it("lists Virtual Profiles from GET /ai-profiles", async () => {
     const request = vi.fn(async (path: string) => {
       if (path === aiProfilesPath) {

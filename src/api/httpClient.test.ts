@@ -164,6 +164,29 @@ describe("request", () => {
     );
   });
 
+  it("returns undefined for a 204 response with no body", async () => {
+    const fetchImpl = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 204,
+      headers: new Headers(),
+      json: async () => {
+        throw new Error("Unexpected end of JSON input");
+      },
+    });
+
+    await expect(
+      request("/wardrobes/wd_1", {
+        baseUrl: API_BASE_URL,
+        method: "DELETE",
+        fetchImpl,
+      }),
+    ).resolves.toBeUndefined();
+
+    const [url, options] = fetchImpl.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe("https://api.example.com/wardrobes/wd_1");
+    expect(options.method).toBe("DELETE");
+  });
+
   it("throws MISCONFIGURED when no base URL is available", async () => {
     const fetchImpl = vi.fn();
 

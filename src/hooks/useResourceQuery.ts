@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 import { ApiError, isApiError } from "../api/httpClient";
-import { subscribeResourceQueryInvalidation } from "./resourceQueryInvalidation";
+import {
+  resourceQueryKeyMatches,
+  subscribeResourceQueryInvalidation as subscribeKeyedInvalidation,
+} from "./resourceQueryCache";
+import { subscribeResourceQueryInvalidation as subscribeAllInvalidation } from "./resourceQueryInvalidation";
 
 export type ResourceQueryState<T> =
   | { status: "loading" }
@@ -55,10 +59,22 @@ export const useResourceQuery = <T>(
   };
 
   useEffect(() => {
-    return subscribeResourceQueryInvalidation(() => {
+    const handleInvalidate = () => {
       setReloadCount((currentCount) => currentCount + 1);
+    };
+
+    const unsubscribeAll = subscribeAllInvalidation(handleInvalidate);
+    const unsubscribeKeyed = subscribeKeyedInvalidation((keys) => {
+      if (resourceQueryKeyMatches(queryKey, keys)) {
+        handleInvalidate();
+      }
     });
-  }, []);
+
+    return () => {
+      unsubscribeAll();
+      unsubscribeKeyed();
+    };
+  }, [queryKey]);
 
   useEffect(() => {
     let isCancelled = false;
