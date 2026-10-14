@@ -10,7 +10,15 @@ import {
   createMockResourceApi,
 } from "../../api/mockResourceApi";
 import type { ResourceApi } from "../../api/resourceApi";
-import { appPaths, getAppItemNewPath } from "../../routes/paths";
+import {
+  expectFormInsideSharedCard,
+  expectSharedFormCardAbsent,
+} from "../../test/formCardTest";
+import {
+  appPaths,
+  getAppItemEditPath,
+  getAppItemNewPath,
+} from "../../routes/paths";
 import { renderWithProviders } from "../../test/renderWithProviders";
 import { ItemFormPage } from "./ItemFormPage";
 
@@ -41,6 +49,21 @@ const renderCreate = (
   );
 };
 
+const renderEdit = (itemId: string, resourceApi: ResourceApi) => {
+  return renderWithProviders(
+    <Routes>
+      <Route
+        path={appPaths.appItemEdit}
+        element={<ItemFormPage mode="edit" resourceApi={resourceApi} />}
+      />
+    </Routes>,
+    {
+      route: getAppItemEditPath(itemId, "wd_weekend01"),
+      auth: { user: { id: "user-1" } },
+    },
+  );
+};
+
 describe("ItemFormPage", () => {
   it("renders a loading state", () => {
     renderCreate(
@@ -52,6 +75,25 @@ describe("ItemFormPage", () => {
 
     expect(
       screen.getByRole("status", { name: "Loading clothing item" }),
+    ).toBeInTheDocument();
+    expectSharedFormCardAbsent();
+  });
+
+  it("renders the add item form inside the shared card", async () => {
+    renderCreate("wd_weekend01", createMockResourceApi());
+
+    await expectFormInsideSharedCard("Save item");
+    expect(
+      screen.getByRole("heading", { name: "Add clothing item" }),
+    ).toBeInTheDocument();
+  });
+
+  it("renders the edit item form inside the shared card", async () => {
+    renderEdit("item_navytee01", createMockResourceApi());
+
+    await expectFormInsideSharedCard("Save changes");
+    expect(
+      screen.getByRole("heading", { name: "Edit clothing item" }),
     ).toBeInTheDocument();
   });
 

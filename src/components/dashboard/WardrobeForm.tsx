@@ -2,6 +2,7 @@ import type { ChangeEvent, FormEvent } from "react";
 import { Alert, Button, Stack, TextField } from "@mui/material";
 import type { FieldErrors, WardrobeFormValues } from "../../api/catalogValidation";
 import { dashboardCopy } from "../../content/dashboardCopy";
+import { FormCard } from "./FormCard";
 
 export type WardrobeFormProps = {
   values: WardrobeFormValues;
@@ -40,45 +41,47 @@ export const WardrobeForm = ({
   };
 
   return (
-    <Stack
-      component="form"
-      spacing={2.5}
-      onSubmit={handleSubmit}
-      noValidate
-      aria-label={submitLabel}
-    >
-      {formError ? (
-        <Alert severity="error" role="alert">
-          {formError}
-        </Alert>
-      ) : null}
-      <TextField
-        id="wardrobe-name"
-        name="name"
-        label={copy.nameLabel}
-        value={values.name}
-        onChange={handleNameChange}
-        error={Boolean(errors.name)}
-        helperText={errors.name}
-        required
-        autoComplete="off"
-        slotProps={{
-          htmlInput: {
-            "aria-label": copy.nameLabel,
-            maxLength: 120,
-          },
-        }}
-      />
-      <Button
-        type="submit"
-        variant="contained"
-        color="primary"
-        disabled={isSubmitting}
-        tabIndex={0}
-        aria-label={isSubmitting ? submittingLabel : submitLabel}
+    <FormCard>
+      <Stack
+        component="form"
+        spacing={2.5}
+        onSubmit={handleSubmit}
+        noValidate
+        aria-label={submitLabel}
       >
-        {isSubmitting ? submittingLabel : submitLabel}
-      </Button>
-    </Stack>
+        {formError ? (
+          <Alert severity="error" role="alert">
+            {formError}
+          </Alert>
+        ) : null}
+        <TextField
+          id="wardrobe-name"
+          name="name"
+          label={copy.nameLabel}
+          value={values.name}
+          onChange={handleNameChange}
+          error={Boolean(errors.name)}
+          helperText={errors.name}
+          required
+          autoComplete="off"
+          slotProps={{
+            htmlInput: {
+              "aria-label": copy.nameLabel,
+              maxLength: 120,
+            },
+          }}
+        />
+        <Button
+          type="submit"
+          variant="contained"
+          color="primary"
+          disabled={isSubmitting}
+          tabIndex={0}
+          aria-label={isSubmitting ? submittingLabel : submitLabel}
+        >
+          {isSubmitting ? submittingLabel : submitLabel}
+        </Button>
+      </Stack>
+    </FormCard>
   );
 };
