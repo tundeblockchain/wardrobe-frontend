@@ -1,5 +1,8 @@
 import { isMockApi } from "../config/mockApi";
-import type { AuthenticatedApi } from "./authenticatedApi";
+import type {
+  AuthenticatedApi,
+  ListJobEventsOptions,
+} from "./authenticatedApi";
 import { ApiError, isApiError } from "./httpClient";
 import { createMockResourceApi } from "./mockResourceApi";
 import {
@@ -9,6 +12,7 @@ import {
   type AttachAiProfileReferenceImagesRequest,
   type ClothingItem,
   type ClothingItemList,
+  type ContentWipeResult,
   type CreateAiProfileRequest,
   type CreateAiProfileUploadRequest,
   type CreateItemRequest,
@@ -18,6 +22,7 @@ import {
   type CreateUploadResponse,
   type CreateWardrobeRequest,
   type Entitlement,
+  type JobEventList,
   type Outfit,
   type OutfitList,
   type OutfitRender,
@@ -29,6 +34,8 @@ import {
   type WardrobeDetail,
   type WardrobeList,
 } from "./resourceTypes";
+
+export type { ListJobEventsOptions } from "./authenticatedApi";
 
 export const wardrobeCollectionPath = "/wardrobes";
 export const itemCollectionPath = "/items";
@@ -120,6 +127,8 @@ export const getWardrobeOutfitRenderApiPath = (
 export type ResourceApi = {
   getMe: () => Promise<Entitlement>;
   deleteAccount: () => Promise<AccountDeleteResult>;
+  clearContent: () => Promise<ContentWipeResult>;
+  listJobEvents: (options?: ListJobEventsOptions) => Promise<JobEventList>;
   listWardrobes: () => Promise<WardrobeList>;
   getWardrobe: (wardrobeId: string) => Promise<Wardrobe>;
   createWardrobe: (body: CreateWardrobeRequest) => Promise<Wardrobe>;
@@ -207,6 +216,16 @@ export const createLiveResourceApi = (api: AuthenticatedApi): ResourceApi => {
 
   const deleteAccount = (): Promise<AccountDeleteResult> => {
     return api.deleteAccount();
+  };
+
+  const clearContent = (): Promise<ContentWipeResult> => {
+    return api.clearContent();
+  };
+
+  const listJobEvents = (
+    options?: ListJobEventsOptions,
+  ): Promise<JobEventList> => {
+    return api.listJobEvents(options);
   };
 
   const listWardrobes = (): Promise<WardrobeList> => {
@@ -447,6 +466,8 @@ export const createLiveResourceApi = (api: AuthenticatedApi): ResourceApi => {
   return {
     getMe,
     deleteAccount,
+    clearContent,
+    listJobEvents,
     listWardrobes,
     getWardrobe,
     createWardrobe,

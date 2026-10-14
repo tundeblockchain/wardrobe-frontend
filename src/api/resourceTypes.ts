@@ -222,6 +222,32 @@ export type AccountDeleteResult = {
   deleted: boolean;
 };
 
+/** DELETE /me/content — wipe catalog data and keep the account signed in. */
+export type ContentWipeResult = {
+  keepAccount: boolean;
+  deletedWardrobes: number;
+  deletedItems: number;
+  deletedOutfits: number;
+  deletedAiProfiles: number;
+  deletedS3Objects: number;
+  s3Failures: number;
+};
+
+/** GET /me/events — job-done inbox. */
+export type JobEvent = {
+  eventId: string;
+  type: string;
+  createdAt: string;
+  readAt?: string;
+  title?: string;
+  message?: string;
+};
+
+export type JobEventList = {
+  events: JobEvent[];
+  unreadCount: number;
+};
+
 /** GET /me */
 export type Entitlement = {
   userId: string;

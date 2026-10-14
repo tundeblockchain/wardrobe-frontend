@@ -93,20 +93,92 @@ describe("createAuthenticatedApi", () => {
     expect(signOut).not.toHaveBeenCalled();
   });
 
-  it("deletes the account with DELETE /me and does not sign out on success", async () => {
-    const fetchImpl = vi.fn().mockResolvedValue(
+  it("deletes the account with DELETE /me, a 60s timeout, and does not sign out on success", async () => {
+    vi.useFakeTimers();
+    const fetchImpl = vi.fn(
+      () =>
+        new Promise(() => {
+          return undefined;
+        }),
+    );
+    const hangingApi = createApi({
+      fetchImpl: fetchImpl as typeof fetch,
+    });
+    const pending = hangingApi.api.deleteAccount();
+    await vi.advanceTimersByTimeAsync(59_000);
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    await vi.advanceTimersByTimeAsync(1_000);
+    await expect(pending).rejects.toMatchObject({
+      status: 0,
+      code: "TIMEOUT",
+    });
+    expect(hangingApi.signOut).not.toHaveBeenCalled();
+    vi.useRealTimers();
+
+    const successFetch = vi.fn().mockResolvedValue(
       createJsonResponse({ status: 200, body: { deleted: true } }),
     );
     const { api, getIdToken, signOut } = createApi({
-      fetchImpl: fetchImpl as typeof fetch,
+      fetchImpl: successFetch as typeof fetch,
     });
 
     await expect(api.deleteAccount()).resolves.toEqual({ deleted: true });
     expect(getIdToken).toHaveBeenCalledTimes(1);
-    const [url, options] = fetchImpl.mock.calls[0] as [string, RequestInit];
+    const [url, options] = successFetch.mock.calls[0] as [string, RequestInit];
     expect(url).toBe("https://api.example.com/me");
     expect(options.method).toBe("DELETE");
     expect(readAuthorization(options)).toBe("Bearer id-token");
+    expect(signOut).not.toHaveBeenCalled();
+  });
+
+  it("clears content with DELETE /me/content and lists GET /me/events", async () => {
+    const wipeBody = {
+      keepAccount: true,
+      deletedWardrobes: 1,
+      deletedItems: 2,
+      deletedOutfits: 0,
+      deletedAiProfiles: 0,
+      deletedS3Objects: 2,
+      s3Failures: 0,
+    };
+    const eventsBody = {
+      events: [
+        {
+          eventId: "evt_1",
+          type: "JOB_DONE",
+          createdAt: "2026-10-13T11:00:00.000Z",
+        },
+      ],
+      unreadCount: 1,
+    };
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValueOnce(createJsonResponse({ status: 200, body: wipeBody }))
+      .mockResolvedValueOnce(
+        createJsonResponse({ status: 200, body: eventsBody }),
+      )
+      .mockResolvedValueOnce(
+        createJsonResponse({ status: 200, body: eventsBody }),
+      );
+    const { api, signOut } = createApi({
+      fetchImpl: fetchImpl as typeof fetch,
+    });
+
+    await expect(api.clearContent()).resolves.toEqual(wipeBody);
+    await expect(api.listJobEvents()).resolves.toEqual(eventsBody);
+    await expect(api.listJobEvents({ unreadOnly: false })).resolves.toEqual(
+      eventsBody,
+    );
+    expect(fetchImpl.mock.calls[0]?.[0]).toBe(
+      "https://api.example.com/me/content",
+    );
+    expect((fetchImpl.mock.calls[0]?.[1] as RequestInit).method).toBe("DELETE");
+    expect(fetchImpl.mock.calls[1]?.[0]).toBe(
+      "https://api.example.com/me/events",
+    );
+    expect(fetchImpl.mock.calls[2]?.[0]).toBe(
+      "https://api.example.com/me/events?unreadOnly=false",
+    );
     expect(signOut).not.toHaveBeenCalled();
   });
 

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { ApiError, isApiError } from "../api/httpClient";
+import { subscribeResourceQueryInvalidation } from "./resourceQueryInvalidation";
 
 export type ResourceQueryState<T> =
   | { status: "loading" }
@@ -52,6 +53,12 @@ export const useResourceQuery = <T>(
   const handleRetry = () => {
     setReloadCount((currentCount) => currentCount + 1);
   };
+
+  useEffect(() => {
+    return subscribeResourceQueryInvalidation(() => {
+      setReloadCount((currentCount) => currentCount + 1);
+    });
+  }, []);
 
   useEffect(() => {
     let isCancelled = false;

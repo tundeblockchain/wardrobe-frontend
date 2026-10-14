@@ -19,6 +19,10 @@ describe("createMockResourceApi", () => {
 
     await expect(api.getMe()).resolves.toEqual(mockEntitlement);
     await expect(api.deleteAccount()).resolves.toEqual({ deleted: true });
+    await expect(api.listJobEvents()).resolves.toMatchObject({
+      unreadCount: 1,
+      events: [{ title: "Virtual Try On is ready" }],
+    });
     await expect(api.listWardrobes()).resolves.toEqual({
       wardrobes: mockWardrobes,
     });
@@ -50,6 +54,20 @@ describe("createMockResourceApi", () => {
       }),
     );
     expect(mockWardrobes[1]).not.toHaveProperty("imageUrl");
+  });
+
+  it("clears catalog content and keeps the account", async () => {
+    const api = createMockResourceApi();
+
+    const wipe = await api.clearContent();
+    expect(wipe.keepAccount).toBe(true);
+    expect(wipe.deletedWardrobes).toBeGreaterThan(0);
+    await expect(api.listWardrobes()).resolves.toEqual({ wardrobes: [] });
+    await expect(api.listOutfits()).resolves.toEqual({ outfits: [] });
+    await expect(api.listAiProfiles()).resolves.toEqual({ aiProfiles: [] });
+    await expect(api.getMe()).resolves.toMatchObject({
+      usage: { wardrobes: 0, items: 0, outfits: 0 },
+    });
   });
 
   it("deletes a clothing item from the nested wardrobe route", async () => {

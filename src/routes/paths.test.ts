@@ -16,7 +16,9 @@ import {
   isLoginSignupMode,
   getSafeInternalPath,
   getSharePath,
+  getContactPath,
   isAppPath,
+  isContactBugType,
   isSharePreviewPath,
   parseShareTokenFromPath,
 } from "./paths";
@@ -73,6 +75,11 @@ describe("login and app paths", () => {
     expect(appPaths.appVirtualTryOn).toBe("/app/virtual-try-on");
     expect(appPaths.appSettings).toBe("/app/settings");
     expect(appPaths.appPlan).toBe("/app/settings");
+    expect(appPaths.appInbox).toBe("/app/inbox");
+    expect(getContactPath()).toBe("/contact");
+    expect(getContactPath("bug")).toBe("/contact?type=bug");
+    expect(isContactBugType("bug")).toBe(true);
+    expect(isContactBugType("support")).toBe(false);
   });
 
   it("builds /app and nested /app/* paths", () => {

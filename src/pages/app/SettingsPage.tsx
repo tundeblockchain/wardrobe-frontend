@@ -1,7 +1,14 @@
-import { useState, type KeyboardEvent, type ReactNode } from "react";
+import {
+  useState,
+  type ChangeEvent,
+  type KeyboardEvent,
+  type ReactNode,
+} from "react";
 import {
   Alert,
+  Badge,
   Button,
+  Chip,
   Dialog,
   DialogActions,
   DialogContent,
@@ -11,6 +18,7 @@ import {
   ListItemText,
   Paper,
   Stack,
+  TextField,
   ToggleButton,
   ToggleButtonGroup,
   Typography,
@@ -20,6 +28,7 @@ import { isApiError } from "../../api/httpClient";
 import type { ResourceApi } from "../../api/resourceApi";
 import { useResourceApi } from "../../api/useResourceApi";
 import { getAuthErrorMessage } from "../../auth/authErrors";
+import { getSignedInWithLabel } from "../../auth/authProviderLabel";
 import { useAuth } from "../../auth/useAuth";
 import { DashboardPage } from "../../components/dashboard/DashboardPage";
 import { ResourceErrorState } from "../../components/dashboard/ResourceErrorState";
@@ -32,8 +41,9 @@ import {
   getPlanStoreLabel,
   getPlanTierLabel,
 } from "../../content/planDisplay";
+import { invalidateResourceQueries } from "../../hooks/resourceQueryInvalidation";
 import { useResourceQuery } from "../../hooks/useResourceQuery";
-import { appPaths } from "../../routes/paths";
+import { appPaths, getContactPath } from "../../routes/paths";
 import { useThemePreference } from "../../theme/useThemePreference";
 import type { ThemePreference } from "../../theme/themePreference";
 
@@ -42,6 +52,127 @@ export type SettingsPageProps = {
 };
 
 const copy = dashboardCopy.settings;
+
+type ConfirmPhraseDialogProps = {
+  open: boolean;
+  titleId: string;
+  descriptionId: string;
+  title: string;
+  description: string;
+  extra?: ReactNode;
+  phrase: string;
+  phraseValue: string;
+  phraseLabel: string;
+  confirmLabel: string;
+  confirmingLabel: string;
+  confirmAriaLabel: string;
+  cancelLabel: string;
+  error: string;
+  isConfirming: boolean;
+  onPhraseChange: (value: string) => void;
+  onClose: () => void;
+  onConfirm: () => void;
+};
+
+const ConfirmPhraseDialog = ({
+  open,
+  titleId,
+  descriptionId,
+  title,
+  description,
+  extra,
+  phrase,
+  phraseValue,
+  phraseLabel,
+  confirmLabel,
+  confirmingLabel,
+  confirmAriaLabel,
+  cancelLabel,
+  error,
+  isConfirming,
+  onPhraseChange,
+  onClose,
+  onConfirm,
+}: ConfirmPhraseDialogProps) => {
+  const canConfirm = phraseValue.trim() === phrase;
+
+  const handlePhraseChange = (event: ChangeEvent<HTMLInputElement>) => {
+    onPhraseChange(event.target.value);
+  };
+
+  const handleConfirmKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
+    if (event.key !== "Enter" && event.key !== " ") {
+      return;
+    }
+
+    event.preventDefault();
+    if (!canConfirm || isConfirming) {
+      return;
+    }
+
+    onConfirm();
+  };
+
+  return (
+    <Dialog
+      open={open}
+      onClose={onClose}
+      aria-labelledby={titleId}
+      aria-describedby={descriptionId}
+    >
+      <DialogTitle id={titleId}>{title}</DialogTitle>
+      <DialogContent>
+        <Stack spacing={2} sx={{ pt: 1 }}>
+          <Typography id={descriptionId} variant="body2">
+            {description}
+          </Typography>
+          {extra}
+          <TextField
+            value={phraseValue}
+            onChange={handlePhraseChange}
+            label={phraseLabel}
+            autoComplete="off"
+            fullWidth
+            disabled={isConfirming}
+            slotProps={{
+              htmlInput: {
+                "aria-label": phraseLabel,
+                "aria-required": true,
+              },
+            }}
+          />
+          {error ? (
+            <Alert severity="error" role="alert" aria-live="assertive">
+              {error}
+            </Alert>
+          ) : null}
+        </Stack>
+      </DialogContent>
+      <DialogActions>
+        <Button
+          onClick={onClose}
+          color="secondary"
+          tabIndex={0}
+          aria-label={cancelLabel}
+          disabled={isConfirming}
+        >
+          {cancelLabel}
+        </Button>
+        <Button
+          onClick={onConfirm}
+          onKeyDown={handleConfirmKeyDown}
+          color="error"
+          variant="contained"
+          tabIndex={0}
+          aria-label={confirmAriaLabel}
+          disabled={!canConfirm || isConfirming}
+        >
+          {isConfirming ? confirmingLabel : confirmLabel}
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+};
 
 const SettingsSection = ({
   title,
@@ -74,6 +205,14 @@ const SettingsSection = ({
   );
 };
 
+const getInboxAriaLabel = (unreadCount: number): string => {
+  if (unreadCount <= 0) {
+    return copy.inboxAriaLabel;
+  }
+
+  return `${copy.inboxUnreadAriaLabel}: ${unreadCount}`;
+};
+
 export const SettingsPage = ({
   resourceApi: resourceApiProp,
 }: SettingsPageProps) => {
@@ -82,11 +221,22 @@ export const SettingsPage = ({
   const { user, signOut } = useAuth();
   const { preference, handlePreferenceChange } = useThemePreference();
   const planQuery = useResourceQuery("settings-plan", resourceApi.getMe);
+  const inboxQuery = useResourceQuery("settings-inbox", resourceApi.listJobEvents);
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [signOutError, setSignOutError] = useState("");
+  const [isClearOpen, setIsClearOpen] = useState(false);
+  const [clearPhrase, setClearPhrase] = useState("");
+  const [isClearing, setIsClearing] = useState(false);
+  const [clearError, setClearError] = useState("");
+  const [clearSuccess, setClearSuccess] = useState("");
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [deletePhrase, setDeletePhrase] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
+
+  const unreadCount =
+    inboxQuery.status === "ready" ? inboxQuery.data.unreadCount : 0;
+  const isBusy = isSigningOut || isClearing || isDeleting;
 
   const handleThemeChange = (
     _event: unknown,
@@ -123,12 +273,62 @@ export const SettingsPage = ({
     void handleSignOut();
   };
 
+  const handleOpenClear = () => {
+    if (isClearing) {
+      return;
+    }
+
+    setClearError("");
+    setClearPhrase("");
+    setIsClearOpen(true);
+  };
+
+  const handleOpenClearKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
+    if (event.key !== "Enter" && event.key !== " ") {
+      return;
+    }
+
+    event.preventDefault();
+    handleOpenClear();
+  };
+
+  const handleCloseClear = () => {
+    if (isClearing) {
+      return;
+    }
+
+    setIsClearOpen(false);
+  };
+
+  const handleConfirmClear = async () => {
+    if (isClearing || clearPhrase.trim() !== copy.clearContentConfirmPhrase) {
+      return;
+    }
+
+    setIsClearing(true);
+    setClearError("");
+    setClearSuccess("");
+    try {
+      await resourceApi.clearContent();
+      invalidateResourceQueries();
+      setIsClearOpen(false);
+      setClearPhrase("");
+      setClearSuccess(copy.clearContentSuccess);
+    } catch (error) {
+      const serverMessage = isApiError(error) ? error.message.trim() : "";
+      setClearError(serverMessage || copy.clearContentErrorFallback);
+    } finally {
+      setIsClearing(false);
+    }
+  };
+
   const handleOpenDelete = () => {
     if (isDeleting) {
       return;
     }
 
     setDeleteError("");
+    setDeletePhrase("");
     setIsDeleteOpen(true);
   };
 
@@ -150,7 +350,7 @@ export const SettingsPage = ({
   };
 
   const handleConfirmDelete = async () => {
-    if (isDeleting) {
+    if (isDeleting || deletePhrase.trim() !== copy.deleteConfirmPhrase) {
       return;
     }
 
@@ -174,6 +374,13 @@ export const SettingsPage = ({
 
   const displayName = user?.displayName?.trim() || copy.nameEmpty;
   const email = user?.email?.trim() || copy.emailEmpty;
+  const signedInWithLabel = getSignedInWithLabel(user?.provider);
+  const deleteConfirmLabel = deleteError
+    ? copy.retryDeleteLabel
+    : copy.deleteConfirmLabel;
+  const deleteConfirmAriaLabel = deleteError
+    ? copy.retryDeleteAriaLabel
+    : copy.deleteConfirmLabel;
 
   return (
     <DashboardPage
@@ -189,6 +396,12 @@ export const SettingsPage = ({
             </ListItem>
             <ListItem disableGutters>
               <ListItemText primary={copy.emailLabel} secondary={email} />
+            </ListItem>
+            <ListItem disableGutters>
+              <ListItemText
+                primary={copy.providerLabel}
+                secondary={signedInWithLabel}
+              />
             </ListItem>
           </List>
         </SettingsSection>
@@ -285,6 +498,80 @@ export const SettingsPage = ({
           ) : null}
         </SettingsSection>
 
+        <SettingsSection
+          title={copy.virtualTryOnTitle}
+          titleId="virtual-try-on-heading"
+        >
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            spacing={1.5}
+            sx={{ alignItems: { sm: "center" } }}
+          >
+            <Button
+              component={RouterLink}
+              to={appPaths.appVirtualTryOn}
+              variant="outlined"
+              color="primary"
+              tabIndex={0}
+              aria-label={copy.virtualTryOnAriaLabel}
+            >
+              {copy.virtualTryOnLabel}
+            </Button>
+            <Chip
+              size="small"
+              color="primary"
+              variant="outlined"
+              label={copy.virtualTryOnPremiumLabel}
+              aria-label={copy.virtualTryOnPremiumLabel}
+            />
+          </Stack>
+        </SettingsSection>
+
+        <SettingsSection title={copy.inboxTitle} titleId="inbox-heading">
+          <Badge
+            color="primary"
+            badgeContent={unreadCount}
+            invisible={unreadCount <= 0}
+            overlap="rectangular"
+          >
+            <Button
+              component={RouterLink}
+              to={appPaths.appInbox}
+              variant="outlined"
+              color="primary"
+              tabIndex={0}
+              aria-label={getInboxAriaLabel(unreadCount)}
+            >
+              {copy.inboxLabel}
+            </Button>
+          </Badge>
+        </SettingsSection>
+
+        <SettingsSection title={copy.supportTitle} titleId="support-heading">
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
+            <Button
+              component={RouterLink}
+              to={appPaths.contact}
+              variant="outlined"
+              color="primary"
+              tabIndex={0}
+              aria-label={copy.contactAriaLabel}
+            >
+              {copy.contactLabel}
+            </Button>
+            <Button
+              component={RouterLink}
+              to={getContactPath("bug")}
+              variant="outlined"
+              color="primary"
+              tabIndex={0}
+              aria-label={copy.reportBugAriaLabel}
+            >
+              {copy.reportBugLabel}
+            </Button>
+          </Stack>
+        </SettingsSection>
+
         <SettingsSection title={copy.legalTitle} titleId="legal-heading">
           <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
             <Button
@@ -326,9 +613,35 @@ export const SettingsPage = ({
             onKeyDown={handleSignOutKeyDown}
             tabIndex={0}
             aria-label={copy.signOutAriaLabel}
-            disabled={isSigningOut || isDeleting}
+            disabled={isBusy}
           >
             {isSigningOut ? copy.signingOutLabel : copy.signOutLabel}
+          </Button>
+        </SettingsSection>
+
+        <SettingsSection
+          title={copy.clearContentTitle}
+          titleId="clear-content-heading"
+        >
+          {clearSuccess ? (
+            <Alert severity="success" role="status" aria-live="polite">
+              {clearSuccess}
+            </Alert>
+          ) : null}
+          <Typography variant="body2" color="text.secondary">
+            {copy.clearContentDescription}
+          </Typography>
+          <Button
+            type="button"
+            variant="outlined"
+            color="error"
+            onClick={handleOpenClear}
+            onKeyDown={handleOpenClearKeyDown}
+            tabIndex={0}
+            aria-label={copy.clearContentAriaLabel}
+            disabled={isBusy}
+          >
+            {copy.clearContentLabel}
           </Button>
         </SettingsSection>
 
@@ -341,58 +654,61 @@ export const SettingsPage = ({
             onKeyDown={handleOpenDeleteKeyDown}
             tabIndex={0}
             aria-label={copy.deleteAccountAriaLabel}
-            disabled={isDeleting || isSigningOut}
+            disabled={isBusy}
           >
             {copy.deleteAccountLabel}
           </Button>
         </SettingsSection>
       </Stack>
 
-      <Dialog
+      <ConfirmPhraseDialog
+        open={isClearOpen}
+        titleId="clear-content-title"
+        descriptionId="clear-content-description"
+        title={copy.clearContentConfirmTitle}
+        description={copy.clearContentConfirmDescription}
+        phrase={copy.clearContentConfirmPhrase}
+        phraseValue={clearPhrase}
+        phraseLabel={copy.clearContentPhraseLabel}
+        confirmLabel={copy.clearContentConfirmLabel}
+        confirmingLabel={copy.clearingContentLabel}
+        confirmAriaLabel={copy.clearContentConfirmLabel}
+        cancelLabel={copy.cancelLabel}
+        error={clearError}
+        isConfirming={isClearing}
+        onPhraseChange={setClearPhrase}
+        onClose={handleCloseClear}
+        onConfirm={() => {
+          void handleConfirmClear();
+        }}
+      />
+
+      <ConfirmPhraseDialog
         open={isDeleteOpen}
+        titleId="delete-account-title"
+        descriptionId="delete-account-description"
+        title={copy.deleteConfirmTitle}
+        description={copy.deleteConfirmDescription}
+        extra={
+          <Alert severity="warning" role="status">
+            {copy.deleteStoreWarning}
+          </Alert>
+        }
+        phrase={copy.deleteConfirmPhrase}
+        phraseValue={deletePhrase}
+        phraseLabel={copy.deletePhraseLabel}
+        confirmLabel={deleteConfirmLabel}
+        confirmingLabel={copy.deletingLabel}
+        confirmAriaLabel={deleteConfirmAriaLabel}
+        cancelLabel={copy.cancelLabel}
+        error={deleteError}
+        isConfirming={isDeleting}
+        onPhraseChange={setDeletePhrase}
         onClose={handleCloseDelete}
-        aria-labelledby="delete-account-title"
-        aria-describedby="delete-account-description"
-      >
-        <DialogTitle id="delete-account-title">
-          {copy.deleteConfirmTitle}
-        </DialogTitle>
-        <DialogContent>
-          <Stack spacing={2}>
-            <Typography id="delete-account-description" variant="body2">
-              {copy.deleteConfirmDescription}
-            </Typography>
-            {deleteError ? (
-              <Alert severity="error" role="alert" aria-live="assertive">
-                {deleteError}
-              </Alert>
-            ) : null}
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={handleCloseDelete}
-            color="secondary"
-            tabIndex={0}
-            aria-label={copy.cancelLabel}
-            disabled={isDeleting}
-          >
-            {copy.cancelLabel}
-          </Button>
-          <Button
-            onClick={() => {
-              void handleConfirmDelete();
-            }}
-            color="error"
-            variant="contained"
-            tabIndex={0}
-            aria-label={copy.deleteConfirmLabel}
-            disabled={isDeleting}
-          >
-            {isDeleting ? copy.deletingLabel : copy.deleteConfirmLabel}
-          </Button>
-        </DialogActions>
-      </Dialog>
+        onConfirm={() => {
+          void handleConfirmDelete();
+        }}
+      />
     </DashboardPage>
   );
 };
