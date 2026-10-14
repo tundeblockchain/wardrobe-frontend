@@ -13,6 +13,7 @@ import { EmailAuthForm } from "../auth/EmailAuthForm";
 import { ForgotPasswordForm } from "../auth/ForgotPasswordForm";
 import { SocialAuthButtons } from "../auth/SocialAuthButtons";
 import { useFirebaseAuthListener } from "../auth/firebaseSession";
+import { consumeLoginNotice } from "../auth/loginNotice";
 import { useAuth } from "../auth/useAuth";
 import { SectionSurface } from "../components/surfaces/SectionSurface";
 import { getPublicAppEnv, hasFirebaseWebConfig } from "../config/env";
@@ -55,6 +56,7 @@ export const LoginPage = () => {
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [loginNotice] = useState(() => consumeLoginNotice());
   const headingId = "login-page-heading";
   const isFirebaseConfigured = hasFirebaseWebConfig();
   const view: LoginView = showForgotPassword
@@ -148,6 +150,12 @@ export const LoginPage = () => {
                     : "Sign in with the same account you use in the Pocket Closet app."}
               </Typography>
             </Stack>
+
+            {loginNotice ? (
+              <Alert severity="error" role="alert" aria-live="assertive">
+                {loginNotice}
+              </Alert>
+            ) : null}
 
             {!isFirebaseConfigured ? (
               <Alert severity="info" role="status" aria-live="polite">

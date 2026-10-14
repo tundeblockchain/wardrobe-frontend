@@ -109,6 +109,33 @@ describe("request", () => {
     expect(error).toBeInstanceOf(ApiError);
   });
 
+  it("maps a 409 billing source onto ApiError, including null", async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(
+      createJsonResponse({
+        status: 409,
+        body: {
+          error: {
+            code: "NOT_STRIPE_PLAN",
+            message: "Manage plan is only available for Stripe subscriptions.",
+            source: null,
+          },
+        },
+      }),
+    );
+
+    await expect(
+      request("/billing/portal-session", {
+        baseUrl: API_BASE_URL,
+        method: "POST",
+        fetchImpl,
+      }),
+    ).rejects.toMatchObject({
+      status: 409,
+      code: "NOT_STRIPE_PLAN",
+      source: null,
+    });
+  });
+
   it("includes Retry-After seconds on ApiError", async () => {
     const fetchImpl = vi.fn().mockResolvedValue(
       createJsonResponse({

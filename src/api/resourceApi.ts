@@ -3,6 +3,12 @@ import type {
   AuthenticatedApi,
   ListJobEventsOptions,
 } from "./authenticatedApi";
+import {
+  BILLING_CHECKOUT_PATH,
+  BILLING_PORTAL_PATH,
+  type BillingSession,
+  type CheckoutTier,
+} from "./billing";
 import { ApiError, isApiError } from "./httpClient";
 import { createMockResourceApi } from "./mockResourceApi";
 import {
@@ -129,6 +135,8 @@ export type ResourceApi = {
   deleteAccount: () => Promise<AccountDeleteResult>;
   clearContent: () => Promise<ContentWipeResult>;
   listJobEvents: (options?: ListJobEventsOptions) => Promise<JobEventList>;
+  createCheckoutSession: (tier: CheckoutTier) => Promise<BillingSession>;
+  createPortalSession: () => Promise<BillingSession>;
   listWardrobes: () => Promise<WardrobeList>;
   getWardrobe: (wardrobeId: string) => Promise<Wardrobe>;
   createWardrobe: (body: CreateWardrobeRequest) => Promise<Wardrobe>;
@@ -227,6 +235,21 @@ export const createLiveResourceApi = (api: AuthenticatedApi): ResourceApi => {
     options?: ListJobEventsOptions,
   ): Promise<JobEventList> => {
     return api.listJobEvents(options);
+  };
+
+  const createCheckoutSession = (
+    tier: CheckoutTier,
+  ): Promise<BillingSession> => {
+    return api.request<BillingSession>(BILLING_CHECKOUT_PATH, {
+      method: "POST",
+      body: { tier },
+    });
+  };
+
+  const createPortalSession = (): Promise<BillingSession> => {
+    return api.request<BillingSession>(BILLING_PORTAL_PATH, {
+      method: "POST",
+    });
   };
 
   const listWardrobes = (): Promise<WardrobeList> => {
@@ -475,6 +498,8 @@ export const createLiveResourceApi = (api: AuthenticatedApi): ResourceApi => {
     deleteAccount,
     clearContent,
     listJobEvents,
+    createCheckoutSession,
+    createPortalSession,
     listWardrobes,
     getWardrobe,
     createWardrobe,

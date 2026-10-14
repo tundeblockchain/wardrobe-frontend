@@ -22,7 +22,7 @@ vi.mock("../auth/authProviders", () => authProviderMocks);
 const RouteLocation = () => {
   const location = useLocation();
   return (
-    <div data-testid="route-location">{`${location.pathname}${location.search}`}</div>
+    <div data-testid="route-location">{`${location.pathname}${location.search}${location.hash}`}</div>
   );
 };
 
@@ -344,8 +344,9 @@ describe("AppRoutes", () => {
       }),
     ).toBeInTheDocument();
     expect(screen.getByTestId("route-location")).toHaveTextContent(
-      appPaths.appSettings,
+      "/app/settings#plan",
     );
+    expect(document.getElementById("plan")).toBeInTheDocument();
   });
 
   it("renders Inbox at /app/inbox", async () => {

@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Route, Routes, useLocation } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { BILLING_CANCEL_FAILED_CODE } from "../../api/billing";
 import { ApiError } from "../../api/httpClient";
 import {
   createAiTryOnOffResourceApi,
@@ -12,6 +14,7 @@ import {
   mockFreeAtLimitEntitlement,
 } from "../../api/mockResourceApi";
 import type { Entitlement } from "../../api/resourceTypes";
+import { consumeLoginNotice } from "../../auth/loginNotice";
 import { ContactPage } from "../ContactPage";
 import { ProtectedRoute } from "../../routes/ProtectedRoute";
 import { appPaths, getContactPath } from "../../routes/paths";
@@ -41,7 +44,19 @@ vi.mock("../../auth/authProviders", () => authProviderMocks);
 const RouteLocation = () => {
   const location = useLocation();
   return (
-    <div data-testid="route-location">{`${location.pathname}${location.search}`}</div>
+    <div data-testid="route-location">{`${location.pathname}${location.search}${location.hash}`}</div>
+  );
+};
+
+const LoginRoute = () => {
+  const [notice] = useState(() => consumeLoginNotice());
+  return (
+    <>
+      <p>Sign in page</p>
+      {notice ? (
+        <div role="alert">{notice}</div>
+      ) : null}
+    </>
   );
 };
 
@@ -65,6 +80,10 @@ const renderSettings = (
     displayName: "Sample User",
     provider: "google",
   },
+  options: {
+    route?: string;
+    assignBillingUrl?: (url: string) => void;
+  } = {},
 ) => {
   return renderWithProviders(
     <DashboardThemeProvider>
@@ -73,7 +92,10 @@ const renderSettings = (
           path={appPaths.appSettings}
           element={
             <ProtectedRoute>
-              <SettingsPage resourceApi={resourceApi} />
+              <SettingsPage
+                resourceApi={resourceApi}
+                assignBillingUrl={options.assignBillingUrl}
+              />
             </ProtectedRoute>
           }
         />
@@ -86,12 +108,12 @@ const renderSettings = (
           element={<InboxPage resourceApi={resourceApi} />}
         />
         <Route path={appPaths.contact} element={<ContactPage />} />
-        <Route path={appPaths.login} element={<p>Sign in page</p>} />
+        <Route path={appPaths.login} element={<LoginRoute />} />
       </Routes>
       <RouteLocation />
     </DashboardThemeProvider>,
     {
-      route: appPaths.appSettings,
+      route: options.route ?? appPaths.appSettings,
       auth: { user },
     },
   );
@@ -117,6 +139,7 @@ const typePhraseAndConfirm = async (
 describe("SettingsPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    sessionStorage.clear();
     authProviderMocks.getIdToken.mockResolvedValue("test-id-token");
     authProviderMocks.signOutUser.mockResolvedValue(undefined);
     window.localStorage.removeItem(THEME_PREFERENCE_STORAGE_KEY);
@@ -133,13 +156,28 @@ describe("SettingsPage", () => {
       }),
     ).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Plan" })).toBeInTheDocument();
+    expect(document.getElementById("plan")).toBeInTheDocument();
     expect(screen.getAllByText("Premium").length).toBeGreaterThan(0);
     expect(
-      screen.getByText(
-        "This plan was bought on the web. Payment management is not available here.",
-      ),
+      screen.getByRole("button", { name: "Manage subscription" }),
     ).toBeInTheDocument();
     await expectBoundedGetMeFetches(getMe);
+  });
+
+  it("keeps the #plan anchor on the Plan section", async () => {
+    renderSettings(createMockResourceApi(), undefined, {
+      route: "/app/settings#plan",
+    });
+
+    expect(
+      await screen.findByRole("heading", { name: "Plan" }),
+    ).toBeInTheDocument();
+    const planSection = document.getElementById("plan");
+    expect(planSection).toBeInTheDocument();
+    expect(planSection).toHaveAttribute("id", "plan");
+    expect(screen.getByTestId("route-location")).toHaveTextContent(
+      "/app/settings#plan",
+    );
   });
 
   it("shows account details and the Firebase sign-in provider", async () => {
@@ -190,81 +228,7 @@ describe("SettingsPage", () => {
     ).toHaveAttribute("aria-pressed", "true");
   });
 
-  it("shows an App Store plan and tells the user to manage it in the app", async () => {
-    renderSettings(
-      createMockResourceApi(
-        {},
-        {
-          entitlement: entitlement({
-            tier: "PREMIUM",
-            status: "ACTIVE",
-            store: "APP_STORE",
-          }),
-        },
-      ),
-    );
-
-    expect(await screen.findByText("App Store")).toBeInTheDocument();
-    expect(screen.getAllByText("Premium").length).toBeGreaterThan(0);
-    expect(
-      screen.getByText(
-        "This plan was bought on the App Store. Manage it in the iOS app.",
-      ),
-    ).toBeInTheDocument();
-    expect(screen.queryByText(/Stripe/i)).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /manage payment/i })).not.toBeInTheDocument();
-  });
-
-  it("shows a Play Store plan and tells the user to manage it in the app", async () => {
-    renderSettings(
-      createMockResourceApi(
-        {},
-        {
-          entitlement: entitlement({
-            tier: "BASIC",
-            status: "ACTIVE",
-            store: "PLAY_STORE",
-          }),
-        },
-      ),
-    );
-
-    expect(await screen.findByText("Basic")).toBeInTheDocument();
-    expect(screen.getByText("Google Play")).toBeInTheDocument();
-    expect(
-      screen.getByText(
-        "This plan was bought on Google Play. Manage it in the Android app.",
-      ),
-    ).toBeInTheDocument();
-  });
-
-  it("shows a Stripe plan without payment management", async () => {
-    renderSettings(
-      createMockResourceApi(
-        {},
-        {
-          entitlement: entitlement({
-            tier: "PREMIUM",
-            status: "ACTIVE",
-            store: "STRIPE",
-          }),
-        },
-      ),
-    );
-
-    expect(await screen.findByText("Web")).toBeInTheDocument();
-    expect(screen.getAllByText("Premium").length).toBeGreaterThan(0);
-    expect(
-      screen.getByText(
-        "This plan was bought on the web. Payment management is not available here.",
-      ),
-    ).toBeInTheDocument();
-    expect(
-      screen.queryByRole("link", { name: /customer portal|billing|checkout/i }),
-    ).not.toBeInTheDocument();
-  });
-
-  it("shows the Free plan when no store is present", async () => {
+  it("shows a Free plan with Basic and Premium upgrade buttons", async () => {
     renderSettings(
       createMockResourceApi(
         {},
@@ -274,8 +238,270 @@ describe("SettingsPage", () => {
 
     expect(await screen.findByText("Free")).toBeInTheDocument();
     expect(
-      screen.getByText("The Free plan is included with the account."),
+      screen.getByRole("button", { name: "Upgrade to Basic" }),
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Upgrade to Premium" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Manage subscription" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("shows a Basic Stripe plan with Manage subscription", async () => {
+    renderSettings(
+      createMockResourceApi(
+        {},
+        {
+          entitlement: entitlement({
+            tier: "BASIC",
+            status: "ACTIVE",
+            store: "STRIPE",
+            expiresAt: "2026-11-01T00:00:00.000Z",
+            paidTier: {
+              tier: "basic",
+              source: "stripe",
+              expiresAt: "2026-11-01T00:00:00.000Z",
+            },
+          }),
+        },
+      ),
+    );
+
+    expect(await screen.findByText("Basic")).toBeInTheDocument();
+    expect(screen.getByText("1 November 2026")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Manage subscription" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(/App Store|Google Play/i),
+    ).not.toBeInTheDocument();
+  });
+
+  it("shows a Premium iOS plan without a Stripe button", async () => {
+    renderSettings(
+      createMockResourceApi(
+        {},
+        {
+          entitlement: entitlement({
+            tier: "PREMIUM",
+            status: "ACTIVE",
+            store: "APP_STORE",
+            expiresAt: "2026-12-15T00:00:00.000Z",
+            paidTier: {
+              tier: "premium",
+              source: "ios",
+              expiresAt: "2026-12-15T00:00:00.000Z",
+            },
+          }),
+        },
+      ),
+    );
+
+    expect(await screen.findByText("Premium")).toBeInTheDocument();
+    expect(screen.getByText("15 December 2026")).toBeInTheDocument();
+    expect(
+      screen.getByText("Manage this plan in the App Store."),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Manage subscription" }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText(/Stripe/i)).not.toBeInTheDocument();
+  });
+
+  it("shows generic store text when paidTier source is missing", async () => {
+    renderSettings(
+      createMockResourceApi(
+        {},
+        {
+          entitlement: entitlement({
+            tier: "PREMIUM",
+            status: "ACTIVE",
+            paidTier: {
+              tier: "premium",
+              expiresAt: "2026-11-01T00:00:00.000Z",
+            },
+          }),
+        },
+      ),
+    );
+
+    expect(await screen.findByText("Premium")).toBeInTheDocument();
+    expect(
+      screen.getByText("Manage this plan in the App Store or Google Play."),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Manage subscription" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("calls the portal and redirects when Manage subscription is clicked", async () => {
+    const user = userEvent.setup();
+    const createPortalSession = vi.fn().mockResolvedValue({
+      url: "https://billing.stripe.com/p/session/test",
+    });
+    const assignBillingUrl = vi.fn();
+    renderSettings(
+      createMockResourceApi({ createPortalSession }),
+      undefined,
+      { assignBillingUrl },
+    );
+
+    await user.click(
+      await screen.findByRole("button", { name: "Manage subscription" }),
+    );
+
+    await waitFor(() => {
+      expect(createPortalSession).toHaveBeenCalledTimes(1);
+    });
+    expect(assignBillingUrl).toHaveBeenCalledWith(
+      "https://billing.stripe.com/p/session/test",
+    );
+  });
+
+  it("refreshes /me and shows store copy on 409 NOT_STRIPE_PLAN", async () => {
+    const user = userEvent.setup();
+    const stripePlan = entitlement({
+      tier: "BASIC",
+      status: "ACTIVE",
+      store: "STRIPE",
+      paidTier: { tier: "basic", source: "stripe" },
+    });
+    const iosPlan = entitlement({
+      tier: "BASIC",
+      status: "ACTIVE",
+      store: "APP_STORE",
+      paidTier: { tier: "basic", source: "ios" },
+    });
+    let currentPlan = stripePlan;
+    const getMe = vi.fn(async () => currentPlan);
+    const createPortalSession = vi.fn().mockImplementation(async () => {
+      currentPlan = iosPlan;
+      throw new ApiError({
+        status: 409,
+        code: "NOT_STRIPE_PLAN",
+        message: "Manage plan is only available for Stripe subscriptions.",
+        source: "ios",
+      });
+    });
+    renderSettings(createMockResourceApi({ getMe, createPortalSession }));
+
+    await user.click(
+      await screen.findByRole("button", { name: "Manage subscription" }),
+    );
+
+    expect(
+      await screen.findByText("Manage this plan in the App Store."),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Manage subscription" }),
+    ).not.toBeInTheDocument();
+    expect(createPortalSession).toHaveBeenCalledTimes(1);
+    expect(getMe.mock.calls.length).toBeGreaterThan(1);
+  });
+
+  it("calls checkout with the selected tier from Free upgrade buttons", async () => {
+    const user = userEvent.setup();
+    const createCheckoutSession = vi.fn().mockResolvedValue({
+      url: "https://checkout.stripe.com/c/pay/cs_basic",
+    });
+    const assignBillingUrl = vi.fn();
+    renderSettings(
+      createMockResourceApi(
+        { createCheckoutSession },
+        { entitlement: mockFreeAtLimitEntitlement },
+      ),
+      undefined,
+      { assignBillingUrl },
+    );
+
+    await user.click(
+      await screen.findByRole("button", { name: "Upgrade to Basic" }),
+    );
+
+    await waitFor(() => {
+      expect(createCheckoutSession).toHaveBeenCalledWith("basic");
+    });
+    expect(assignBillingUrl).toHaveBeenCalledWith(
+      "https://checkout.stripe.com/c/pay/cs_basic",
+    );
+
+    createCheckoutSession.mockResolvedValue({
+      url: "https://checkout.stripe.com/c/pay/cs_premium",
+    });
+    await user.click(
+      screen.getByRole("button", { name: "Upgrade to Premium" }),
+    );
+
+    await waitFor(() => {
+      expect(createCheckoutSession).toHaveBeenCalledWith("premium");
+    });
+    expect(assignBillingUrl).toHaveBeenCalledWith(
+      "https://checkout.stripe.com/c/pay/cs_premium",
+    );
+  });
+
+  it("refreshes /me and shows the current plan on 409 ALREADY_SUBSCRIBED", async () => {
+    const user = userEvent.setup();
+    const subscribedPlan = entitlement({
+      tier: "BASIC",
+      status: "ACTIVE",
+      store: "STRIPE",
+      paidTier: { tier: "basic", source: "stripe" },
+    });
+    let currentPlan: Entitlement = mockFreeAtLimitEntitlement;
+    const getMe = vi.fn(async () => currentPlan);
+    const createCheckoutSession = vi.fn().mockImplementation(async () => {
+      currentPlan = subscribedPlan;
+      throw new ApiError({
+        status: 409,
+        code: "ALREADY_SUBSCRIBED",
+        message: "This account already has a paid plan.",
+        source: "stripe",
+      });
+    });
+    renderSettings(
+      createMockResourceApi({ getMe, createCheckoutSession }),
+    );
+
+    await user.click(
+      await screen.findByRole("button", { name: "Upgrade to Basic" }),
+    );
+
+    expect(
+      await screen.findByRole("button", { name: "Manage subscription" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Basic")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Upgrade to Basic" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("shows a portal error without redirecting on a failed manage request", async () => {
+    const user = userEvent.setup();
+    const createPortalSession = vi.fn().mockRejectedValue(
+      new ApiError({
+        status: 500,
+        code: "INTERNAL",
+        message: "Portal is unavailable.",
+      }),
+    );
+    const assignBillingUrl = vi.fn();
+    renderSettings(
+      createMockResourceApi({ createPortalSession }),
+      undefined,
+      { assignBillingUrl },
+    );
+
+    await user.click(
+      await screen.findByRole("button", { name: "Manage subscription" }),
+    );
+
+    expect(await screen.findByText("Portal is unavailable.")).toBeInTheDocument();
+    expect(assignBillingUrl).not.toHaveBeenCalled();
+    expect(
+      screen.getByRole("button", { name: "Manage subscription" }),
+    ).toBeEnabled();
   });
 
   it("links Virtual Try On to the existing page and keeps Premium gating", async () => {
@@ -453,7 +679,7 @@ describe("SettingsPage", () => {
     });
     expect(
       within(dialog).getByText(
-        "Deleting this account does not cancel App Store or Google Play subscriptions. Cancel those in the store first.",
+        "App Store and Google Play plans need cancelling separately. Stripe web plans are cancelled automatically.",
       ),
     ).toBeInTheDocument();
     expect(
@@ -488,20 +714,18 @@ describe("SettingsPage", () => {
       expect(authProviderMocks.signOutUser).toHaveBeenCalledTimes(1);
     });
     expect(await screen.findByText("Sign in page")).toBeInTheDocument();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
-  it("stays signed in and offers Retry delete when delete account fails", async () => {
+  it("signs out, goes to login, and shows try again when DELETE /me returns 503 BILLING_CANCEL_FAILED", async () => {
     const user = userEvent.setup();
-    const deleteAccount = vi
-      .fn()
-      .mockRejectedValueOnce(
-        new ApiError({
-          status: 500,
-          code: "ACCOUNT_DELETION_FAILED",
-          message: "Account data deletion failed.",
-        }),
-      )
-      .mockResolvedValueOnce({ deleted: true });
+    const deleteAccount = vi.fn().mockRejectedValue(
+      new ApiError({
+        status: 503,
+        code: BILLING_CANCEL_FAILED_CODE,
+        message: "Could not cancel the web subscription.",
+      }),
+    );
     renderSettings(createMockResourceApi({ deleteAccount }));
 
     await user.click(
@@ -514,27 +738,19 @@ describe("SettingsPage", () => {
       "Delete account",
     );
 
-    expect(
-      await screen.findByText("Account data deletion failed."),
-    ).toBeInTheDocument();
-    expect(authProviderMocks.signOutUser).not.toHaveBeenCalled();
-    expect(
-      screen.getByRole("dialog", { name: "Delete this account?" }),
-    ).toBeInTheDocument();
-    expect(screen.getByTestId("route-location")).toHaveTextContent(
-      appPaths.appSettings,
-    );
-    expect(screen.queryByText("Sign in page")).not.toBeInTheDocument();
-
-    await user.click(screen.getByRole("button", { name: "Retry delete" }));
-
     await waitFor(() => {
       expect(authProviderMocks.signOutUser).toHaveBeenCalledTimes(1);
     });
-    expect(deleteAccount).toHaveBeenCalledTimes(2);
+    expect(await screen.findByText("Sign in page")).toBeInTheDocument();
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Couldn't delete this account. Sign in and try again.",
+    );
+    expect(screen.getByTestId("route-location")).toHaveTextContent(
+      "/login?next=%2Fapp%2Fsettings",
+    );
   });
 
-  it("offers Retry delete when DELETE /me times out", async () => {
+  it("signs out and shows try again for any failed DELETE /me", async () => {
     const user = userEvent.setup();
     const deleteAccount = vi.fn().mockRejectedValue(
       new ApiError({
@@ -555,9 +771,13 @@ describe("SettingsPage", () => {
       "Delete account",
     );
 
-    expect(await screen.findByText("Request timed out.")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Retry delete" })).toBeEnabled();
-    expect(authProviderMocks.signOutUser).not.toHaveBeenCalled();
+    await waitFor(() => {
+      expect(authProviderMocks.signOutUser).toHaveBeenCalledTimes(1);
+    });
+    expect(await screen.findByText("Sign in page")).toBeInTheDocument();
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Couldn't delete this account. Sign in and try again.",
+    );
   });
 
   it("does not call the server when delete is cancelled", async () => {

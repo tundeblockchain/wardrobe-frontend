@@ -78,7 +78,7 @@ describe("dashboard resource states", () => {
     ).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: "View plan to add more wardrobes" }),
-    ).toHaveAttribute("href", "/app/settings");
+    ).toHaveAttribute("href", "/app/settings#plan");
   });
 
   it("renders catalog limit copy from non-default /me limits", () => {

@@ -241,7 +241,7 @@ describe("OutfitFormPage", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("Free")).toBeInTheDocument();
     expect(
-      screen.getByText("The Free plan is included with the account."),
+      screen.getByRole("button", { name: "Upgrade to Basic" }),
     ).toBeInTheDocument();
     await expectBoundedGetMeFetches(getMe);
   });

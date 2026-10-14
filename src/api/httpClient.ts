@@ -6,23 +6,27 @@ export class ApiError extends Error {
   readonly status: number;
   readonly code?: string;
   readonly retryAfterSeconds?: number;
+  readonly source?: string | null;
 
   constructor({
     status,
     code,
     message,
     retryAfterSeconds,
+    source,
   }: {
     status: number;
     code?: string;
     message?: string;
     retryAfterSeconds?: number;
+    source?: string | null;
   }) {
     super(message ?? `Request failed with status ${status}`);
     this.name = "ApiError";
     this.status = status;
     this.code = code;
     this.retryAfterSeconds = retryAfterSeconds;
+    this.source = source;
   }
 }
 
@@ -64,7 +68,7 @@ const isAbsoluteUrl = (value: string): boolean => {
 
 const readBackendError = (
   value: unknown,
-): { code?: string; message?: string } => {
+): { code?: string; message?: string; source?: string | null } => {
   if (!value || typeof value !== "object") {
     return {};
   }
@@ -74,12 +78,31 @@ const readBackendError = (
     return {};
   }
 
-  const errorRecord = record.error as { code?: unknown; message?: unknown };
+  const errorRecord = record.error as {
+    code?: unknown;
+    message?: unknown;
+    source?: unknown;
+  };
   return {
     code: typeof errorRecord.code === "string" ? errorRecord.code : undefined,
     message:
       typeof errorRecord.message === "string" ? errorRecord.message : undefined,
+    source: readBackendErrorSource(errorRecord.source),
   };
+};
+
+const readBackendErrorSource = (
+  value: unknown,
+): string | null | undefined => {
+  if (value === null) {
+    return null;
+  }
+
+  if (typeof value === "string") {
+    return value;
+  }
+
+  return undefined;
 };
 
 const parseRetryAfterSeconds = (
@@ -219,6 +242,7 @@ export const request = async <T>(
         code: backendError.code,
         message: backendError.message,
         retryAfterSeconds: parseRetryAfterSeconds(response.headers),
+        source: backendError.source,
       });
     }
 

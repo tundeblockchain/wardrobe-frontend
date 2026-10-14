@@ -59,6 +59,7 @@ vi.mock("../firebase/config", () => ({
   getFirebaseAuth: () => ({ currentUser: null }),
 }));
 
+import { setLoginNotice } from "../auth/loginNotice";
 import { renderWithProviders } from "../test/renderWithProviders";
 import { LoginPage } from "./LoginPage";
 
@@ -98,6 +99,7 @@ const stubFirebaseEnv = () => {
 describe("LoginPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    sessionStorage.clear();
     vi.unstubAllEnvs();
     firebaseAuthMocks.signInWithPopup.mockResolvedValue({});
     firebaseAuthMocks.signInWithEmailAndPassword.mockResolvedValue({});
@@ -106,6 +108,15 @@ describe("LoginPage", () => {
       callback(null);
       return vi.fn();
     });
+  });
+
+  it("shows a try-again notice after a failed account delete", () => {
+    setLoginNotice("Couldn't delete this account. Sign in and try again.");
+    renderLoginRoute();
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Couldn't delete this account. Sign in and try again.",
+    );
   });
 
   it("renders Google, Apple, email sign-in, create account, and forgot password", () => {
