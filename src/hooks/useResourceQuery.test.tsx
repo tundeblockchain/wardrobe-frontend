@@ -142,7 +142,7 @@ describe("useResourceQuery", () => {
   });
 
   it("does not refetch /me when the caller passes a new queryFn each render", async () => {
-    const queryFn = vi.fn().mockResolvedValue("ready");
+    const queryFn = vi.fn<() => Promise<string>>().mockResolvedValue("ready");
     const UnstableMeProbe = () => {
       const query = useResourceQuery("me", () => queryFn());
 
@@ -166,7 +166,7 @@ describe("useResourceQuery", () => {
   });
 
   it("does not refetch settings-plan when the caller passes a new queryFn each render", async () => {
-    const queryFn = vi.fn().mockResolvedValue("premium");
+    const queryFn = vi.fn<() => Promise<string>>().mockResolvedValue("premium");
     const UnstablePlanProbe = () => {
       const query = useResourceQuery("settings-plan", () => queryFn());
 
