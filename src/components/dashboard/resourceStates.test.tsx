@@ -55,7 +55,7 @@ describe("dashboard resource states", () => {
         title="Virtual Try On is a Premium feature"
         description="Upgrade to browse Virtual Profiles."
         actionLabel="View plan"
-        actionTo="/app/plan"
+        actionTo="/app/settings"
         actionAriaLabel="View plan for Virtual Try On"
       />,
     );
@@ -67,7 +67,7 @@ describe("dashboard resource states", () => {
     ).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: "View plan for Virtual Try On" }),
-    ).toHaveAttribute("href", "/app/plan");
+    ).toHaveAttribute("href", "/app/settings");
   });
 
   it("links catalog limit prompts to Plan", () => {
@@ -78,7 +78,7 @@ describe("dashboard resource states", () => {
     ).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: "View plan to add more wardrobes" }),
-    ).toHaveAttribute("href", "/app/plan");
+    ).toHaveAttribute("href", "/app/settings");
   });
 
   it("renders catalog limit copy from non-default /me limits", () => {

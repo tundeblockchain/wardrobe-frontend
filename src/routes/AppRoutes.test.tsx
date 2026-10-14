@@ -129,6 +129,18 @@ describe("AppRoutes", () => {
     expect(getApps()).toHaveLength(0);
   });
 
+  it("renders Report a bug at /contact?type=bug", () => {
+    renderAppRoutes("/contact?type=bug");
+
+    expect(
+      screen.getByRole("heading", { level: 1, name: "Report a bug" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "Subject" })).toHaveValue(
+      "Report a bug",
+    );
+    expect(getApps()).toHaveLength(0);
+  });
+
   it("renders Privacy Policy at /privacy", () => {
     renderAppRoutes(appPaths.privacy);
 
@@ -303,6 +315,48 @@ describe("AppRoutes", () => {
     ).not.toBeInTheDocument();
     expectHeaderHasNoLegalLinks();
     expectLegalFooterLinks();
+  });
+
+  it("renders Profile & Settings and redirects /app/plan there", async () => {
+    const { unmount } = renderAppRoutes(appPaths.appSettings, {
+      user: { id: "user-1" },
+    });
+
+    expect(
+      await screen.findByRole("heading", {
+        level: 1,
+        name: "Profile & Settings",
+      }),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId("route-location")).toHaveTextContent(
+      appPaths.appSettings,
+    );
+    expect(
+      screen.queryByRole("link", { name: "Plan" }),
+    ).not.toBeInTheDocument();
+    unmount();
+
+    renderAppRoutes("/app/plan", { user: { id: "user-1" } });
+    expect(
+      await screen.findByRole("heading", {
+        level: 1,
+        name: "Profile & Settings",
+      }),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId("route-location")).toHaveTextContent(
+      appPaths.appSettings,
+    );
+  });
+
+  it("renders Inbox at /app/inbox", async () => {
+    renderAppRoutes(appPaths.appInbox, { user: { id: "user-1" } });
+
+    expect(
+      await screen.findByRole("heading", { level: 1, name: "Inbox" }),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId("route-location")).toHaveTextContent(
+      appPaths.appInbox,
+    );
   });
 
   it("renders a nested /app path for a signed-in user", async () => {

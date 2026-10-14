@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { ApiError } from "../api/httpClient";
 import { renderWithProviders } from "../test/renderWithProviders";
+import { invalidateResourceQueries } from "./resourceQueryInvalidation";
 import { useResourceQuery } from "./useResourceQuery";
 
 const QueryProbe = ({
@@ -54,6 +55,25 @@ describe("useResourceQuery", () => {
 
     await waitFor(() => {
       expect(screen.getByText("ready")).toBeInTheDocument();
+    });
+    expect(queryFn).toHaveBeenCalledTimes(2);
+  });
+
+  it("refetches when resource queries are invalidated", async () => {
+    const queryFn = vi
+      .fn()
+      .mockResolvedValueOnce("first")
+      .mockResolvedValueOnce("second");
+
+    renderWithProviders(
+      <QueryProbe queryKey="probe" queryFn={queryFn} />,
+      { auth: { user: { id: "user-1" } } },
+    );
+
+    expect(await screen.findByText("first")).toBeInTheDocument();
+    invalidateResourceQueries();
+    await waitFor(() => {
+      expect(screen.getByText("second")).toBeInTheDocument();
     });
     expect(queryFn).toHaveBeenCalledTimes(2);
   });

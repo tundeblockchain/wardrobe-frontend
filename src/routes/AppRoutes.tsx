@@ -74,6 +74,16 @@ const VirtualTryOnPage = lazy(async () => {
   return { default: module.VirtualTryOnPage };
 });
 
+const SettingsPage = lazy(async () => {
+  const module = await import("../pages/app/SettingsPage");
+  return { default: module.SettingsPage };
+});
+
+const InboxPage = lazy(async () => {
+  const module = await import("../pages/app/InboxPage");
+  return { default: module.InboxPage };
+});
+
 const PlanPage = lazy(async () => {
   const module = await import("../pages/app/PlanPage");
   return { default: module.PlanPage };
@@ -138,6 +148,8 @@ export const AppRoutes = () => {
           element={<VirtualProfileFormPage mode="edit" />}
         />
         <Route path="virtual-try-on" element={<VirtualTryOnPage />} />
+        <Route path="inbox" element={<InboxPage />} />
+        <Route path="settings" element={<SettingsPage />} />
         <Route path="plan" element={<PlanPage />} />
         <Route path="*" element={<AppHomePage />} />
       </Route>

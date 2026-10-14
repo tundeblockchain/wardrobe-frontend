@@ -1,11 +1,14 @@
 import { catalogLimitError, isAtCatalogLimit } from "./catalogLimits";
 import { isAllowedUploadContentType } from "./catalogValidation";
 import { ApiError } from "./httpClient";
+import type { ListJobEventsOptions } from "./authenticatedApi";
 import type { ListWardrobeItemsOptions, ResourceApi } from "./resourceApi";
 import type {
+  AccountDeleteResult,
   AiProfile,
   AttachAiProfileReferenceImagesRequest,
   ClothingItem,
+  ContentWipeResult,
   CreateAiProfileRequest,
   CreateAiProfileUploadRequest,
   CreateItemRequest,
@@ -16,6 +19,7 @@ import type {
   CreateWardrobeRequest,
   Entitlement,
   EntitlementLimits,
+  JobEvent,
   Outfit,
   OutfitRender,
   UpdateAiProfileRequest,
@@ -184,6 +188,27 @@ export type MockResourceApiOptions = {
   items?: ClothingItem[];
   outfits?: Outfit[];
   aiProfiles?: AiProfile[];
+  jobEvents?: JobEvent[];
+};
+
+export const mockJobEvents: JobEvent[] = [
+  {
+    eventId: "evt_render01",
+    type: "JOB_DONE",
+    title: "Virtual Try On is ready",
+    message: "Sunday brunch render finished.",
+    createdAt: "2026-10-13T11:00:00.000Z",
+  },
+];
+
+export const mockContentWipeResult: ContentWipeResult = {
+  keepAccount: true,
+  deletedWardrobes: 2,
+  deletedItems: 2,
+  deletedOutfits: 1,
+  deletedAiProfiles: 1,
+  deletedS3Objects: 3,
+  s3Failures: 0,
 };
 
 const notFound = (code: string, message: string): ApiError => {
@@ -313,6 +338,9 @@ export const createMockResourceApi = (
   const items = (options.items ?? mockItems).map(cloneItemWithRender);
   const outfits = (options.outfits ?? mockOutfits).map(cloneOutfit);
   const aiProfiles = (options.aiProfiles ?? mockAiProfiles).map(cloneAiProfile);
+  const jobEvents = (options.jobEvents ?? mockJobEvents).map((event) => ({
+    ...event,
+  }));
   let entitlement = cloneEntitlement(options.entitlement ?? mockEntitlement);
   let renderCount = 0;
 
@@ -387,6 +415,40 @@ export const createMockResourceApi = (
   const getMe = async () => {
     syncUsage();
     return delay(cloneEntitlement(entitlement));
+  };
+
+  const deleteAccount = async (): Promise<AccountDeleteResult> => {
+    return delay({ deleted: true });
+  };
+
+  const clearContent = async (): Promise<ContentWipeResult> => {
+    const result: ContentWipeResult = {
+      keepAccount: true,
+      deletedWardrobes: wardrobes.length,
+      deletedItems: items.length,
+      deletedOutfits: outfits.length,
+      deletedAiProfiles: aiProfiles.length,
+      deletedS3Objects: items.length + aiProfiles.length,
+      s3Failures: 0,
+    };
+    wardrobes.splice(0, wardrobes.length);
+    items.splice(0, items.length);
+    outfits.splice(0, outfits.length);
+    aiProfiles.splice(0, aiProfiles.length);
+    syncUsage();
+    return delay(result);
+  };
+
+  const listJobEvents = async (
+    listOptions: ListJobEventsOptions = {},
+  ) => {
+    const unreadOnly = listOptions.unreadOnly !== false;
+    const unreadEvents = jobEvents.filter((event) => !event.readAt);
+    const events = unreadOnly ? unreadEvents : jobEvents;
+    return delay({
+      events: events.map((event) => ({ ...event })),
+      unreadCount: unreadEvents.length,
+    });
   };
 
   const listWardrobes = async () => {
@@ -849,6 +911,9 @@ export const createMockResourceApi = (
 
   return {
     getMe,
+    deleteAccount,
+    clearContent,
+    listJobEvents,
     listWardrobes,
     getWardrobe,
     createWardrobe,
@@ -905,6 +970,9 @@ const rejectAll = (error: ApiError): ResourceApi => {
 
   return {
     getMe: reject,
+    deleteAccount: reject,
+    clearContent: reject,
+    listJobEvents: reject,
     listWardrobes: reject,
     getWardrobe: reject,
     createWardrobe: reject,

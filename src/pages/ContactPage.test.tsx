@@ -55,4 +55,23 @@ describe("ContactPage", () => {
     ).toBeDisabled();
     expect(sendMessage).not.toHaveBeenCalled();
   });
+
+  it("presets the subject when opened as a bug report", () => {
+    renderWithProviders(
+      <ContactPage
+        env={getPublicAppEnv({
+          VITE_APP_NAME: "Pocket Closet",
+          VITE_API_BASE_URL: "https://api.example.com",
+        })}
+      />,
+      { route: "/contact?type=bug" },
+    );
+
+    expect(
+      screen.getByRole("heading", { level: 1, name: "Report a bug" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "Subject" })).toHaveValue(
+      "Report a bug",
+    );
+  });
 });

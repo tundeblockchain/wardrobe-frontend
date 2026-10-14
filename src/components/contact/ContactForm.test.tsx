@@ -260,4 +260,16 @@ describe("ContactForm", () => {
     await user.type(getNameField(), "Ada");
     expect(sendMessage).not.toHaveBeenCalled();
   });
+
+  it("prefills the subject when an initial subject is provided", () => {
+    renderWithProviders(
+      <ContactForm
+        appName="Pocket Closet"
+        apiBaseUrl="https://api.example.com"
+        initialSubject="Report a bug"
+      />,
+    );
+
+    expect(getSubjectField()).toHaveValue("Report a bug");
+  });
 });

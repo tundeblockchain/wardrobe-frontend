@@ -1,5 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
-import { createAuthenticatedApi } from "./authenticatedApi";
+import {
+  ACCOUNT_DELETE_TIMEOUT_MS,
+  createAuthenticatedApi,
+} from "./authenticatedApi";
 import { isApiError } from "./httpClient";
 
 const API_BASE_URL = "https://api.example.com";
@@ -91,6 +94,99 @@ describe("createAuthenticatedApi", () => {
     expect(options.method).toBe("GET");
     expect(readAuthorization(options)).toBe("Bearer id-token");
     expect(signOut).not.toHaveBeenCalled();
+  });
+
+  it("deletes the account with DELETE /me and does not sign out on success", async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(
+      createJsonResponse({ status: 200, body: { deleted: true } }),
+    );
+    const { api, getIdToken, signOut } = createApi({
+      fetchImpl: fetchImpl as typeof fetch,
+    });
+
+    await expect(api.deleteAccount()).resolves.toEqual({ deleted: true });
+    expect(getIdToken).toHaveBeenCalledTimes(1);
+    const [url, options] = fetchImpl.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe("https://api.example.com/me");
+    expect(options.method).toBe("DELETE");
+    expect(readAuthorization(options)).toBe("Bearer id-token");
+    expect(signOut).not.toHaveBeenCalled();
+    expect(ACCOUNT_DELETE_TIMEOUT_MS).toBe(60_000);
+  });
+
+  it("clears content with DELETE /me/content and lists GET /me/events", async () => {
+    const wipeBody = {
+      keepAccount: true,
+      deletedWardrobes: 1,
+      deletedItems: 2,
+      deletedOutfits: 0,
+      deletedAiProfiles: 0,
+      deletedS3Objects: 2,
+      s3Failures: 0,
+    };
+    const eventsBody = {
+      events: [
+        {
+          eventId: "evt_1",
+          type: "JOB_DONE",
+          createdAt: "2026-10-13T11:00:00.000Z",
+        },
+      ],
+      unreadCount: 1,
+    };
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValueOnce(createJsonResponse({ status: 200, body: wipeBody }))
+      .mockResolvedValueOnce(
+        createJsonResponse({ status: 200, body: eventsBody }),
+      )
+      .mockResolvedValueOnce(
+        createJsonResponse({ status: 200, body: eventsBody }),
+      );
+    const { api, signOut } = createApi({
+      fetchImpl: fetchImpl as typeof fetch,
+    });
+
+    await expect(api.clearContent()).resolves.toEqual(wipeBody);
+    await expect(api.listJobEvents()).resolves.toEqual(eventsBody);
+    await expect(api.listJobEvents({ unreadOnly: false })).resolves.toEqual(
+      eventsBody,
+    );
+    expect(fetchImpl.mock.calls[0]?.[0]).toBe(
+      "https://api.example.com/me/content",
+    );
+    expect((fetchImpl.mock.calls[0]?.[1] as RequestInit).method).toBe("DELETE");
+    expect(fetchImpl.mock.calls[1]?.[0]).toBe(
+      "https://api.example.com/me/events",
+    );
+    expect(fetchImpl.mock.calls[2]?.[0]).toBe(
+      "https://api.example.com/me/events?unreadOnly=false",
+    );
+    expect(signOut).not.toHaveBeenCalled();
+  });
+
+  it("does not sign out when DELETE /me fails with a non-401 error", async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(
+      createJsonResponse({
+        status: 500,
+        body: {
+          error: {
+            code: "ACCOUNT_DELETION_FAILED",
+            message: "Account data deletion failed.",
+          },
+        },
+      }),
+    );
+    const { api, signOut, navigate } = createApi({
+      fetchImpl: fetchImpl as typeof fetch,
+    });
+
+    await expect(api.deleteAccount()).rejects.toMatchObject({
+      status: 500,
+      code: "ACCOUNT_DELETION_FAILED",
+    });
+    expect(signOut).not.toHaveBeenCalled();
+    expect(navigate).not.toHaveBeenCalled();
   });
 
   it("force-refreshes the token and retries once on 401", async () => {

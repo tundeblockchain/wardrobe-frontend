@@ -27,6 +27,7 @@ import { ContactHoneypotField } from "./ContactHoneypotField";
 export type ContactFormProps = {
   appName: string;
   apiBaseUrl: string | undefined;
+  initialSubject?: string;
   sendMessage?: (input: SendContactMessageInput) => ReturnType<
     typeof sendContactMessage
   >;
@@ -40,12 +41,22 @@ const EMPTY_VALUES: ContactFormValues = {
   company: "",
 };
 
+const createInitialValues = (initialSubject = ""): ContactFormValues => {
+  return {
+    ...EMPTY_VALUES,
+    subject: initialSubject,
+  };
+};
+
 export const ContactForm = ({
   appName,
   apiBaseUrl,
+  initialSubject = "",
   sendMessage = sendContactMessage,
 }: ContactFormProps) => {
-  const [values, setValues] = useState<ContactFormValues>(EMPTY_VALUES);
+  const [values, setValues] = useState<ContactFormValues>(() =>
+    createInitialValues(initialSubject),
+  );
   const [fieldErrors, setFieldErrors] = useState<ContactFieldErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [statusKind, setStatusKind] = useState<
@@ -148,7 +159,7 @@ export const ContactForm = ({
   };
 
   const handleSendAnotherClick = () => {
-    setValues(EMPTY_VALUES);
+    setValues(createInitialValues(initialSubject));
     setFieldErrors({});
     setStatusKind("idle");
     setStatusMessage("");

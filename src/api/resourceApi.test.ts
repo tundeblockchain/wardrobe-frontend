@@ -89,10 +89,16 @@ const aiProfile: AiProfile = {
 const createApi = (
   request: AuthenticatedApi["request"],
   getMe: AuthenticatedApi["getMe"] = vi.fn(),
+  deleteAccount: AuthenticatedApi["deleteAccount"] = vi.fn(),
+  clearContent: AuthenticatedApi["clearContent"] = vi.fn(),
+  listJobEvents: AuthenticatedApi["listJobEvents"] = vi.fn(),
 ): AuthenticatedApi => {
   return {
     request,
     getMe,
+    deleteAccount,
+    clearContent,
+    listJobEvents,
   };
 };
 
@@ -109,6 +115,39 @@ describe("createLiveResourceApi", () => {
 
     await expect(api.getMe()).resolves.toEqual(entitlement);
     expect(getMe).toHaveBeenCalledTimes(1);
+  });
+
+  it("deletes the account with DELETE /me", async () => {
+    const deleteAccount = vi.fn().mockResolvedValue({ deleted: true });
+    const api = createLiveResourceApi(createApi(vi.fn(), vi.fn(), deleteAccount));
+
+    await expect(api.deleteAccount()).resolves.toEqual({ deleted: true });
+    expect(deleteAccount).toHaveBeenCalledTimes(1);
+  });
+
+  it("clears content and lists job events through the authenticated client", async () => {
+    const wipe = {
+      keepAccount: true,
+      deletedWardrobes: 1,
+      deletedItems: 1,
+      deletedOutfits: 0,
+      deletedAiProfiles: 0,
+      deletedS3Objects: 1,
+      s3Failures: 0,
+    };
+    const events = { events: [], unreadCount: 0 };
+    const clearContent = vi.fn().mockResolvedValue(wipe);
+    const listJobEvents = vi.fn().mockResolvedValue(events);
+    const api = createLiveResourceApi(
+      createApi(vi.fn(), vi.fn(), vi.fn(), clearContent, listJobEvents),
+    );
+
+    await expect(api.clearContent()).resolves.toEqual(wipe);
+    await expect(api.listJobEvents({ unreadOnly: false })).resolves.toEqual(
+      events,
+    );
+    expect(clearContent).toHaveBeenCalledTimes(1);
+    expect(listJobEvents).toHaveBeenCalledWith({ unreadOnly: false });
   });
 
   it("calls GET /wardrobes and wardrobe detail plus items", async () => {
