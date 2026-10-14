@@ -8,6 +8,7 @@ import {
   createMockResourceApi,
   mockEntitlement,
   mockItems,
+  mockRecommendations,
   mockWardrobes,
   WEEKEND_WARDROBE_IMAGE_URL,
   WORKWEAR_WARDROBE_COVER_IMAGE_URL,
@@ -38,6 +39,9 @@ describe("createMockResourceApi", () => {
     });
     await expect(api.getItem("item_navytee01")).resolves.toMatchObject({
       name: "Navy tee",
+    });
+    await expect(api.listRecommendations("wd_weekend01")).resolves.toEqual({
+      recommendations: mockRecommendations,
     });
     await expect(api.listOutfits()).resolves.toMatchObject({
       outfits: [{ name: "Sunday brunch" }],

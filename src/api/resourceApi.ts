@@ -3,6 +3,7 @@ import type {
   AuthenticatedApi,
   ListJobEventsOptions,
 } from "./authenticatedApi";
+import { toOutfitRecommendationList } from "./outfitRecommendations";
 import {
   createCheckoutSession as requestCheckoutSession,
   createPortalSession as requestPortalSession,
@@ -32,6 +33,7 @@ import {
   type JobEventList,
   type Outfit,
   type OutfitList,
+  type OutfitRecommendationList,
   type OutfitRender,
   type UpdateAiProfileRequest,
   type UpdateItemRequest,
@@ -90,6 +92,16 @@ export const getWardrobeItemApiPath = (
 
 export const getWardrobeOutfitsApiPath = (wardrobeId: string): string => {
   return `${getWardrobeApiPath(wardrobeId)}/outfits`;
+};
+
+export const getWardrobeRecommendationsApiPath = (
+  wardrobeId: string,
+): string => {
+  return `${getWardrobeApiPath(wardrobeId)}/recommendations`;
+};
+
+export type ListRecommendationsOptions = {
+  signal?: AbortSignal;
 };
 
 export const getWardrobeOutfitApiPath = (
@@ -165,6 +177,10 @@ export type ResourceApi = {
   ) => Promise<ClothingItem>;
   deleteItem: (wardrobeId: string, itemId: string) => Promise<void>;
   getWardrobeDetail: (wardrobeId: string) => Promise<WardrobeDetail>;
+  listRecommendations: (
+    wardrobeId: string,
+    options?: ListRecommendationsOptions,
+  ) => Promise<OutfitRecommendationList>;
   listOutfits: () => Promise<OutfitList>;
   getOutfit: (wardrobeId: string, outfitId: string) => Promise<Outfit>;
   createOutfit: (
@@ -290,6 +306,18 @@ export const createLiveResourceApi = (api: AuthenticatedApi): ResourceApi => {
       wardrobe,
       items: itemList.items,
     };
+  };
+
+  const listRecommendations = async (
+    wardrobeId: string,
+    options: ListRecommendationsOptions = {},
+  ): Promise<OutfitRecommendationList> => {
+    const path = getWardrobeRecommendationsApiPath(wardrobeId);
+    const payload = options.signal
+      ? await api.request<unknown>(path, { signal: options.signal })
+      : await api.request<unknown>(path);
+
+    return toOutfitRecommendationList(payload);
   };
 
   const createWardrobe = (body: CreateWardrobeRequest): Promise<Wardrobe> => {
@@ -511,6 +539,7 @@ export const createLiveResourceApi = (api: AuthenticatedApi): ResourceApi => {
     updateItem,
     deleteItem,
     getWardrobeDetail,
+    listRecommendations,
     listOutfits,
     getOutfit,
     createOutfit,

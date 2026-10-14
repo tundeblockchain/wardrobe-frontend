@@ -3,7 +3,10 @@ import { catalogLimitError, isAtCatalogLimit } from "./catalogLimits";
 import { isAllowedUploadContentType } from "./catalogValidation";
 import { ApiError } from "./httpClient";
 import type { ListJobEventsOptions } from "./authenticatedApi";
-import type { ListWardrobeItemsOptions, ResourceApi } from "./resourceApi";
+import type {
+  ListWardrobeItemsOptions,
+  ResourceApi,
+} from "./resourceApi";
 import type {
   AccountDeleteResult,
   AiProfile,
@@ -22,6 +25,8 @@ import type {
   EntitlementLimits,
   JobEvent,
   Outfit,
+  OutfitRecommendation,
+  OutfitRecommendationList,
   OutfitRender,
   UpdateAiProfileRequest,
   UpdateItemRequest,
@@ -139,6 +144,21 @@ export const mockItems: ClothingItem[] = [
     processingStatus: "READY",
     createdAt: "2026-09-04T10:15:00.000Z",
     updatedAt: "2026-09-04T10:15:00.000Z",
+  },
+];
+
+export const mockRecommendations: OutfitRecommendation[] = [
+  {
+    name: "Navy + cream look",
+    reason: "A weekend look from pieces you already own.",
+    items: [
+      { itemId: "item_navytee01", slot: "TOP" },
+      { itemId: "item_ivorymaxi01", slot: "DRESS" },
+    ],
+  },
+  {
+    title: "Ivory maxi evening",
+    items: [{ itemId: "item_ivorymaxi01", slot: "DRESS" }],
   },
 ];
 
@@ -395,6 +415,14 @@ export const createMockResourceApi = (
     if (!entitlement.features.otherAi) {
       throw entitlementAiRequired(
         "Premium is required for Virtual Profiles.",
+      );
+    }
+  };
+
+  const assertPremiumAi = () => {
+    if (!entitlement.features.aiTryOn && !entitlement.features.otherAi) {
+      throw entitlementAiRequired(
+        "Premium is required for suggested outfits.",
       );
     }
   };
@@ -666,6 +694,33 @@ export const createMockResourceApi = (
     const wardrobe = await getWardrobe(wardrobeId);
     const { items: wardrobeItems } = await listWardrobeItems(wardrobeId);
     return { wardrobe, items: wardrobeItems };
+  };
+
+  const listRecommendations = async (
+    wardrobeId: string,
+  ): Promise<OutfitRecommendationList> => {
+    await getWardrobe(wardrobeId);
+    assertPremiumAi();
+    const wardrobeItemIds = new Set(
+      items
+        .filter((item) => item.wardrobeId === wardrobeId)
+        .map((item) => item.itemId),
+    );
+    const recommendations = mockRecommendations
+      .map((recommendation) => ({
+        ...recommendation,
+        items: recommendation.items.filter((entry) =>
+          wardrobeItemIds.has(entry.itemId),
+        ),
+      }))
+      .filter((recommendation) => recommendation.items.length > 0);
+
+    return delay({
+      recommendations: recommendations.map((recommendation) => ({
+        ...recommendation,
+        items: recommendation.items.map((entry) => ({ ...entry })),
+      })),
+    });
   };
 
   const listOutfits = async () => {
@@ -995,6 +1050,7 @@ export const createMockResourceApi = (
     updateItem,
     deleteItem,
     getWardrobeDetail,
+    listRecommendations,
     listOutfits,
     getOutfit,
     createOutfit,
@@ -1058,6 +1114,7 @@ const rejectAll = (error: ApiError): ResourceApi => {
     updateItem: reject,
     deleteItem: reject,
     getWardrobeDetail: reject,
+    listRecommendations: reject,
     listOutfits: reject,
     getOutfit: reject,
     createOutfit: reject,

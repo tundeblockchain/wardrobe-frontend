@@ -13,7 +13,12 @@ import {
   WARDROBE_DELETE_INVALIDATION_KEYS,
 } from "../../hooks/resourceQueryCache";
 import * as resourceQueryCache from "../../hooks/resourceQueryCache";
-import { appPaths, getAppItemPath, getAppWardrobePath } from "../../routes/paths";
+import {
+  appPaths,
+  getAppItemPath,
+  getAppWardrobePath,
+  getAppWardrobeRecommendationsPath,
+} from "../../routes/paths";
 import { renderWithProviders } from "../../test/renderWithProviders";
 import { AppHomePage } from "./AppHomePage";
 import { WardrobeDetailPage } from "./WardrobeDetailPage";
@@ -73,6 +78,12 @@ describe("WardrobeDetailPage", () => {
     expect(
       screen.getByRole("button", { name: "Delete this wardrobe" }),
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Suggested outfits for this wardrobe" }),
+    ).toHaveAttribute(
+      "href",
+      getAppWardrobeRecommendationsPath("wd_weekend01"),
+    );
   });
 
   it("renders an empty items state for a wardrobe with no clothing", async () => {
@@ -229,6 +240,7 @@ describe("WardrobeDetailPage", () => {
       "virtual-profiles",
       "virtual-try-on",
       "virtual-profile",
+      "recommendations",
     ]);
     expect(
       await screen.findByRole("heading", { level: 1, name: "Your closet" }),

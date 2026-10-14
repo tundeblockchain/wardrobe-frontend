@@ -354,6 +354,29 @@ export type CreateOutfitRequest = {
   items: OutfitItem[];
 };
 
+/**
+ * GET /wardrobes/{wardrobeId}/recommendations.
+ * Backend returns `{ recommendations }` and never persists the rows.
+ * Soft-omit unused optionals. `title` / `reason` are accepted when present.
+ */
+export type OutfitRecommendationItem = OutfitItem & {
+  name?: string;
+  imageUrl?: string;
+  originalImageUrl?: string;
+  processedImageUrl?: string;
+};
+
+export type OutfitRecommendation = {
+  items: OutfitRecommendationItem[];
+  name?: string;
+  title?: string;
+  reason?: string;
+};
+
+export type OutfitRecommendationList = {
+  recommendations: OutfitRecommendation[];
+};
+
 /** PATCH /wardrobes/{wardrobeId}/outfits/{outfitId} */
 export type UpdateOutfitRequest = {
   name?: string;

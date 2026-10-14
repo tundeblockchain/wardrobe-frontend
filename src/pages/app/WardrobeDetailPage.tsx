@@ -32,6 +32,7 @@ import {
   getAppItemNewPath,
   getAppItemPath,
   getAppWardrobeEditPath,
+  getAppWardrobeRecommendationsPath,
 } from "../../routes/paths";
 
 export type WardrobeDetailPageProps = {
@@ -174,6 +175,16 @@ export const WardrobeDetailPage = ({
         onClick={handleOpenDelete}
       >
         {copy.deleteLabel}
+      </Button>
+      <Button
+        component={RouterLink}
+        to={getAppWardrobeRecommendationsPath(id)}
+        variant="outlined"
+        color="secondary"
+        tabIndex={0}
+        aria-label={copy.suggestedOutfitsAriaLabel}
+      >
+        {copy.suggestedOutfitsLabel}
       </Button>
       <Button
         component={RouterLink}

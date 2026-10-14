@@ -32,6 +32,9 @@ describe("resourceQueryCache", () => {
     expect(
       resourceQueryKeyMatches("virtual-profile:aip_1", ["virtual-profile"]),
     ).toBe(true);
+    expect(
+      resourceQueryKeyMatches("recommendations:wd_1", ["recommendations"]),
+    ).toBe(true);
     expect(resourceQueryKeyMatches("me", ["wardrobes"])).toBe(false);
   });
 
@@ -50,6 +53,7 @@ describe("resourceQueryCache", () => {
       CATALOG_LIST_QUERY_KEYS.virtualProfiles,
       CATALOG_LIST_QUERY_KEYS.virtualTryOn,
       CATALOG_LIST_QUERY_KEYS.virtualProfile,
+      CATALOG_LIST_QUERY_KEYS.recommendations,
     ]);
 
     unsubscribe();
