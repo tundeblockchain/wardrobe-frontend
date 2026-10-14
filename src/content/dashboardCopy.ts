@@ -47,10 +47,18 @@ export const dashboardCopy = {
       "Try again in a moment. Your account and plan were not changed.",
     planRetryLabel: "Try loading this plan again",
     planTierLabel: "Current plan",
-    planStatusLabel: "Status",
-    planStoreLabel: "Bought from",
-    planPeriodLabel: "Billing period",
     planExpiresLabel: "Renews or ends",
+    planManageLabel: "Manage subscription",
+    planManageAriaLabel: "Manage subscription",
+    planManagingLabel: "Opening subscription…",
+    planManageErrorFallback:
+      "Couldn't open subscription management. Try again.",
+    planUpgradeBasicLabel: "Upgrade to Basic",
+    planUpgradeBasicAriaLabel: "Upgrade to Basic",
+    planUpgradePremiumLabel: "Upgrade to Premium",
+    planUpgradePremiumAriaLabel: "Upgrade to Premium",
+    planUpgradingLabel: "Redirecting to checkout…",
+    planCheckoutErrorFallback: "Couldn't start checkout. Try again.",
     virtualTryOnTitle: "Virtual Try On",
     virtualTryOnLabel: "Virtual Try On",
     virtualTryOnAriaLabel: "Open Virtual Try On",
@@ -94,7 +102,7 @@ export const dashboardCopy = {
     deleteConfirmDescription:
       "This permanently deletes the account and wardrobe content on the server. This cannot be undone.",
     deleteStoreWarning:
-      "Deleting this account does not cancel App Store or Google Play subscriptions. Cancel those in the store first.",
+      "App Store and Google Play plans need cancelling separately. Stripe web plans are cancelled automatically.",
     deleteConfirmLabel: "Delete account",
     deleteConfirmPhrase: "DELETE",
     deletePhraseLabel: "Type DELETE to confirm",
@@ -102,7 +110,7 @@ export const dashboardCopy = {
     retryDeleteLabel: "Retry delete",
     retryDeleteAriaLabel: "Retry delete",
     deleteErrorFallback:
-      "Couldn't delete this account. You are still signed in.",
+      "Couldn't delete this account. Sign in and try again.",
     cancelLabel: "Cancel",
   },
   inbox: {

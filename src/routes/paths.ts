@@ -23,9 +23,15 @@ export const appPaths = {
   appVirtualProfileEdit: `${APP_BASE_PATH}/virtual-profiles/:id/edit`,
   appVirtualTryOn: `${APP_BASE_PATH}/virtual-try-on`,
   appSettings: `${APP_BASE_PATH}/settings`,
-  appPlan: `${APP_BASE_PATH}/settings`,
+  appPlan: `${APP_BASE_PATH}/settings#plan`,
   appInbox: `${APP_BASE_PATH}/inbox`,
 } as const;
+
+export const SETTINGS_PLAN_HASH = "plan";
+
+export const getAppSettingsPlanPath = (): string => {
+  return `${appPaths.appSettings}#${SETTINGS_PLAN_HASH}`;
+};
 
 export const WARDROBE_ID_QUERY_PARAM = "wardrobeId";
 

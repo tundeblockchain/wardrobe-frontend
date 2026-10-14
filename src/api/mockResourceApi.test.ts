@@ -19,6 +19,12 @@ describe("createMockResourceApi", () => {
 
     await expect(api.getMe()).resolves.toEqual(mockEntitlement);
     await expect(api.deleteAccount()).resolves.toEqual({ deleted: true });
+    await expect(api.createCheckoutSession("premium")).resolves.toEqual({
+      url: "https://checkout.stripe.com/c/pay/mock-premium",
+    });
+    await expect(api.createPortalSession()).resolves.toEqual({
+      url: "https://billing.stripe.com/p/session/mock",
+    });
     await expect(api.listJobEvents()).resolves.toMatchObject({
       unreadCount: 1,
       events: [{ title: "Virtual Try On is ready" }],

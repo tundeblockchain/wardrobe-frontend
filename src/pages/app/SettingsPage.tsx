@@ -29,26 +29,20 @@ import type { ResourceApi } from "../../api/resourceApi";
 import { useResourceApi } from "../../api/useResourceApi";
 import { getAuthErrorMessage } from "../../auth/authErrors";
 import { getSignedInWithLabel } from "../../auth/authProviderLabel";
+import { setLoginNotice } from "../../auth/loginNotice";
 import { useAuth } from "../../auth/useAuth";
 import { DashboardPage } from "../../components/dashboard/DashboardPage";
-import { ResourceErrorState } from "../../components/dashboard/ResourceErrorState";
-import { ResourceLoadingState } from "../../components/dashboard/ResourceLoadingState";
 import { dashboardCopy } from "../../content/dashboardCopy";
-import {
-  getPlanManagementCopy,
-  getPlanPeriodLabel,
-  getPlanStatusLabel,
-  getPlanStoreLabel,
-  getPlanTierLabel,
-} from "../../content/planDisplay";
 import { invalidateResourceQueries } from "../../hooks/resourceQueryInvalidation";
 import { useResourceQuery } from "../../hooks/useResourceQuery";
 import { appPaths, getContactPath } from "../../routes/paths";
 import { useThemePreference } from "../../theme/useThemePreference";
 import type { ThemePreference } from "../../theme/themePreference";
+import { PlanSettingsSection } from "./PlanSettingsSection";
 
 export type SettingsPageProps = {
   resourceApi?: ResourceApi;
+  assignBillingUrl?: (url: string) => void;
 };
 
 const copy = dashboardCopy.settings;
@@ -215,12 +209,12 @@ const getInboxAriaLabel = (unreadCount: number): string => {
 
 export const SettingsPage = ({
   resourceApi: resourceApiProp,
+  assignBillingUrl,
 }: SettingsPageProps) => {
   const defaultResourceApi = useResourceApi();
   const resourceApi = resourceApiProp ?? defaultResourceApi;
   const { user, signOut } = useAuth();
   const { preference, handlePreferenceChange } = useThemePreference();
-  const planQuery = useResourceQuery("settings-plan", resourceApi.getMe);
   const inboxQuery = useResourceQuery("settings-inbox", resourceApi.listJobEvents);
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [signOutError, setSignOutError] = useState("");
@@ -349,6 +343,11 @@ export const SettingsPage = ({
     setIsDeleteOpen(false);
   };
 
+  const handleDeleteFailed = async () => {
+    setLoginNotice(copy.deleteErrorFallback);
+    await signOut();
+  };
+
   const handleConfirmDelete = async () => {
     if (isDeleting || deletePhrase.trim() !== copy.deleteConfirmPhrase) {
       return;
@@ -359,14 +358,13 @@ export const SettingsPage = ({
     try {
       const result = await resourceApi.deleteAccount();
       if (!result.deleted) {
-        setDeleteError(copy.deleteErrorFallback);
+        await handleDeleteFailed();
         return;
       }
 
       await signOut();
-    } catch (error) {
-      const serverMessage = isApiError(error) ? error.message.trim() : "";
-      setDeleteError(serverMessage || copy.deleteErrorFallback);
+    } catch {
+      await handleDeleteFailed();
     } finally {
       setIsDeleting(false);
     }
@@ -441,62 +439,10 @@ export const SettingsPage = ({
           </ToggleButtonGroup>
         </SettingsSection>
 
-        <SettingsSection title={copy.planTitle} titleId="plan-heading">
-          {planQuery.status === "loading" ? (
-            <ResourceLoadingState label={copy.planLoadingLabel} />
-          ) : null}
-          {planQuery.status === "error" ? (
-            <ResourceErrorState
-              title={copy.planErrorTitle}
-              description={copy.planErrorDescription}
-              retryLabel={copy.planRetryLabel}
-              onRetry={planQuery.handleRetry}
-            />
-          ) : null}
-          {planQuery.status === "ready" ? (
-            <Stack spacing={2}>
-              <List disablePadding>
-                <ListItem disableGutters>
-                  <ListItemText
-                    primary={copy.planTierLabel}
-                    secondary={getPlanTierLabel(planQuery.data.tier)}
-                  />
-                </ListItem>
-                <ListItem disableGutters>
-                  <ListItemText
-                    primary={copy.planStatusLabel}
-                    secondary={getPlanStatusLabel(planQuery.data.status)}
-                  />
-                </ListItem>
-                <ListItem disableGutters>
-                  <ListItemText
-                    primary={copy.planStoreLabel}
-                    secondary={getPlanStoreLabel(planQuery.data.store)}
-                  />
-                </ListItem>
-                {getPlanPeriodLabel(planQuery.data.period) ? (
-                  <ListItem disableGutters>
-                    <ListItemText
-                      primary={copy.planPeriodLabel}
-                      secondary={getPlanPeriodLabel(planQuery.data.period)}
-                    />
-                  </ListItem>
-                ) : null}
-                {planQuery.data.expiresAt ? (
-                  <ListItem disableGutters>
-                    <ListItemText
-                      primary={copy.planExpiresLabel}
-                      secondary={planQuery.data.expiresAt}
-                    />
-                  </ListItem>
-                ) : null}
-              </List>
-              <Typography variant="body2" color="text.secondary">
-                {getPlanManagementCopy(planQuery.data)}
-              </Typography>
-            </Stack>
-          ) : null}
-        </SettingsSection>
+        <PlanSettingsSection
+          resourceApi={resourceApi}
+          assignBillingUrl={assignBillingUrl}
+        />
 
         <SettingsSection
           title={copy.virtualTryOnTitle}

@@ -125,6 +125,33 @@ describe("createLiveResourceApi", () => {
     expect(deleteAccount).toHaveBeenCalledTimes(1);
   });
 
+  it("creates Stripe checkout and portal sessions", async () => {
+    const request = vi.fn(async (path: string, options?: { method?: string; body?: unknown }) => {
+      if (path === "/billing/checkout-session") {
+        return { url: "https://checkout.stripe.com/c/pay/cs_test" };
+      }
+      if (path === "/billing/portal-session") {
+        return { url: "https://billing.stripe.com/p/session/test" };
+      }
+      throw new Error(`unexpected path ${path} ${options?.method ?? ""}`);
+    });
+    const api = createLiveResourceApi(createApi(asRequest(request)));
+
+    await expect(api.createCheckoutSession("basic")).resolves.toEqual({
+      url: "https://checkout.stripe.com/c/pay/cs_test",
+    });
+    await expect(api.createPortalSession()).resolves.toEqual({
+      url: "https://billing.stripe.com/p/session/test",
+    });
+    expect(request).toHaveBeenNthCalledWith(1, "/billing/checkout-session", {
+      method: "POST",
+      body: { tier: "basic" },
+    });
+    expect(request).toHaveBeenNthCalledWith(2, "/billing/portal-session", {
+      method: "POST",
+    });
+  });
+
   it("clears content and lists job events through the authenticated client", async () => {
     const wipe = {
       keepAccount: true,

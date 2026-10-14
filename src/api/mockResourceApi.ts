@@ -1,3 +1,4 @@
+import type { BillingSession, CheckoutTier } from "./billing";
 import { catalogLimitError, isAtCatalogLimit } from "./catalogLimits";
 import { isAllowedUploadContentType } from "./catalogValidation";
 import { ApiError } from "./httpClient";
@@ -59,6 +60,10 @@ export const mockEntitlement: Entitlement = {
   },
   store: "STRIPE",
   updatedAt: "2026-10-01T09:12:00.000Z",
+  paidTier: {
+    tier: "premium",
+    source: "stripe",
+  },
 };
 
 export const mockFreeAtLimitEntitlement: Entitlement = {
@@ -81,6 +86,7 @@ export const mockFreeAtLimitEntitlement: Entitlement = {
     outfits: 5,
   },
   updatedAt: "2026-10-01T09:12:00.000Z",
+  paidTier: null,
 };
 
 export const mockWardrobes: Wardrobe[] = [
@@ -275,6 +281,12 @@ const cloneEntitlement = (entitlement: Entitlement): Entitlement => {
     features: { ...entitlement.features },
     limits: entitlement.limits ? { ...entitlement.limits } : null,
     usage: { ...entitlement.usage },
+    paidTier:
+      entitlement.paidTier === undefined
+        ? undefined
+        : entitlement.paidTier
+          ? { ...entitlement.paidTier }
+          : null,
   };
 };
 
@@ -437,6 +449,20 @@ export const createMockResourceApi = (
     aiProfiles.splice(0, aiProfiles.length);
     syncUsage();
     return delay(result);
+  };
+
+  const createCheckoutSession = async (
+    tier: CheckoutTier,
+  ): Promise<BillingSession> => {
+    return delay({
+      url: `https://checkout.stripe.com/c/pay/mock-${tier}`,
+    });
+  };
+
+  const createPortalSession = async (): Promise<BillingSession> => {
+    return delay({
+      url: "https://billing.stripe.com/p/session/mock",
+    });
   };
 
   const listJobEvents = async (
@@ -955,6 +981,8 @@ export const createMockResourceApi = (
     deleteAccount,
     clearContent,
     listJobEvents,
+    createCheckoutSession,
+    createPortalSession,
     listWardrobes,
     getWardrobe,
     createWardrobe,
@@ -1015,6 +1043,8 @@ const rejectAll = (error: ApiError): ResourceApi => {
     deleteAccount: reject,
     clearContent: reject,
     listJobEvents: reject,
+    createCheckoutSession: reject,
+    createPortalSession: reject,
     listWardrobes: reject,
     getWardrobe: reject,
     createWardrobe: reject,

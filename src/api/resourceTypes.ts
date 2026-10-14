@@ -217,6 +217,22 @@ export type EntitlementUsage = {
   outfits: number;
 };
 
+/** WARDROBE-188 paid-tier status. Soft-omitted `source` means a store plan. */
+export const PAID_PLAN_TIERS = ["basic", "premium"] as const;
+export type PaidPlanTier = (typeof PAID_PLAN_TIERS)[number];
+
+export const PAID_TIER_SOURCES = ["ios", "android", "stripe"] as const;
+export type PaidTierSource = (typeof PAID_TIER_SOURCES)[number];
+
+export type PaidTierStatus = {
+  tier: PaidPlanTier;
+  source?: PaidTierSource;
+  expiresAt?: string;
+};
+
+/** GET /me `paidTier`: `null` is Free. */
+export type PaidTier = PaidTierStatus | null;
+
 /** DELETE /me — Flutter WARDROBE-154 / backend account-delete contract. */
 export type AccountDeleteResult = {
   deleted: boolean;
@@ -261,6 +277,8 @@ export type Entitlement = {
   period?: EntitlementPeriod;
   expiresAt?: string;
   updatedAt: string;
+  /** Additive WARDROBE-188 field. `null` is Free; omitted on older payloads. */
+  paidTier?: PaidTier;
 };
 
 export const ENTITLEMENT_AI_REQUIRED_CODE = "ENTITLEMENT_AI_REQUIRED";

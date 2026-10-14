@@ -8,9 +8,11 @@ import {
   getAppOutfitNewPath,
   getAppVirtualProfileEditPath,
   getAppPath,
+  getAppSettingsPlanPath,
   getAppWardrobeEditPath,
   getAppWardrobePath,
   getLoginPath,
+  SETTINGS_PLAN_HASH,
   getLoginSignupPath,
   getPostLoginRedirectPath,
   isLoginSignupMode,
@@ -74,7 +76,9 @@ describe("login and app paths", () => {
     );
     expect(appPaths.appVirtualTryOn).toBe("/app/virtual-try-on");
     expect(appPaths.appSettings).toBe("/app/settings");
-    expect(appPaths.appPlan).toBe("/app/settings");
+    expect(appPaths.appPlan).toBe("/app/settings#plan");
+    expect(SETTINGS_PLAN_HASH).toBe("plan");
+    expect(getAppSettingsPlanPath()).toBe("/app/settings#plan");
     expect(appPaths.appInbox).toBe("/app/inbox");
     expect(getContactPath()).toBe("/contact");
     expect(getContactPath("bug")).toBe("/contact?type=bug");

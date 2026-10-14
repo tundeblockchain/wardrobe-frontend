@@ -1,17 +1,15 @@
 import { describe, expect, it } from "vitest";
 import type { Entitlement } from "../api/resourceTypes";
 import {
-  getPlanManagementCopy,
-  getPlanPeriodLabel,
-  getPlanStatusLabel,
-  getPlanStoreLabel,
-  getPlanTierLabel,
-  shouldManagePlanInApp,
+  getPaidPlanLabel,
+  getPaidTier,
+  getPaidTierStoreManagementCopy,
+  getPlanExpiresLabel,
+  isPaidTierSource,
+  isStripePaidTier,
 } from "./planDisplay";
 
-const entitlement = (
-  overrides: Partial<Entitlement> = {},
-): Entitlement => {
+const entitlement = (overrides: Partial<Entitlement> = {}): Entitlement => {
   return {
     userId: "user-1",
     tier: "FREE",
@@ -29,55 +27,74 @@ const entitlement = (
 };
 
 describe("planDisplay", () => {
-  it("labels tiers, statuses, stores, and periods", () => {
-    expect(getPlanTierLabel("FREE")).toBe("Free");
-    expect(getPlanTierLabel("BASIC")).toBe("Basic");
-    expect(getPlanTierLabel("PREMIUM")).toBe("Premium");
-    expect(getPlanStatusLabel("NONE")).toBe("None");
-    expect(getPlanStatusLabel("ACTIVE")).toBe("Active");
-    expect(getPlanStatusLabel("CANCELED")).toBe("Canceled");
-    expect(getPlanStatusLabel("BILLING_ISSUE")).toBe("Billing issue");
-    expect(getPlanStatusLabel("PAUSED")).toBe("Paused");
-    expect(getPlanStatusLabel("EXPIRED")).toBe("Expired");
-    expect(getPlanStoreLabel("APP_STORE")).toBe("App Store");
-    expect(getPlanStoreLabel("PLAY_STORE")).toBe("Google Play");
-    expect(getPlanStoreLabel("STRIPE")).toBe("Web");
-    expect(getPlanStoreLabel("UNKNOWN")).toBe("Unknown");
-    expect(getPlanStoreLabel(undefined)).toBe("Unknown");
-    expect(getPlanPeriodLabel("MONTHLY")).toBe("Monthly");
-    expect(getPlanPeriodLabel("YEARLY")).toBe("Yearly");
-    expect(getPlanPeriodLabel("UNKNOWN")).toBeUndefined();
-    expect(getPlanPeriodLabel(undefined)).toBeUndefined();
+  it("prefers GET /me paidTier including Free null", () => {
+    expect(getPaidTier(entitlement({ paidTier: null }))).toBeNull();
+    expect(
+      getPaidTier(
+        entitlement({
+          tier: "PREMIUM",
+          paidTier: {
+            tier: "premium",
+            source: "ios",
+            expiresAt: "2026-11-01T00:00:00.000Z",
+          },
+        }),
+      ),
+    ).toEqual({
+      tier: "premium",
+      source: "ios",
+      expiresAt: "2026-11-01T00:00:00.000Z",
+    });
   });
 
-  it("tells App Store and Play buyers to manage the plan in the app", () => {
-    expect(shouldManagePlanInApp("APP_STORE")).toBe(true);
-    expect(shouldManagePlanInApp("PLAY_STORE")).toBe(true);
-    expect(shouldManagePlanInApp("STRIPE")).toBe(false);
-    expect(shouldManagePlanInApp("UNKNOWN")).toBe(false);
-    expect(shouldManagePlanInApp(undefined)).toBe(false);
-
+  it("derives paidTier from legacy entitlement fields when omitted", () => {
+    expect(getPaidTier(entitlement())).toBeNull();
     expect(
-      getPlanManagementCopy(entitlement({ tier: "PREMIUM", store: "APP_STORE" })),
-    ).toBe("This plan was bought on the App Store. Manage it in the iOS app.");
+      getPaidTier(entitlement({ tier: "BASIC", store: "STRIPE" })),
+    ).toEqual({ tier: "basic", source: "stripe" });
     expect(
-      getPlanManagementCopy(entitlement({ tier: "BASIC", store: "PLAY_STORE" })),
-    ).toBe(
-      "This plan was bought on Google Play. Manage it in the Android app.",
-    );
+      getPaidTier(entitlement({ tier: "PREMIUM", store: "APP_STORE" })),
+    ).toEqual({ tier: "premium", source: "ios" });
+    expect(
+      getPaidTier(entitlement({ tier: "PREMIUM", store: "PLAY_STORE" })),
+    ).toEqual({ tier: "premium", source: "android" });
+    expect(getPaidTier(entitlement({ tier: "PREMIUM" }))).toEqual({
+      tier: "premium",
+    });
+    expect(
+      getPaidTier(entitlement({ tier: "PREMIUM", store: "UNKNOWN" })),
+    ).toEqual({ tier: "premium" });
   });
 
-  it("does not offer Stripe or other payment management", () => {
-    expect(
-      getPlanManagementCopy(entitlement({ tier: "PREMIUM", store: "STRIPE" })),
-    ).toBe(
-      "This plan was bought on the web. Payment management is not available here.",
+  it("labels the current plan and formats expiresAt", () => {
+    expect(getPaidPlanLabel(null)).toBe("Free");
+    expect(getPaidPlanLabel({ tier: "basic", source: "stripe" })).toBe("Basic");
+    expect(getPaidPlanLabel({ tier: "premium", source: "ios" })).toBe("Premium");
+    expect(getPlanExpiresLabel()).toBeUndefined();
+    expect(getPlanExpiresLabel("2026-11-01T00:00:00.000Z")).toBe(
+      "1 November 2026",
     );
-    expect(
-      getPlanManagementCopy(entitlement({ tier: "PREMIUM", store: "UNKNOWN" })),
-    ).toBe("Purchase location is not available.");
-    expect(getPlanManagementCopy(entitlement())).toBe(
-      "The Free plan is included with the account.",
+    expect(getPlanExpiresLabel("not-a-date")).toBe("not-a-date");
+  });
+
+  it("picks store management copy from source and treats a missing source as a store plan", () => {
+    expect(getPaidTierStoreManagementCopy("ios")).toBe(
+      "Manage this plan in the App Store.",
     );
+    expect(getPaidTierStoreManagementCopy("android")).toBe(
+      "Manage this plan in Google Play.",
+    );
+    expect(getPaidTierStoreManagementCopy()).toBe(
+      "Manage this plan in the App Store or Google Play.",
+    );
+    expect(isStripePaidTier({ tier: "basic", source: "stripe" })).toBe(true);
+    expect(isStripePaidTier({ tier: "premium", source: "ios" })).toBe(false);
+    expect(isStripePaidTier({ tier: "premium" })).toBe(false);
+    expect(isStripePaidTier(null)).toBe(false);
+    expect(isPaidTierSource("ios")).toBe(true);
+    expect(isPaidTierSource("android")).toBe(true);
+    expect(isPaidTierSource("stripe")).toBe(true);
+    expect(isPaidTierSource(null)).toBe(false);
+    expect(isPaidTierSource("APP_STORE")).toBe(false);
   });
 });
