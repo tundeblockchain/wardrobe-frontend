@@ -16,7 +16,7 @@ import {
 import { isApiError } from "../../api/httpClient";
 import { isNotFoundError, type ResourceApi } from "../../api/resourceApi";
 import { getAiProfileImageUrl } from "../../api/resourceDisplay";
-import type { AiProfile } from "../../api/resourceTypes";
+import type { AiProfile, Entitlement } from "../../api/resourceTypes";
 import { uploadAiProfileImage } from "../../api/uploadAiProfileImage";
 import { putFileToPresignedUrl } from "../../api/uploadToPresignedUrl";
 import { DashboardPage } from "../../components/dashboard/DashboardPage";
@@ -132,6 +132,7 @@ export const VirtualProfileFormPage = ({
       >
         <ForbiddenUpgradePrompt
           kind="premium"
+          entitlement={meQuery.data}
           premiumTitle={dashboardCopy.virtualProfiles.otherAiTitle}
           premiumDescription={dashboardCopy.virtualProfiles.otherAiDescription}
           premiumActionAriaLabel={
@@ -201,6 +202,7 @@ export const VirtualProfileFormPage = ({
       resourceApi={resourceApi}
       profile={profile}
       putFile={putFile}
+      entitlement={meQuery.data}
     />
   );
 };
@@ -210,6 +212,7 @@ type VirtualProfileFormReadyProps = {
   resourceApi: ResourceApi;
   profile?: AiProfile;
   putFile: typeof putFileToPresignedUrl;
+  entitlement: Entitlement;
 };
 
 const VirtualProfileFormReady = ({
@@ -217,6 +220,7 @@ const VirtualProfileFormReady = ({
   resourceApi,
   profile,
   putFile,
+  entitlement,
 }: VirtualProfileFormReadyProps) => {
   const navigate = useNavigate();
   const copy = dashboardCopy.virtualProfileForm;
@@ -348,6 +352,7 @@ const VirtualProfileFormReady = ({
       >
         <ForbiddenUpgradePrompt
           kind={upgradeKind}
+          entitlement={entitlement}
           premiumTitle={dashboardCopy.virtualProfiles.otherAiTitle}
           premiumDescription={dashboardCopy.virtualProfiles.otherAiDescription}
           premiumActionAriaLabel={

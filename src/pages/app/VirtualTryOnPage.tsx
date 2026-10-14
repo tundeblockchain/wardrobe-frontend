@@ -156,7 +156,10 @@ export const VirtualTryOnPage = ({
         title={copy.title}
         description={copy.description}
       >
-        <ForbiddenUpgradePrompt kind="premium" />
+        <ForbiddenUpgradePrompt
+          kind="premium"
+          entitlement={query.data.entitlement}
+        />
       </DashboardPage>
     );
   }
@@ -308,7 +311,10 @@ const VirtualTryOnReady = ({
         title={copy.title}
         description={copy.description}
       >
-        <ForbiddenUpgradePrompt kind={upgradeKind} />
+        <ForbiddenUpgradePrompt
+          kind={upgradeKind}
+          entitlement={data.entitlement}
+        />
       </DashboardPage>
     );
   }

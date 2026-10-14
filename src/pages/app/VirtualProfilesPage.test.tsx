@@ -92,8 +92,10 @@ describe("VirtualProfilesPage", () => {
       }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: "View plan for Virtual Try On" }),
-    ).toHaveAttribute("href", appPaths.appPlan);
+      screen.getByRole("button", {
+        name: "Upgrade to Premium for Virtual Try On",
+      }),
+    ).toBeInTheDocument();
     expect(
       screen.queryByRole("heading", { name: "Weekday look" }),
     ).not.toBeInTheDocument();
@@ -113,8 +115,10 @@ describe("VirtualProfilesPage", () => {
       ),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: "View plan for Virtual Try On" }),
-    ).toHaveAttribute("href", appPaths.appPlan);
+      screen.getByRole("button", {
+        name: "Upgrade to Premium for Virtual Try On",
+      }),
+    ).toBeInTheDocument();
     expect(
       screen.queryByRole("heading", { name: "Couldn't load Virtual Profiles" }),
     ).not.toBeInTheDocument();

@@ -181,6 +181,7 @@ export const ItemFormPage = ({
           kind="item"
           limits={meQuery.data.limits}
           usage={meQuery.data.usage}
+          entitlement={meQuery.data}
         />
       </DashboardPage>
     );
@@ -368,6 +369,7 @@ const ItemFormReady = ({
           kind="item"
           limits={entitlement.limits}
           usage={entitlement.usage}
+          entitlement={entitlement}
         />
       </DashboardPage>
     );

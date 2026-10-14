@@ -522,8 +522,10 @@ describe("SettingsPage", () => {
       }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: "View plan for Virtual Try On" }),
-    ).toHaveAttribute("href", appPaths.appPlan);
+      screen.getByRole("button", {
+        name: "Upgrade to Premium for Virtual Try On",
+      }),
+    ).toBeInTheDocument();
     expect(screen.getByTestId("route-location")).toHaveTextContent(
       appPaths.appVirtualTryOn,
     );

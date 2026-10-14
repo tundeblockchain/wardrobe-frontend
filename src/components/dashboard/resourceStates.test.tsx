@@ -70,15 +70,17 @@ describe("dashboard resource states", () => {
     ).toHaveAttribute("href", "/app/settings");
   });
 
-  it("links catalog limit prompts to Plan", () => {
+  it("starts Basic checkout from catalog limit prompts", () => {
     renderWithProviders(<CatalogLimitPrompt kind="wardrobe" />);
 
     expect(
       screen.getByRole("heading", { name: "Wardrobe limit reached" }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: "View plan to add more wardrobes" }),
-    ).toHaveAttribute("href", "/app/settings#plan");
+      screen.getByRole("button", {
+        name: "Upgrade to Basic to add more wardrobes",
+      }),
+    ).toBeInTheDocument();
   });
 
   it("renders catalog limit copy from non-default /me limits", () => {

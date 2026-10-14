@@ -349,6 +349,58 @@ describe("AppRoutes", () => {
     expect(document.getElementById("plan")).toBeInTheDocument();
   });
 
+  it("renders billing success and cancel as signed-in /app routes", async () => {
+    const { unmount } = renderAppRoutes(appPaths.appBillingSuccess, {
+      user: { id: "user-1" },
+    });
+
+    expect(
+      await screen.findByRole("heading", {
+        level: 1,
+        name: "Setting up your plan",
+      }),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId("route-location")).toHaveTextContent(
+      appPaths.appBillingSuccess,
+    );
+    unmount();
+
+    renderAppRoutes(appPaths.appBillingCancel, { user: { id: "user-1" } });
+    expect(
+      await screen.findByRole("heading", {
+        level: 1,
+        name: "Checkout cancelled",
+      }),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId("route-location")).toHaveTextContent(
+      appPaths.appBillingCancel,
+    );
+    expect(
+      screen.getAllByText("Checkout cancelled, you have not been charged.")
+        .length,
+    ).toBeGreaterThan(0);
+  });
+
+  it("redirects a signed-out user from billing return routes to /login", async () => {
+    const { unmount } = renderAppRoutes(appPaths.appBillingSuccess);
+
+    expect(
+      await screen.findByRole("heading", { level: 1, name: "Sign in" }),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId("route-location")).toHaveTextContent(
+      "/login?next=%2Fapp%2Fbilling%2Fsuccess",
+    );
+    unmount();
+
+    renderAppRoutes(appPaths.appBillingCancel);
+    expect(
+      await screen.findByRole("heading", { level: 1, name: "Sign in" }),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId("route-location")).toHaveTextContent(
+      "/login?next=%2Fapp%2Fbilling%2Fcancel",
+    );
+  });
+
   it("renders Inbox at /app/inbox", async () => {
     renderAppRoutes(appPaths.appInbox, { user: { id: "user-1" } });
 

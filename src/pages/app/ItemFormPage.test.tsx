@@ -211,8 +211,10 @@ describe("ItemFormPage", () => {
       }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: "View plan to add more clothing items" }),
-    ).toHaveAttribute("href", appPaths.appPlan);
+      screen.getByRole("button", {
+        name: "Upgrade to Basic to add more clothing items",
+      }),
+    ).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "Save item" }),
     ).not.toBeInTheDocument();

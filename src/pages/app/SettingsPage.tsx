@@ -171,14 +171,17 @@ const ConfirmPhraseDialog = ({
 const SettingsSection = ({
   title,
   titleId,
+  sectionId,
   children,
 }: {
   title: string;
   titleId: string;
+  sectionId?: string;
   children: ReactNode;
 }) => {
   return (
     <Paper
+      id={sectionId}
       component="section"
       elevation={0}
       aria-labelledby={titleId}

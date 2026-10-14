@@ -4,22 +4,22 @@ export const dashboardCopy = {
       title: "Wardrobe limit reached",
       description:
         "This plan has reached its wardrobe limit. Upgrade your plan to add another.",
-      actionLabel: "View plan",
-      actionAriaLabel: "View plan to add more wardrobes",
+      actionLabel: "Upgrade to Basic",
+      actionAriaLabel: "Upgrade to Basic to add more wardrobes",
     },
     item: {
       title: "Clothing item limit reached",
       description:
         "This plan has reached its clothing item limit. Upgrade your plan to add another.",
-      actionLabel: "View plan",
-      actionAriaLabel: "View plan to add more clothing items",
+      actionLabel: "Upgrade to Basic",
+      actionAriaLabel: "Upgrade to Basic to add more clothing items",
     },
     outfit: {
       title: "Outfit limit reached",
       description:
         "This plan has reached its outfit limit. Upgrade your plan to add another.",
-      actionLabel: "View plan",
-      actionAriaLabel: "View plan to add more outfits",
+      actionLabel: "Upgrade to Basic",
+      actionAriaLabel: "Upgrade to Basic to add more outfits",
     },
   },
   settings: {
@@ -286,16 +286,43 @@ export const dashboardCopy = {
       title: "Upgrade to Basic",
       description:
         "This plan has reached a catalog limit. Upgrade to Basic to add more wardrobes, clothing items, or outfits.",
-      actionLabel: "View plan",
-      actionAriaLabel: "View plan to upgrade to Basic",
+      actionLabel: "Upgrade to Basic",
+      actionAriaLabel: "Upgrade to Basic",
     },
     premium: {
       title: "Virtual Try On is a Premium feature",
       description:
         "Upgrade to browse Virtual Profiles and preview looks with Virtual Try On.",
-      actionLabel: "View plan",
-      actionAriaLabel: "View plan for Virtual Try On",
+      actionLabel: "Upgrade to Premium",
+      actionAriaLabel: "Upgrade to Premium for Virtual Try On",
     },
+  },
+  billing: {
+    startingLabel: "Starting checkout…",
+    errorFallback: "Couldn't start checkout. Try again in a moment.",
+    storeManage:
+      "Manage this plan in the App Store / Google Play.",
+    stripeBasicManageLabel: "Manage plan",
+    stripeBasicManageAriaLabel: "Manage this plan in Settings",
+    successProcessingTitle: "Setting up your plan",
+    successProcessingDescription:
+      "Checkout finished. Pocket Closet is confirming the plan now.",
+    successReadyTitle: "You are subscribed",
+    successReadyDescription:
+      "Your plan is active. Open the dashboard to continue.",
+    successTimeoutTitle: "Your plan is being set up. Refresh in a moment.",
+    successTimeoutDescription:
+      "Checkout finished, but the plan is still being applied.",
+    successRetryLabel: "Retry",
+    successRetryAriaLabel: "Check plan status again",
+    successDashboardLabel: "Go to dashboard",
+    successDashboardAriaLabel: "Go to the dashboard",
+    cancelTitle: "Checkout cancelled",
+    cancelDescription: "Checkout cancelled, you have not been charged.",
+    cancelDashboardLabel: "Go to dashboard",
+    cancelDashboardAriaLabel: "Go to the dashboard",
+    cancelSettingsLabel: "View plan in Settings",
+    cancelSettingsAriaLabel: "View plan in Settings",
   },
   virtualProfiles: {
     title: "Virtual Profiles",
@@ -312,8 +339,8 @@ export const dashboardCopy = {
     upgradeTitle: "Virtual Try On is a Premium feature",
     upgradeDescription:
       "Upgrade to browse Virtual Profiles and preview looks with Virtual Try On.",
-    upgradeActionLabel: "View plan",
-    upgradeActionAriaLabel: "View plan for Virtual Try On",
+    upgradeActionLabel: "Upgrade to Premium",
+    upgradeActionAriaLabel: "Upgrade to Premium for Virtual Try On",
     addLabel: "Add Virtual Profile",
     addAriaLabel: "Add a Virtual Profile",
     editLabel: "Edit",
@@ -326,7 +353,7 @@ export const dashboardCopy = {
     otherAiTitle: "Virtual Profile edits need Premium",
     otherAiDescription:
       "Upgrade to create, edit, or delete a Virtual Profile.",
-    otherAiActionAriaLabel: "View plan to edit Virtual Profiles",
+    otherAiActionAriaLabel: "Upgrade to Premium to edit Virtual Profiles",
   },
   virtualProfileForm: {
     createTitle: "Add Virtual Profile",
