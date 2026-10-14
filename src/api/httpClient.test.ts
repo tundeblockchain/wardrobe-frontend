@@ -81,6 +81,34 @@ describe("request", () => {
     expect(JSON.parse(String(options.body))).toEqual({ ping: true });
   });
 
+  it("maps a backend error payload onto ApiError including source", async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(
+      createJsonResponse({
+        status: 409,
+        body: {
+          error: {
+            code: "ALREADY_SUBSCRIBED",
+            message: "Already subscribed",
+            source: "ios",
+          },
+        },
+      }),
+    );
+
+    const error = await request("/billing/checkout-session", {
+      baseUrl: API_BASE_URL,
+      method: "POST",
+      fetchImpl,
+    }).catch((caught: unknown) => caught);
+
+    expect(error).toMatchObject({
+      status: 409,
+      code: "ALREADY_SUBSCRIBED",
+      source: "ios",
+      message: "Already subscribed",
+    });
+  });
+
   it("maps a backend error payload onto ApiError", async () => {
     const fetchImpl = vi.fn().mockResolvedValue(
       createJsonResponse({

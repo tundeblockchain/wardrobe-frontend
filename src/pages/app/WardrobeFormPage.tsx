@@ -138,6 +138,7 @@ export const WardrobeFormPage = ({
           kind="wardrobe"
           limits={meQuery.data.limits}
           usage={meQuery.data.usage}
+          entitlement={meQuery.data}
         />
       </DashboardPage>
     );
@@ -237,6 +238,7 @@ const WardrobeFormReady = ({
           kind="wardrobe"
           limits={entitlement.limits}
           usage={entitlement.usage}
+          entitlement={entitlement}
         />
       </DashboardPage>
     );

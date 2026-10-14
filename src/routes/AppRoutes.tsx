@@ -89,6 +89,16 @@ const PlanPage = lazy(async () => {
   return { default: module.PlanPage };
 });
 
+const BillingSuccessPage = lazy(async () => {
+  const module = await import("../pages/app/BillingSuccessPage");
+  return { default: module.BillingSuccessPage };
+});
+
+const BillingCancelPage = lazy(async () => {
+  const module = await import("../pages/app/BillingCancelPage");
+  return { default: module.BillingCancelPage };
+});
+
 export const AppRoutes = () => {
   return (
     <Routes>
@@ -151,6 +161,8 @@ export const AppRoutes = () => {
         <Route path="inbox" element={<InboxPage />} />
         <Route path="settings" element={<SettingsPage />} />
         <Route path="plan" element={<PlanPage />} />
+        <Route path="billing/success" element={<BillingSuccessPage />} />
+        <Route path="billing/cancel" element={<BillingCancelPage />} />
         <Route path="*" element={<AppHomePage />} />
       </Route>
     </Routes>

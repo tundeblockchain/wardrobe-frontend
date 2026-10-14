@@ -59,11 +59,12 @@ export const mockEntitlement: Entitlement = {
     outfits: 1,
   },
   store: "STRIPE",
-  updatedAt: "2026-10-01T09:12:00.000Z",
   paidTier: {
     tier: "premium",
     source: "stripe",
+    expiresAt: "2027-10-01T09:12:00.000Z",
   },
+  updatedAt: "2026-10-01T09:12:00.000Z",
 };
 
 export const mockFreeAtLimitEntitlement: Entitlement = {
@@ -85,8 +86,8 @@ export const mockFreeAtLimitEntitlement: Entitlement = {
     items: 5,
     outfits: 5,
   },
-  updatedAt: "2026-10-01T09:12:00.000Z",
   paidTier: null,
+  updatedAt: "2026-10-01T09:12:00.000Z",
 };
 
 export const mockWardrobes: Wardrobe[] = [

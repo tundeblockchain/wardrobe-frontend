@@ -77,9 +77,12 @@ describe("login and app paths", () => {
     expect(appPaths.appVirtualTryOn).toBe("/app/virtual-try-on");
     expect(appPaths.appSettings).toBe("/app/settings");
     expect(appPaths.appPlan).toBe("/app/settings#plan");
+    expect(appPaths.appSettingsPlan).toBe("/app/settings#plan");
     expect(SETTINGS_PLAN_HASH).toBe("plan");
     expect(getAppSettingsPlanPath()).toBe("/app/settings#plan");
     expect(appPaths.appInbox).toBe("/app/inbox");
+    expect(appPaths.appBillingSuccess).toBe("/app/billing/success");
+    expect(appPaths.appBillingCancel).toBe("/app/billing/cancel");
     expect(getContactPath()).toBe("/contact");
     expect(getContactPath("bug")).toBe("/contact?type=bug");
     expect(isContactBugType("bug")).toBe(true);

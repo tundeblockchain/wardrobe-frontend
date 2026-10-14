@@ -20,7 +20,6 @@ import {
   createUnstableGetMeApi,
   expectBoundedGetMeFetches,
 } from "../../test/unstableGetMeApi";
-import { SettingsPage } from "./SettingsPage";
 import { OutfitFormPage } from "./OutfitFormPage";
 
 const renderCreate = (resourceApi: ResourceApi) => {
@@ -130,8 +129,10 @@ describe("OutfitFormPage", () => {
       await screen.findByRole("heading", { name: "Outfit limit reached" }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: "View plan to add more outfits" }),
-    ).toHaveAttribute("href", appPaths.appPlan);
+      screen.getByRole("button", {
+        name: "Upgrade to Basic to add more outfits",
+      }),
+    ).toBeInTheDocument();
   });
 
   it("reads outfit limit copy from the /me entitlement", async () => {
@@ -202,24 +203,14 @@ describe("OutfitFormPage", () => {
     await expectBoundedGetMeFetches(getMe);
   });
 
-  it("opens View plan from Add outfit without refetching GET /me in a loop", async () => {
-    const user = userEvent.setup();
+  it("starts Basic checkout from Add outfit without refetching GET /me in a loop", async () => {
     const getMe = vi
       .fn()
       .mockImplementation(createFreeAtLimitResourceApi().getMe);
     const resourceApi = createUnstableFreeAtLimitGetMeApi(getMe);
 
     renderWithProviders(
-      <Routes>
-        <Route
-          path={appPaths.appOutfitNew}
-          element={<OutfitFormPage mode="create" resourceApi={resourceApi} />}
-        />
-        <Route
-          path={appPaths.appSettings}
-          element={<SettingsPage resourceApi={resourceApi} />}
-        />
-      </Routes>,
+      <OutfitFormPage mode="create" resourceApi={resourceApi} />,
       {
         route: appPaths.appOutfitNew,
         auth: { user: { id: "user-1" } },
@@ -229,19 +220,10 @@ describe("OutfitFormPage", () => {
     expect(
       await screen.findByRole("heading", { name: "Outfit limit reached" }),
     ).toBeInTheDocument();
-    await user.click(
-      screen.getByRole("link", { name: "View plan to add more outfits" }),
-    );
-
     expect(
-      await screen.findByRole("heading", {
-        level: 1,
-        name: "Profile & Settings",
+      screen.getByRole("button", {
+        name: "Upgrade to Basic to add more outfits",
       }),
-    ).toBeInTheDocument();
-    expect(screen.getByText("Free")).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: "Upgrade to Basic" }),
     ).toBeInTheDocument();
     await expectBoundedGetMeFetches(getMe);
   });

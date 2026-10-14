@@ -115,8 +115,10 @@ describe("WardrobeFormPage", () => {
       await screen.findByRole("heading", { name: "Wardrobe limit reached" }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: "View plan to add more wardrobes" }),
-    ).toHaveAttribute("href", appPaths.appPlan);
+      screen.getByRole("button", {
+        name: "Upgrade to Basic to add more wardrobes",
+      }),
+    ).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "Save wardrobe" }),
     ).not.toBeInTheDocument();

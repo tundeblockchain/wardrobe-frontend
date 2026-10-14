@@ -7,7 +7,6 @@ import {
   createErrorResourceApi,
   createMockResourceApi,
 } from "../../api/mockResourceApi";
-import { appPaths } from "../../routes/paths";
 import { renderWithProviders } from "../../test/renderWithProviders";
 import { VirtualTryOnPage } from "./VirtualTryOnPage";
 
@@ -111,8 +110,10 @@ describe("VirtualTryOnPage", () => {
       }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: "View plan for Virtual Try On" }),
-    ).toHaveAttribute("href", appPaths.appPlan);
+      screen.getByRole("button", {
+        name: "Upgrade to Premium for Virtual Try On",
+      }),
+    ).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "Start Virtual Try On" }),
     ).not.toBeInTheDocument();

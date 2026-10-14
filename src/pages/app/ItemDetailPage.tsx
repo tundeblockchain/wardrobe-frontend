@@ -543,7 +543,12 @@ export const ItemDetailPage = ({
                   </Button>
                 )}
               </Stack>
-              {upgradeKind ? <ForbiddenUpgradePrompt kind={upgradeKind} /> : null}
+              {upgradeKind ? (
+                <ForbiddenUpgradePrompt
+                  kind={upgradeKind}
+                  entitlement={entitlement}
+                />
+              ) : null}
             </Stack>
           </Paper>
         </Box>

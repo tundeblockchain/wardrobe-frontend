@@ -176,6 +176,7 @@ export const OutfitFormPage = ({
           kind="outfit"
           limits={meQuery.data.limits}
           usage={meQuery.data.usage}
+          entitlement={meQuery.data}
         />
       </DashboardPage>
     );
@@ -296,6 +297,7 @@ const OutfitFormReady = ({
           kind="outfit"
           limits={entitlement.limits}
           usage={entitlement.usage}
+          entitlement={entitlement}
         />
       </DashboardPage>
     );

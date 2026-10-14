@@ -96,7 +96,10 @@ export const VirtualProfilesPage = ({
         title={copy.title}
         description={copy.description}
       >
-        <ForbiddenUpgradePrompt kind="premium" />
+        <ForbiddenUpgradePrompt
+          kind="premium"
+          entitlement={meQuery.data}
+        />
       </DashboardPage>
     );
   }
@@ -125,6 +128,7 @@ export const VirtualProfilesPage = ({
           <ForbiddenUpgradePrompt
             kind={upgradeKind}
             catalogKind={getCatalogKindForLimitCode(profilesQuery.error.code)}
+            entitlement={meQuery.data}
           />
         </DashboardPage>
       );
@@ -240,6 +244,7 @@ const VirtualProfilesReady = ({
       >
         <ForbiddenUpgradePrompt
           kind={upgradeKind}
+          entitlement={entitlement}
           premiumTitle={copy.otherAiTitle}
           premiumDescription={copy.otherAiDescription}
           premiumActionAriaLabel={copy.otherAiActionAriaLabel}
@@ -266,6 +271,7 @@ const VirtualProfilesReady = ({
         ) : (
           <ForbiddenUpgradePrompt
             kind="premium"
+            entitlement={entitlement}
             premiumTitle={copy.otherAiTitle}
             premiumDescription={copy.otherAiDescription}
             premiumActionAriaLabel={copy.otherAiActionAriaLabel}
