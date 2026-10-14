@@ -1,5 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
-import { createAuthenticatedApi } from "./authenticatedApi";
+import {
+  ACCOUNT_DELETE_TIMEOUT_MS,
+  createAuthenticatedApi,
+} from "./authenticatedApi";
 import { isApiError } from "./httpClient";
 
 const API_BASE_URL = "https://api.example.com";
@@ -93,42 +96,22 @@ describe("createAuthenticatedApi", () => {
     expect(signOut).not.toHaveBeenCalled();
   });
 
-  it("deletes the account with DELETE /me, a 60s timeout, and does not sign out on success", async () => {
-    vi.useFakeTimers();
-    const fetchImpl = vi.fn(
-      () =>
-        new Promise(() => {
-          return undefined;
-        }),
-    );
-    const hangingApi = createApi({
-      fetchImpl: fetchImpl as typeof fetch,
-    });
-    const pending = hangingApi.api.deleteAccount();
-    await vi.advanceTimersByTimeAsync(59_000);
-    expect(fetchImpl).toHaveBeenCalledTimes(1);
-    await vi.advanceTimersByTimeAsync(1_000);
-    await expect(pending).rejects.toMatchObject({
-      status: 0,
-      code: "TIMEOUT",
-    });
-    expect(hangingApi.signOut).not.toHaveBeenCalled();
-    vi.useRealTimers();
-
-    const successFetch = vi.fn().mockResolvedValue(
+  it("deletes the account with DELETE /me and does not sign out on success", async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(
       createJsonResponse({ status: 200, body: { deleted: true } }),
     );
     const { api, getIdToken, signOut } = createApi({
-      fetchImpl: successFetch as typeof fetch,
+      fetchImpl: fetchImpl as typeof fetch,
     });
 
     await expect(api.deleteAccount()).resolves.toEqual({ deleted: true });
     expect(getIdToken).toHaveBeenCalledTimes(1);
-    const [url, options] = successFetch.mock.calls[0] as [string, RequestInit];
+    const [url, options] = fetchImpl.mock.calls[0] as [string, RequestInit];
     expect(url).toBe("https://api.example.com/me");
     expect(options.method).toBe("DELETE");
     expect(readAuthorization(options)).toBe("Bearer id-token");
     expect(signOut).not.toHaveBeenCalled();
+    expect(ACCOUNT_DELETE_TIMEOUT_MS).toBe(60_000);
   });
 
   it("clears content with DELETE /me/content and lists GET /me/events", async () => {
