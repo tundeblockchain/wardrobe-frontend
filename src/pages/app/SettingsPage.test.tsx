@@ -3,7 +3,11 @@ import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Route, Routes, useLocation } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { BILLING_CANCEL_FAILED_CODE } from "../../api/billing";
+import {
+  BILLING_CANCEL_FAILED_CODE,
+  BILLING_PRICE_NOT_FOUND_CODE,
+  YEARLY_BILLING_UNAVAILABLE_MESSAGE,
+} from "../../api/billing";
 import { ApiError } from "../../api/httpClient";
 import {
   createAiTryOnOffResourceApi,
@@ -244,6 +248,13 @@ describe("SettingsPage", () => {
       screen.getByRole("button", { name: "Upgrade to Premium" }),
     ).toBeInTheDocument();
     expect(
+      screen.getByRole("group", { name: "Billing interval" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Bill monthly" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(
       screen.queryByRole("button", { name: "Manage subscription" }),
     ).not.toBeInTheDocument();
   });
@@ -273,6 +284,9 @@ describe("SettingsPage", () => {
     expect(
       screen.getByRole("button", { name: "Manage subscription" }),
     ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("group", { name: "Billing interval" }),
+    ).not.toBeInTheDocument();
     expect(
       screen.queryByText(/App Store|Google Play/i),
     ).not.toBeInTheDocument();
@@ -306,6 +320,11 @@ describe("SettingsPage", () => {
     expect(
       screen.queryByRole("button", { name: "Manage subscription" }),
     ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("group", { name: "Billing interval" }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Bill monthly" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Bill yearly" })).not.toBeInTheDocument();
     expect(screen.queryByText(/Stripe/i)).not.toBeInTheDocument();
   });
 
@@ -332,6 +351,9 @@ describe("SettingsPage", () => {
     ).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "Manage subscription" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("group", { name: "Billing interval" }),
     ).not.toBeInTheDocument();
   });
 
@@ -419,8 +441,13 @@ describe("SettingsPage", () => {
       await screen.findByRole("button", { name: "Upgrade to Basic" }),
     );
 
+    expect(screen.getByRole("button", { name: "Bill monthly" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+
     await waitFor(() => {
-      expect(createCheckoutSession).toHaveBeenCalledWith("basic");
+      expect(createCheckoutSession).toHaveBeenCalledWith("basic", "monthly");
     });
     expect(assignBillingUrl).toHaveBeenCalledWith(
       "https://checkout.stripe.com/c/pay/cs_basic",
@@ -434,11 +461,86 @@ describe("SettingsPage", () => {
     );
 
     await waitFor(() => {
-      expect(createCheckoutSession).toHaveBeenCalledWith("premium");
+      expect(createCheckoutSession).toHaveBeenCalledWith("premium", "monthly");
     });
     expect(assignBillingUrl).toHaveBeenCalledWith(
       "https://checkout.stripe.com/c/pay/cs_premium",
     );
+  });
+
+  it("sends yearly checkout for both tiers from the Plan section", async () => {
+    const user = userEvent.setup();
+    const createCheckoutSession = vi.fn().mockResolvedValue({
+      url: "https://checkout.stripe.com/c/pay/cs_yearly_basic",
+    });
+    const assignBillingUrl = vi.fn();
+    renderSettings(
+      createMockResourceApi(
+        { createCheckoutSession },
+        { entitlement: mockFreeAtLimitEntitlement },
+      ),
+      undefined,
+      { assignBillingUrl },
+    );
+
+    await user.click(await screen.findByRole("button", { name: "Bill yearly" }));
+    await user.click(
+      screen.getByRole("button", { name: "Upgrade to Basic" }),
+    );
+
+    await waitFor(() => {
+      expect(createCheckoutSession).toHaveBeenCalledWith("basic", "yearly");
+    });
+    expect(assignBillingUrl).toHaveBeenCalledWith(
+      "https://checkout.stripe.com/c/pay/cs_yearly_basic",
+    );
+
+    createCheckoutSession.mockResolvedValue({
+      url: "https://checkout.stripe.com/c/pay/cs_yearly_premium",
+    });
+    await user.click(
+      screen.getByRole("button", { name: "Upgrade to Premium" }),
+    );
+
+    await waitFor(() => {
+      expect(createCheckoutSession).toHaveBeenCalledWith("premium", "yearly");
+    });
+    expect(assignBillingUrl).toHaveBeenCalledWith(
+      "https://checkout.stripe.com/c/pay/cs_yearly_premium",
+    );
+  });
+
+  it("shows a friendly message when yearly checkout returns 503 BILLING_PRICE_NOT_FOUND", async () => {
+    const user = userEvent.setup();
+    const createCheckoutSession = vi.fn().mockRejectedValue(
+      new ApiError({
+        status: 503,
+        code: BILLING_PRICE_NOT_FOUND_CODE,
+        message: "No Stripe price configured for yearly billing.",
+      }),
+    );
+    const assignBillingUrl = vi.fn();
+    renderSettings(
+      createMockResourceApi(
+        { createCheckoutSession },
+        { entitlement: mockFreeAtLimitEntitlement },
+      ),
+      undefined,
+      { assignBillingUrl },
+    );
+
+    await user.click(await screen.findByRole("button", { name: "Bill yearly" }));
+    await user.click(
+      screen.getByRole("button", { name: "Upgrade to Premium" }),
+    );
+
+    expect(
+      await screen.findByRole("alert"),
+    ).toHaveTextContent(YEARLY_BILLING_UNAVAILABLE_MESSAGE);
+    expect(assignBillingUrl).not.toHaveBeenCalled();
+    expect(
+      screen.getByRole("button", { name: "Upgrade to Premium" }),
+    ).toBeEnabled();
   });
 
   it("refreshes /me and shows the current plan on 409 ALREADY_SUBSCRIBED", async () => {

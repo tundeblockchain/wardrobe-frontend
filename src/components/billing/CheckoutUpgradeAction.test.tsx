@@ -3,7 +3,11 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { ApiError } from "../../api/httpClient";
 import { mockFreeAtLimitEntitlement } from "../../api/mockResourceApi";
-import { ALREADY_SUBSCRIBED_CODE } from "../../api/billing";
+import {
+  ALREADY_SUBSCRIBED_CODE,
+  BILLING_PRICE_NOT_FOUND_CODE,
+  YEARLY_BILLING_UNAVAILABLE_MESSAGE,
+} from "../../api/billing";
 import { appPaths } from "../../routes/paths";
 import { renderWithProviders } from "../../test/renderWithProviders";
 import { ForbiddenUpgradePrompt } from "../dashboard/ForbiddenUpgradePrompt";
@@ -33,8 +37,13 @@ describe("CheckoutUpgradeAction", () => {
       }),
     );
 
+    expect(screen.getByRole("button", { name: "Bill monthly" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+
     await waitFor(() => {
-      expect(startCheckout).toHaveBeenCalledWith("basic");
+      expect(startCheckout).toHaveBeenCalledWith("basic", "monthly");
       expect(assignLocation).toHaveBeenCalledWith(
         "https://checkout.example.test/basic",
       );
@@ -64,12 +73,108 @@ describe("CheckoutUpgradeAction", () => {
       }),
     );
 
+    expect(screen.getByRole("button", { name: "Bill monthly" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+
     await waitFor(() => {
-      expect(startCheckout).toHaveBeenCalledWith("premium");
+      expect(startCheckout).toHaveBeenCalledWith("premium", "monthly");
       expect(assignLocation).toHaveBeenCalledWith(
         "https://checkout.example.test/premium",
       );
     });
+  });
+
+  it("sends yearly checkout from paywall prompts for both tiers", async () => {
+    const user = userEvent.setup();
+    const startCheckout = vi.fn().mockResolvedValue({
+      url: "https://checkout.example.test/yearly-basic",
+    });
+    const assignLocation = vi.fn();
+
+    const { unmount } = renderWithProviders(
+      <CatalogLimitPrompt
+        kind="wardrobe"
+        startCheckout={startCheckout}
+        assignLocation={assignLocation}
+      />,
+      { auth: { user: { id: "user-1" } } },
+    );
+
+    await user.click(screen.getByRole("button", { name: "Bill yearly" }));
+    await user.click(
+      screen.getByRole("button", {
+        name: "Upgrade to Basic to add more wardrobes",
+      }),
+    );
+
+    await waitFor(() => {
+      expect(startCheckout).toHaveBeenCalledWith("basic", "yearly");
+      expect(assignLocation).toHaveBeenCalledWith(
+        "https://checkout.example.test/yearly-basic",
+      );
+    });
+    unmount();
+
+    startCheckout.mockResolvedValue({
+      url: "https://checkout.example.test/yearly-premium",
+    });
+    renderWithProviders(
+      <ForbiddenUpgradePrompt
+        kind="premium"
+        startCheckout={startCheckout}
+        assignLocation={assignLocation}
+      />,
+      { auth: { user: { id: "user-1" } } },
+    );
+
+    await user.click(screen.getByRole("button", { name: "Bill yearly" }));
+    await user.click(
+      screen.getByRole("button", {
+        name: "Upgrade to Premium for Virtual Try On",
+      }),
+    );
+
+    await waitFor(() => {
+      expect(startCheckout).toHaveBeenCalledWith("premium", "yearly");
+      expect(assignLocation).toHaveBeenCalledWith(
+        "https://checkout.example.test/yearly-premium",
+      );
+    });
+  });
+
+  it("shows a friendly message when yearly checkout returns 503 BILLING_PRICE_NOT_FOUND", async () => {
+    const user = userEvent.setup();
+    const startCheckout = vi.fn().mockRejectedValue(
+      new ApiError({
+        status: 503,
+        code: BILLING_PRICE_NOT_FOUND_CODE,
+        message: "No Stripe price configured for yearly billing.",
+      }),
+    );
+    const assignLocation = vi.fn();
+
+    renderWithProviders(
+      <ForbiddenUpgradePrompt
+        kind="premium"
+        startCheckout={startCheckout}
+        assignLocation={assignLocation}
+      />,
+      { auth: { user: { id: "user-1" } } },
+    );
+
+    await user.click(screen.getByRole("button", { name: "Bill yearly" }));
+    await user.click(
+      screen.getByRole("button", {
+        name: "Upgrade to Premium for Virtual Try On",
+      }),
+    );
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      YEARLY_BILLING_UNAVAILABLE_MESSAGE,
+    );
+    expect(assignLocation).not.toHaveBeenCalled();
   });
 
   it("disables double clicks while checkout is starting", async () => {
@@ -260,6 +365,11 @@ describe("CheckoutUpgradeAction", () => {
     expect(
       screen.queryByRole("button", { name: /Upgrade to Premium/i }),
     ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("group", { name: "Billing interval" }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Bill monthly" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Bill yearly" })).not.toBeInTheDocument();
     unmount();
 
     renderWithProviders(
@@ -279,6 +389,9 @@ describe("CheckoutUpgradeAction", () => {
     ).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: /Upgrade to Basic/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("group", { name: "Billing interval" }),
     ).not.toBeInTheDocument();
     expect(startCheckout).not.toHaveBeenCalled();
   });
@@ -300,6 +413,9 @@ describe("CheckoutUpgradeAction", () => {
     ).toHaveAttribute("href", appPaths.appSettingsPlan);
     expect(
       screen.queryByRole("button", { name: /Upgrade to Premium/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("group", { name: "Billing interval" }),
     ).not.toBeInTheDocument();
   });
 });

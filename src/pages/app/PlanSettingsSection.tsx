@@ -12,13 +12,16 @@ import {
 import { useLocation } from "react-router-dom";
 import {
   assignBillingUrl as defaultAssignBillingUrl,
+  DEFAULT_BILLING_INTERVAL,
+  getBillingCheckoutErrorMessage,
   isAlreadySubscribedError,
   isNotStripePlanError,
   readBillingSessionUrl,
+  type BillingInterval,
 } from "../../api/billing";
-import { isApiError } from "../../api/httpClient";
 import type { ResourceApi } from "../../api/resourceApi";
 import type { PaidPlanTier } from "../../api/resourceTypes";
+import { BillingIntervalToggle } from "../../components/billing/BillingIntervalToggle";
 import { ResourceErrorState } from "../../components/dashboard/ResourceErrorState";
 import { ResourceLoadingState } from "../../components/dashboard/ResourceLoadingState";
 import { dashboardCopy } from "../../content/dashboardCopy";
@@ -51,7 +54,14 @@ export const PlanSettingsSection = ({
     null,
   );
   const [billingError, setBillingError] = useState("");
+  const [billingInterval, setBillingInterval] = useState<BillingInterval>(
+    DEFAULT_BILLING_INTERVAL,
+  );
   const isBillingBusy = billingAction !== null;
+
+  const handleIntervalChange = (nextInterval: BillingInterval) => {
+    setBillingInterval(nextInterval);
+  };
 
   const handleSectionRef = (node: HTMLElement | null) => {
     if (!node || hash !== `#${SETTINGS_PLAN_HASH}`) {
@@ -71,8 +81,7 @@ export const PlanSettingsSection = ({
       return;
     }
 
-    const serverMessage = isApiError(error) ? error.message.trim() : "";
-    setBillingError(serverMessage || fallback);
+    setBillingError(getBillingCheckoutErrorMessage(error, fallback));
   };
 
   const handleManageSubscription = async () => {
@@ -111,7 +120,10 @@ export const PlanSettingsSection = ({
     setBillingAction(tier);
     setBillingError("");
     try {
-      const session = await resourceApi.createCheckoutSession(tier);
+      const session = await resourceApi.createCheckoutSession(
+        tier,
+        billingInterval,
+      );
       assignBillingUrl(readBillingSessionUrl(session));
     } catch (error) {
       handleBillingFailure(error, copy.planCheckoutErrorFallback);
@@ -195,43 +207,50 @@ export const PlanSettingsSection = ({
               </Alert>
             ) : null}
             {paidTier === null ? (
-              <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
-                <Button
-                  type="button"
-                  variant="contained"
-                  color="primary"
-                  onClick={() => {
-                    void handleUpgrade("basic");
-                  }}
-                  onKeyDown={(event) => {
-                    handleUpgradeKeyDown(event, "basic");
-                  }}
-                  tabIndex={0}
-                  aria-label={copy.planUpgradeBasicAriaLabel}
+              <Stack spacing={2}>
+                <BillingIntervalToggle
+                  value={billingInterval}
+                  onChange={handleIntervalChange}
                   disabled={isBillingBusy}
-                >
-                  {billingAction === "basic"
-                    ? copy.planUpgradingLabel
-                    : copy.planUpgradeBasicLabel}
-                </Button>
-                <Button
-                  type="button"
-                  variant="contained"
-                  color="primary"
-                  onClick={() => {
-                    void handleUpgrade("premium");
-                  }}
-                  onKeyDown={(event) => {
-                    handleUpgradeKeyDown(event, "premium");
-                  }}
-                  tabIndex={0}
-                  aria-label={copy.planUpgradePremiumAriaLabel}
-                  disabled={isBillingBusy}
-                >
-                  {billingAction === "premium"
-                    ? copy.planUpgradingLabel
-                    : copy.planUpgradePremiumLabel}
-                </Button>
+                />
+                <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
+                  <Button
+                    type="button"
+                    variant="contained"
+                    color="primary"
+                    onClick={() => {
+                      void handleUpgrade("basic");
+                    }}
+                    onKeyDown={(event) => {
+                      handleUpgradeKeyDown(event, "basic");
+                    }}
+                    tabIndex={0}
+                    aria-label={copy.planUpgradeBasicAriaLabel}
+                    disabled={isBillingBusy}
+                  >
+                    {billingAction === "basic"
+                      ? copy.planUpgradingLabel
+                      : copy.planUpgradeBasicLabel}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="contained"
+                    color="primary"
+                    onClick={() => {
+                      void handleUpgrade("premium");
+                    }}
+                    onKeyDown={(event) => {
+                      handleUpgradeKeyDown(event, "premium");
+                    }}
+                    tabIndex={0}
+                    aria-label={copy.planUpgradePremiumAriaLabel}
+                    disabled={isBillingBusy}
+                  >
+                    {billingAction === "premium"
+                      ? copy.planUpgradingLabel
+                      : copy.planUpgradePremiumLabel}
+                  </Button>
+                </Stack>
               </Stack>
             ) : isStripePaidTier(paidTier) ? (
               <Button
