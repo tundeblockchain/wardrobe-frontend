@@ -135,7 +135,10 @@ describe("RecommendationsPage", () => {
     renderList("wd_work02", createEmptyResourceApi());
 
     expect(
-      await screen.findByRole("heading", { name: "No suggested outfits yet" }),
+      await screen.findByRole("heading", { name: "No suggestions yet" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Add more items to this wardrobe, then refresh."),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Refresh suggested outfits" }),

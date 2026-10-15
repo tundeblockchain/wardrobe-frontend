@@ -1,10 +1,14 @@
 import { describe, expect, it } from "vitest";
+import { NAME_MAX_LENGTH } from "./resourceTypes";
 import {
   DEFAULT_SUGGESTED_OUTFIT_NAME,
   getRecommendationReason,
   getRecommendationTitle,
+  MAX_ITEMS_PER_SLOT,
+  MAX_RECOMMENDATIONS,
   parseOutfitRecommendations,
   readSuggestedOutfitState,
+  resolveOutfitSaveName,
   SUGGESTED_OUTFIT_STATE_KEY,
   toCreateOutfitRequest,
   toOutfitRecommendationList,
@@ -110,6 +114,20 @@ describe("outfitRecommendations", () => {
         items: [{ itemId: "item_ivorymaxi01", slot: "DRESS" }],
       }),
     ).toBe(DEFAULT_SUGGESTED_OUTFIT_NAME);
+    expect(DEFAULT_SUGGESTED_OUTFIT_NAME).toBe("Suggested look");
+    expect(resolveOutfitSaveName("  ")).toBe("Suggested look");
+    expect(resolveOutfitSaveName("")).toBe("Suggested look");
+    expect(toCreateOutfitRequest(recommendation, "   ")).toEqual({
+      name: "Suggested look",
+      items: [
+        { itemId: "item_navytee01", slot: "TOP" },
+        { itemId: "item_ivorymaxi01", slot: "DRESS" },
+      ],
+    });
+    expect(
+      toCreateOutfitRequest(recommendation, `${"n".repeat(NAME_MAX_LENGTH)}x`)
+        .name,
+    ).toHaveLength(NAME_MAX_LENGTH);
     expect(toCreateOutfitRequest(recommendation)).toEqual({
       name: "Navy + cream look",
       items: [
@@ -144,5 +162,20 @@ describe("outfitRecommendations", () => {
     expect(readSuggestedOutfitState(undefined)).toBeUndefined();
     expect(readSuggestedOutfitState({})).toBeUndefined();
     expect(readSuggestedOutfitState({ [SUGGESTED_OUTFIT_STATE_KEY]: {} })).toBeUndefined();
+  });
+
+  it("keeps at most 8 recommendations and 6 items per slot", () => {
+    const extraTops = Array.from({ length: MAX_ITEMS_PER_SLOT + 2 }, (_, index) => ({
+      itemId: `item_top_${index}`,
+      slot: "TOP" as const,
+    }));
+    const rows = Array.from({ length: MAX_RECOMMENDATIONS + 3 }, (_, index) => ({
+      name: `Look ${index}`,
+      items: extraTops,
+    }));
+
+    const parsed = parseOutfitRecommendations({ recommendations: rows });
+    expect(parsed).toHaveLength(MAX_RECOMMENDATIONS);
+    expect(parsed[0]?.items).toHaveLength(MAX_ITEMS_PER_SLOT);
   });
 });

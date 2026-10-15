@@ -5,24 +5,17 @@ import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
 import {
   canUseAiTryOn,
   canUseOtherAi,
-  getCatalogKindForLimitCode,
-  getForbiddenUpgradeKind,
+  getRecommendationsPaywallKind,
 } from "../../api/entitlementGating";
+import { loadOutfitRecommendations } from "../../api/loadOutfitRecommendations";
 import {
   getRecommendationReason,
   getRecommendationTitle,
-  parseOutfitRecommendations,
   toSuggestedOutfitLocationState,
   toSuggestedOutfitView,
   type SuggestedOutfitView,
 } from "../../api/outfitRecommendations";
 import { isNotFoundError, type ResourceApi } from "../../api/resourceApi";
-import type {
-  ClothingItem,
-  Entitlement,
-  OutfitRecommendation,
-  Wardrobe,
-} from "../../api/resourceTypes";
 import { useResourceApi } from "../../api/useResourceApi";
 import { DashboardPage } from "../../components/dashboard/DashboardPage";
 import { ForbiddenUpgradePrompt } from "../../components/dashboard/ForbiddenUpgradePrompt";
@@ -42,45 +35,6 @@ export type RecommendationsPageProps = {
   wardrobeId?: string;
 };
 
-type RecommendationsPageData = {
-  entitlement: Entitlement;
-  wardrobe: Wardrobe;
-  items: ClothingItem[];
-  recommendations: OutfitRecommendation[];
-};
-
-const loadRecommendationsPage = async (
-  resourceApi: ResourceApi,
-  wardrobeId: string,
-  signal: AbortSignal,
-): Promise<RecommendationsPageData> => {
-  const [entitlement, detail] = await Promise.all([
-    resourceApi.getMe(),
-    resourceApi.getWardrobeDetail(wardrobeId),
-  ]);
-
-  if (!canUseAiTryOn(entitlement) && !canUseOtherAi(entitlement)) {
-    return {
-      entitlement,
-      wardrobe: detail.wardrobe,
-      items: detail.items,
-      recommendations: [],
-    };
-  }
-
-  const recommendationList = await resourceApi.listRecommendations(
-    wardrobeId,
-    { signal },
-  );
-
-  return {
-    entitlement,
-    wardrobe: detail.wardrobe,
-    items: detail.items,
-    recommendations: parseOutfitRecommendations(recommendationList),
-  };
-};
-
 export const RecommendationsPage = ({
   resourceApi: resourceApiProp,
   wardrobeId: wardrobeIdProp,
@@ -92,7 +46,7 @@ export const RecommendationsPage = ({
   const copy = dashboardCopy.recommendations;
   const loadPage = useMemo(
     () => (signal: AbortSignal) =>
-      loadRecommendationsPage(resourceApi, wardrobeId, signal),
+      loadOutfitRecommendations(resourceApi, wardrobeId, signal),
     [resourceApi, wardrobeId],
   );
   const query = useAbortableResourceQuery(
@@ -162,7 +116,7 @@ export const RecommendationsPage = ({
   }
 
   if (query.status === "error") {
-    const upgradeKind = getForbiddenUpgradeKind(query.error);
+    const upgradeKind = getRecommendationsPaywallKind(query.error);
     if (upgradeKind) {
       return (
         <DashboardPage
@@ -171,10 +125,7 @@ export const RecommendationsPage = ({
           description={copy.description}
           actions={backLink}
         >
-          <ForbiddenUpgradePrompt
-            kind={upgradeKind}
-            catalogKind={getCatalogKindForLimitCode(query.error.code)}
-          />
+          <ForbiddenUpgradePrompt kind={upgradeKind} />
         </DashboardPage>
       );
     }

@@ -30,6 +30,10 @@ export const isEntitlementAiRequiredError = (
   );
 };
 
+export const isForbiddenStatusError = (error: unknown): error is ApiError => {
+  return isApiError(error) && error.status === 403;
+};
+
 export const getForbiddenUpgradeKind = (
   error: unknown,
 ): ForbiddenUpgradeKind | undefined => {
@@ -42,6 +46,16 @@ export const getForbiddenUpgradeKind = (
   }
 
   return undefined;
+};
+
+export const getRecommendationsPaywallKind = (
+  error: unknown,
+): ForbiddenUpgradeKind | undefined => {
+  if (!isForbiddenStatusError(error)) {
+    return undefined;
+  }
+
+  return "premium";
 };
 
 export const getCatalogKindForLimitCode = (
