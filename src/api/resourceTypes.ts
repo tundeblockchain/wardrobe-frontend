@@ -249,21 +249,6 @@ export type ContentWipeResult = {
   s3Failures: number;
 };
 
-/** GET /me/events — job-done inbox. */
-export type JobEvent = {
-  eventId: string;
-  type: string;
-  createdAt: string;
-  readAt?: string;
-  title?: string;
-  message?: string;
-};
-
-export type JobEventList = {
-  events: JobEvent[];
-  unreadCount: number;
-};
-
 /** GET /me */
 export type Entitlement = {
   userId: string;

@@ -26,10 +26,6 @@ describe("createMockResourceApi", () => {
     await expect(api.createPortalSession()).resolves.toEqual({
       url: "https://billing.stripe.com/p/session/mock",
     });
-    await expect(api.listJobEvents()).resolves.toMatchObject({
-      unreadCount: 1,
-      events: [{ title: "Virtual Try On is ready" }],
-    });
     await expect(api.listWardrobes()).resolves.toEqual({
       wardrobes: mockWardrobes,
     });

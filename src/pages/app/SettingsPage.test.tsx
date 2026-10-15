@@ -628,9 +628,8 @@ describe("SettingsPage", () => {
     );
   });
 
-  it("does not render an Inbox card or fetch GET /me/events", async () => {
-    const listJobEvents = vi.fn();
-    renderSettings(createMockResourceApi({ listJobEvents }));
+  it("does not render an Inbox card", async () => {
+    renderSettings();
 
     expect(
       await screen.findByRole("heading", {
@@ -649,7 +648,6 @@ describe("SettingsPage", () => {
       screen.getByRole("heading", { name: "Virtual Try On" }),
     ).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Support" })).toBeInTheDocument();
-    expect(listJobEvents).not.toHaveBeenCalled();
   });
 
   it("links Contact us and Report a bug to the existing contact form", async () => {

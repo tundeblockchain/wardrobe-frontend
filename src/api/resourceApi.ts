@@ -1,8 +1,5 @@
 import { isMockApi } from "../config/mockApi";
-import type {
-  AuthenticatedApi,
-  ListJobEventsOptions,
-} from "./authenticatedApi";
+import type { AuthenticatedApi } from "./authenticatedApi";
 import { toOutfitRecommendationList } from "./outfitRecommendations";
 import {
   createCheckoutSession as requestCheckoutSession,
@@ -30,7 +27,6 @@ import {
   type CreateUploadResponse,
   type CreateWardrobeRequest,
   type Entitlement,
-  type JobEventList,
   type Outfit,
   type OutfitList,
   type OutfitRecommendationList,
@@ -43,8 +39,6 @@ import {
   type WardrobeDetail,
   type WardrobeList,
 } from "./resourceTypes";
-
-export type { ListJobEventsOptions } from "./authenticatedApi";
 
 export const wardrobeCollectionPath = "/wardrobes";
 export const itemCollectionPath = "/items";
@@ -147,7 +141,6 @@ export type ResourceApi = {
   getMe: () => Promise<Entitlement>;
   deleteAccount: () => Promise<AccountDeleteResult>;
   clearContent: () => Promise<ContentWipeResult>;
-  listJobEvents: (options?: ListJobEventsOptions) => Promise<JobEventList>;
   createCheckoutSession: (
     tier: CheckoutTier,
     interval?: BillingInterval,
@@ -249,12 +242,6 @@ export const createLiveResourceApi = (api: AuthenticatedApi): ResourceApi => {
 
   const clearContent = (): Promise<ContentWipeResult> => {
     return api.clearContent();
-  };
-
-  const listJobEvents = (
-    options?: ListJobEventsOptions,
-  ): Promise<JobEventList> => {
-    return api.listJobEvents(options);
   };
 
   const createCheckoutSession = (
@@ -525,7 +512,6 @@ export const createLiveResourceApi = (api: AuthenticatedApi): ResourceApi => {
     getMe,
     deleteAccount,
     clearContent,
-    listJobEvents,
     createCheckoutSession,
     createPortalSession,
     listWardrobes,

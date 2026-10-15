@@ -2,7 +2,6 @@ import type { BillingSession, CheckoutTier } from "./billing";
 import { catalogLimitError, isAtCatalogLimit } from "./catalogLimits";
 import { isAllowedUploadContentType } from "./catalogValidation";
 import { ApiError } from "./httpClient";
-import type { ListJobEventsOptions } from "./authenticatedApi";
 import type {
   ListWardrobeItemsOptions,
   ResourceApi,
@@ -23,7 +22,6 @@ import type {
   CreateWardrobeRequest,
   Entitlement,
   EntitlementLimits,
-  JobEvent,
   Outfit,
   OutfitRecommendation,
   OutfitRecommendationList,
@@ -215,18 +213,7 @@ export type MockResourceApiOptions = {
   items?: ClothingItem[];
   outfits?: Outfit[];
   aiProfiles?: AiProfile[];
-  jobEvents?: JobEvent[];
 };
-
-export const mockJobEvents: JobEvent[] = [
-  {
-    eventId: "evt_render01",
-    type: "JOB_DONE",
-    title: "Virtual Try On is ready",
-    message: "Sunday brunch render finished.",
-    createdAt: "2026-10-13T11:00:00.000Z",
-  },
-];
 
 export const mockContentWipeResult: ContentWipeResult = {
   keepAccount: true,
@@ -371,9 +358,6 @@ export const createMockResourceApi = (
   const items = (options.items ?? mockItems).map(cloneItemWithRender);
   const outfits = (options.outfits ?? mockOutfits).map(cloneOutfit);
   const aiProfiles = (options.aiProfiles ?? mockAiProfiles).map(cloneAiProfile);
-  const jobEvents = (options.jobEvents ?? mockJobEvents).map((event) => ({
-    ...event,
-  }));
   let entitlement = cloneEntitlement(options.entitlement ?? mockEntitlement);
   let renderCount = 0;
 
@@ -491,18 +475,6 @@ export const createMockResourceApi = (
   const createPortalSession = async (): Promise<BillingSession> => {
     return delay({
       url: "https://billing.stripe.com/p/session/mock",
-    });
-  };
-
-  const listJobEvents = async (
-    listOptions: ListJobEventsOptions = {},
-  ) => {
-    const unreadOnly = listOptions.unreadOnly !== false;
-    const unreadEvents = jobEvents.filter((event) => !event.readAt);
-    const events = unreadOnly ? unreadEvents : jobEvents;
-    return delay({
-      events: events.map((event) => ({ ...event })),
-      unreadCount: unreadEvents.length,
     });
   };
 
@@ -1036,7 +1008,6 @@ export const createMockResourceApi = (
     getMe,
     deleteAccount,
     clearContent,
-    listJobEvents,
     createCheckoutSession,
     createPortalSession,
     listWardrobes,
@@ -1100,7 +1071,6 @@ const rejectAll = (error: ApiError): ResourceApi => {
     getMe: reject,
     deleteAccount: reject,
     clearContent: reject,
-    listJobEvents: reject,
     createCheckoutSession: reject,
     createPortalSession: reject,
     listWardrobes: reject,

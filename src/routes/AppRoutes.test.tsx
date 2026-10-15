@@ -415,14 +415,17 @@ describe("AppRoutes", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("renders Inbox at /app/inbox", async () => {
-    renderAppRoutes(appPaths.appInbox, { user: { id: "user-1" } });
+  it("does not resolve /app/inbox as a dedicated page", async () => {
+    renderAppRoutes("/app/inbox", { user: { id: "user-1" } });
 
     expect(
-      await screen.findByRole("heading", { level: 1, name: "Inbox" }),
+      await screen.findByRole("heading", { level: 1, name: "Your closet" }),
     ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { level: 1, name: "Inbox" }),
+    ).not.toBeInTheDocument();
     expect(screen.getByTestId("route-location")).toHaveTextContent(
-      appPaths.appInbox,
+      "/app/inbox",
     );
   });
 

@@ -32,7 +32,6 @@ const createApi = (request: AuthenticatedApi["request"]): AuthenticatedApi => {
     getMe: vi.fn(),
     deleteAccount: vi.fn(),
     clearContent: vi.fn(),
-    listJobEvents: vi.fn(),
   };
 };
 

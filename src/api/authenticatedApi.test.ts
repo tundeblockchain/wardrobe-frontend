@@ -114,7 +114,7 @@ describe("createAuthenticatedApi", () => {
     expect(ACCOUNT_DELETE_TIMEOUT_MS).toBe(60_000);
   });
 
-  it("clears content with DELETE /me/content and lists GET /me/events", async () => {
+  it("clears content with DELETE /me/content", async () => {
     const wipeBody = {
       keepAccount: true,
       deletedWardrobes: 1,
@@ -124,44 +124,18 @@ describe("createAuthenticatedApi", () => {
       deletedS3Objects: 2,
       s3Failures: 0,
     };
-    const eventsBody = {
-      events: [
-        {
-          eventId: "evt_1",
-          type: "JOB_DONE",
-          createdAt: "2026-10-13T11:00:00.000Z",
-        },
-      ],
-      unreadCount: 1,
-    };
-    const fetchImpl = vi
-      .fn()
-      .mockResolvedValueOnce(createJsonResponse({ status: 200, body: wipeBody }))
-      .mockResolvedValueOnce(
-        createJsonResponse({ status: 200, body: eventsBody }),
-      )
-      .mockResolvedValueOnce(
-        createJsonResponse({ status: 200, body: eventsBody }),
-      );
+    const fetchImpl = vi.fn().mockResolvedValue(
+      createJsonResponse({ status: 200, body: wipeBody }),
+    );
     const { api, signOut } = createApi({
       fetchImpl: fetchImpl as typeof fetch,
     });
 
     await expect(api.clearContent()).resolves.toEqual(wipeBody);
-    await expect(api.listJobEvents()).resolves.toEqual(eventsBody);
-    await expect(api.listJobEvents({ unreadOnly: false })).resolves.toEqual(
-      eventsBody,
-    );
     expect(fetchImpl.mock.calls[0]?.[0]).toBe(
       "https://api.example.com/me/content",
     );
     expect((fetchImpl.mock.calls[0]?.[1] as RequestInit).method).toBe("DELETE");
-    expect(fetchImpl.mock.calls[1]?.[0]).toBe(
-      "https://api.example.com/me/events",
-    );
-    expect(fetchImpl.mock.calls[2]?.[0]).toBe(
-      "https://api.example.com/me/events?unreadOnly=false",
-    );
     expect(signOut).not.toHaveBeenCalled();
   });
 

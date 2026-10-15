@@ -109,18 +109,6 @@ export const dashboardCopy = {
       "Couldn't delete this account. Sign in and try again.",
     cancelLabel: "Cancel",
   },
-  inbox: {
-    title: "Inbox",
-    description: "Job updates for Virtual Try On and other account activity.",
-    loadingLabel: "Loading inbox",
-    emptyTitle: "No inbox messages",
-    emptyDescription: "Job updates will appear here when they are ready.",
-    errorTitle: "Couldn't load inbox",
-    errorDescription:
-      "Try again in a moment. Your inbox messages were not changed.",
-    retryLabel: "Try loading inbox again",
-    unreadLabel: "unread",
-  },
   home: {
     title: "Your closet",
     description: "Open a wardrobe to browse its clothing items.",
