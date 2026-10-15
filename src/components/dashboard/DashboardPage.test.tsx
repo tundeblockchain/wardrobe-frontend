@@ -4,7 +4,7 @@ import { renderWithProviders } from "../../test/renderWithProviders";
 import { DashboardPage } from "./DashboardPage";
 
 describe("DashboardPage", () => {
-  it("fills the main column instead of centering a max-width container", () => {
+  it("fills the paper wrapper without adding its own card padding", () => {
     renderWithProviders(
       <DashboardPage
         headingId="wardrobes-heading"
@@ -20,9 +20,14 @@ describe("DashboardPage", () => {
     expect(container).toHaveStyle({
       maxWidth: "none",
       width: "100%",
+      minWidth: "0px",
       marginLeft: "0px",
       marginRight: "0px",
+      paddingLeft: "0px",
+      paddingRight: "0px",
     });
-    expect(container).toHaveStyle({ paddingLeft: "24px", paddingRight: "24px" });
+    expect(
+      screen.getByRole("heading", { level: 1, name: "Wardrobes" }),
+    ).toBeInTheDocument();
   });
 });

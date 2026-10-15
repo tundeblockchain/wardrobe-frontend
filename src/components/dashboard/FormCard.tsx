@@ -1,5 +1,6 @@
 import type { FormEvent, KeyboardEvent, ReactNode } from "react";
 import { Button, Paper, Stack, Typography } from "@mui/material";
+import { useDashboardPaper } from "./dashboardPaperContext";
 
 export const FORM_CARD_TEST_ID = "form-card";
 export const FORM_CARD_HEADER_TEST_ID = "form-card-header";
@@ -36,6 +37,7 @@ export const FormCard = ({
   const isSubmitBusy = isSubmitting || isSubmitDisabled;
   const submitButtonLabel =
     isSubmitting && submittingLabel ? submittingLabel : submitLabel;
+  const isInsideDashboardPaper = useDashboardPaper();
 
   const handleCancel = () => {
     onCancel();
@@ -63,18 +65,35 @@ export const FormCard = ({
     <Paper
       elevation={0}
       data-testid={FORM_CARD_TEST_ID}
-      sx={(theme) => ({
-        width: "100%",
-        maxWidth: FORM_CARD_MAX_WIDTH,
-        minWidth: 0,
-        mx: "auto",
-        boxSizing: "border-box",
-        p: { xs: 2.5, sm: 3 },
-        border: 1,
-        borderColor: theme.palette.divider,
-        bgcolor: theme.palette.background.paper,
-        color: theme.palette.text.primary,
-      })}
+      sx={(theme) =>
+        isInsideDashboardPaper
+          ? {
+              width: "100%",
+              maxWidth: "none",
+              minWidth: 0,
+              mx: 0,
+              boxSizing: "border-box",
+              p: 0,
+              border: 0,
+              boxShadow: "none",
+              bgcolor: "transparent",
+              color: theme.palette.text.primary,
+              overflow: "visible",
+            }
+          : {
+              width: "100%",
+              maxWidth: FORM_CARD_MAX_WIDTH,
+              minWidth: 0,
+              mx: "auto",
+              boxSizing: "border-box",
+              p: { xs: 2.5, sm: 3 },
+              border: 1,
+              borderColor: theme.palette.divider,
+              bgcolor: theme.palette.background.paper,
+              color: theme.palette.text.primary,
+              overflow: "visible",
+            }
+      }
     >
       <Stack
         component="form"

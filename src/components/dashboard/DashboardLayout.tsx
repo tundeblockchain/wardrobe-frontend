@@ -8,6 +8,7 @@ import { AppMain } from "../../layout/AppMain";
 import { RouteFallback } from "../../routes/RouteFallback";
 import { DashboardThemeProvider } from "../../theme/DashboardThemeProvider";
 import { AppSidebar } from "./AppSidebar";
+import { DashboardPaper } from "./DashboardPaper";
 import { TopBar } from "./TopBar";
 import {
   readSidebarCollapsed,
@@ -79,9 +80,11 @@ export const DashboardLayout = () => {
         }}
       >
         <AppMain>
-          <Suspense fallback={<RouteFallback />}>
-            <Outlet />
-          </Suspense>
+          <DashboardPaper>
+            <Suspense fallback={<RouteFallback />}>
+              <Outlet />
+            </Suspense>
+          </DashboardPaper>
         </AppMain>
         <AppFooter />
       </Box>
