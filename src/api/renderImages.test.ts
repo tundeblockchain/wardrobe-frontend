@@ -1,9 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  mapRenderGalleryNewestFirst,
-  mapRenderImageUrls,
-  type RenderImageSource,
-} from "./renderImages";
+import { mapRenderImageUrls, type RenderImageSource } from "./renderImages";
 
 describe("mapRenderImageUrls", () => {
   it("keeps renderImageUrls in the backend newest-first order", () => {
@@ -102,41 +98,3 @@ describe("mapRenderImageUrls", () => {
   });
 });
 
-describe("mapRenderGalleryNewestFirst", () => {
-  it("orders a gallery newest first across items and outfits", () => {
-    const urls = mapRenderGalleryNewestFirst([
-      {
-        renderHistory: [
-          {
-            imageUrl: "https://cdn.example.com/item-old.jpg",
-            createdAt: "2026-08-01T09:00:00.000Z",
-          },
-        ],
-      },
-      {
-        renderImageUrls: ["https://cdn.example.com/outfit-new.jpg"],
-        renderHistory: [
-          {
-            imageUrl: "https://cdn.example.com/outfit-new.jpg",
-            createdAt: "2026-10-12T18:00:00.000Z",
-          },
-        ],
-      },
-      {
-        render: { imageUrl: "https://cdn.example.com/item-mid.jpg" },
-        renderHistory: [
-          {
-            imageUrl: "https://cdn.example.com/item-mid.jpg",
-            createdAt: "2026-09-15T12:00:00.000Z",
-          },
-        ],
-      },
-    ]);
-
-    expect(urls).toEqual([
-      "https://cdn.example.com/outfit-new.jpg",
-      "https://cdn.example.com/item-mid.jpg",
-      "https://cdn.example.com/item-old.jpg",
-    ]);
-  });
-});

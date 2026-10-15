@@ -18,6 +18,7 @@ export type FormCardProps = {
   submittingLabel?: string;
   isSubmitting?: boolean;
   isSubmitDisabled?: boolean;
+  fullWidth?: boolean;
   onSubmit: () => void;
 };
 
@@ -31,6 +32,7 @@ export const FormCard = ({
   submittingLabel,
   isSubmitting = false,
   isSubmitDisabled = false,
+  fullWidth = false,
   onSubmit,
 }: FormCardProps) => {
   const resolvedCancelAriaLabel = cancelAriaLabel ?? cancelLabel;
@@ -38,6 +40,7 @@ export const FormCard = ({
   const submitButtonLabel =
     isSubmitting && submittingLabel ? submittingLabel : submitLabel;
   const isInsideDashboardPaper = useDashboardPaper();
+  const stretchToContainer = isInsideDashboardPaper || fullWidth;
 
   const handleCancel = () => {
     onCancel();
@@ -71,6 +74,7 @@ export const FormCard = ({
               width: "100%",
               maxWidth: "none",
               minWidth: 0,
+              alignSelf: "stretch",
               mx: 0,
               boxSizing: "border-box",
               p: 0,
@@ -82,9 +86,10 @@ export const FormCard = ({
             }
           : {
               width: "100%",
-              maxWidth: FORM_CARD_MAX_WIDTH,
+              maxWidth: stretchToContainer ? "none" : FORM_CARD_MAX_WIDTH,
               minWidth: 0,
-              mx: "auto",
+              alignSelf: stretchToContainer ? "stretch" : "auto",
+              mx: stretchToContainer ? 0 : "auto",
               boxSizing: "border-box",
               p: { xs: 2.5, sm: 3 },
               border: 1,
@@ -101,6 +106,7 @@ export const FormCard = ({
         onSubmit={handleSubmit}
         noValidate
         aria-label={submitLabel}
+        sx={{ minWidth: 0, width: "100%" }}
       >
         <Stack
           direction="row"

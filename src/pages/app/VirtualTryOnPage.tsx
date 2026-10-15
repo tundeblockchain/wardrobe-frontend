@@ -31,7 +31,7 @@ import {
   getItemImageUrl,
   getOutfitImageUrl,
 } from "../../api/resourceDisplay";
-import { mapRenderGalleryNewestFirst } from "../../api/renderImages";
+import { mapRenderImageUrls } from "../../api/renderImages";
 import type { ResourceApi } from "../../api/resourceApi";
 import type {
   AiProfile,
@@ -50,7 +50,6 @@ import {
   HorizontalResourceCardItem,
   HorizontalResourceCardList,
 } from "../../components/dashboard/HorizontalResourceCardList";
-import { ResourceEmptyState } from "../../components/dashboard/ResourceEmptyState";
 import { ResourceErrorState } from "../../components/dashboard/ResourceErrorState";
 import { ResourceImage } from "../../components/dashboard/ResourceImage";
 import { ResourceLoadingState } from "../../components/dashboard/ResourceLoadingState";
@@ -218,12 +217,9 @@ const VirtualTryOnReady = ({
     outfitId,
   );
 
-  const galleryUrls = mapRenderGalleryNewestFirst([
-    ...data.items,
-    ...data.outfits,
-    ...renderedItems,
-    ...renderedOutfits,
-  ]);
+  const resultUrls = [...renderedItems, ...renderedOutfits].flatMap(
+    (sourceItem) => mapRenderImageUrls(sourceItem),
+  );
 
   const handleSourceChange = (event: ChangeEvent<HTMLInputElement>) => {
     setSource(event.target.value as VirtualTryOnSource);
@@ -354,22 +350,39 @@ const VirtualTryOnReady = ({
       title={copy.title}
       description={copy.description}
     >
-      <Stack spacing={4} sx={{ minWidth: 0, width: "100%" }}>
-        <Stack spacing={2} component="section" aria-label={copy.galleryLabel}>
-          <Typography variant="h2" component="h2">
-            {copy.galleryLabel}
+      <FormCard
+        title={copy.title}
+        fullWidth
+        onCancel={handleCancel}
+        submitLabel={copy.submitLabel}
+        submittingLabel={copy.submittingLabel}
+        isSubmitting={isSubmitting}
+        onSubmit={() => {
+          void handleSubmit();
+        }}
+      >
+        {formError ? (
+          <Alert severity="error" role="alert">
+            {`${copy.renderErrorTitle}. ${formError}`}
+          </Alert>
+        ) : null}
+        {fieldError ? (
+          <Alert severity="error" role="alert">
+            {fieldError}
+          </Alert>
+        ) : null}
+        {statusMessage ? (
+          <Typography variant="body2" color="text.secondary" role="status">
+            {statusMessage}
           </Typography>
-          {statusMessage ? (
-            <Typography variant="body2" color="text.secondary" role="status">
-              {statusMessage}
-            </Typography>
-          ) : null}
-          {galleryUrls.length === 0 ? (
-            <ResourceEmptyState
-              title={copy.galleryEmptyTitle}
-              description={copy.galleryEmptyDescription}
-            />
-          ) : (
+        ) : null}
+        {resultUrls.length > 0 ? (
+          <Stack
+            spacing={2}
+            component="section"
+            aria-label={copy.resultLabel}
+            sx={{ minWidth: 0, width: "100%" }}
+          >
             <Box
               component="ul"
               sx={{
@@ -383,9 +396,10 @@ const VirtualTryOnReady = ({
                 listStyle: "none",
                 p: 0,
                 m: 0,
+                width: "100%",
               }}
             >
-              {galleryUrls.map((imageUrl, index) => (
+              {resultUrls.map((imageUrl, index) => (
                 <Box key={`${imageUrl}-${index}`} component="li">
                   <Box
                     sx={{
@@ -404,29 +418,9 @@ const VirtualTryOnReady = ({
                 </Box>
               ))}
             </Box>
-          )}
-        </Stack>
-        <FormCard
-          title={copy.title}
-          onCancel={handleCancel}
-          submitLabel={copy.submitLabel}
-          submittingLabel={copy.submittingLabel}
-          isSubmitting={isSubmitting}
-          onSubmit={() => {
-            void handleSubmit();
-          }}
-        >
-          {formError ? (
-            <Alert severity="error" role="alert">
-              {`${copy.renderErrorTitle}. ${formError}`}
-            </Alert>
-          ) : null}
-          {fieldError ? (
-            <Alert severity="error" role="alert">
-              {fieldError}
-            </Alert>
-          ) : null}
-          <FormControl>
+          </Stack>
+        ) : null}
+        <FormControl sx={{ minWidth: 0, width: "100%" }}>
             <FormLabel id="virtual-try-on-source-label">
               {copy.sourceLabel}
             </FormLabel>
@@ -460,6 +454,7 @@ const VirtualTryOnReady = ({
               setAiProfileId("");
             }}
             select
+            fullWidth
             slotProps={{
               htmlInput: { "aria-label": copy.wardrobeLabel },
             }}
@@ -590,9 +585,8 @@ const VirtualTryOnReady = ({
                 })}
               </HorizontalResourceCardList>
             )}
-          </FormControl>
-        </FormCard>
-      </Stack>
+        </FormControl>
+      </FormCard>
     </DashboardPage>
   );
 };

@@ -9,6 +9,11 @@ import {
   createMockResourceApi,
   createOtherAiOffResourceApi,
 } from "../../api/mockResourceApi";
+import {
+  DASHBOARD_PAPER_TEST_ID,
+  DashboardPaper,
+} from "../../components/dashboard/DashboardPaper";
+import { FORM_CARD_TEST_ID } from "../../components/dashboard/FormCard";
 import { HORIZONTAL_RESOURCE_CARD_LIST_TEST_ID } from "../../components/dashboard/HorizontalResourceCardList";
 import {
   expectFormInsideSharedCard,
@@ -63,20 +68,49 @@ describe("VirtualTryOnPage", () => {
     expectSharedFormCardAbsent();
   });
 
-  it("shows the Virtual Try On gallery above the form", async () => {
+  it("does not render the Virtual Try On gallery section", async () => {
     renderPage(createMockResourceApi());
 
     await expectFormInsideSharedCard("Start Virtual Try On");
-    const gallery = screen.getByRole("region", {
-      name: "Virtual Try On gallery",
-    });
+    expect(
+      screen.queryByRole("region", { name: "Virtual Try On gallery" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: "Virtual Try On gallery" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: "No Virtual Try On renders yet" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("img", { name: "Virtual Try On render 1" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("spans the Virtual Try On card across the paper content area", async () => {
+    renderWithProviders(
+      <DashboardPaper>
+        <VirtualTryOnPage resourceApi={createMockResourceApi()} />
+      </DashboardPaper>,
+      { auth: { user: { id: "user-1" } } },
+    );
+
+    await expectFormInsideSharedCard("Start Virtual Try On");
+    const paper = screen.getByTestId(DASHBOARD_PAPER_TEST_ID);
+    const card = screen.getByTestId(FORM_CARD_TEST_ID);
     const form = screen.getByRole("form", { name: "Start Virtual Try On" });
+    expect(paper).toContainElement(card);
+    expect(card).toContainElement(form);
+    expect(card).toHaveStyle({
+      width: "100%",
+      maxWidth: "none",
+      alignSelf: "stretch",
+    });
+    expect(form).toHaveStyle({
+      width: "100%",
+    });
     expect(
-      gallery.compareDocumentPosition(form) & Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
-    expect(
-      screen.getByRole("img", { name: "Virtual Try On render 1" }),
-    ).toHaveAttribute("src", "/screenshots/try-on-ivory-maxi-390.jpg");
+      screen.getByRole("combobox", { name: "Wardrobe" }).closest(".MuiFormControl-root"),
+    ).toHaveClass("MuiFormControl-fullWidth");
   });
 
   it("puts clothing items before Virtual Profiles in the form", async () => {
@@ -271,8 +305,11 @@ describe("VirtualTryOnPage", () => {
       screen.getByRole("heading", { level: 1, name: "Virtual Try On" }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("img", { name: "Virtual Try On render 1" }),
-    ).toHaveAttribute("src", "/screenshots/try-on-ivory-maxi-390.jpg");
+      screen.queryByRole("region", { name: "Virtual Try On gallery" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("img", { name: "Virtual Try On render 1" }),
+    ).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("checkbox", { name: "Navy tee" }));
     await user.click(screen.getByRole("button", { name: "Weekday look" }));
@@ -288,8 +325,17 @@ describe("VirtualTryOnPage", () => {
       aiProfileId: "aip_personal01",
     });
     expect(
-      await screen.findByRole("img", { name: "Virtual Try On render 1" }),
+      await screen.findByRole("status"),
+    ).toHaveTextContent("Virtual Try On is processing.");
+    const result = screen.getByRole("region", {
+      name: "Virtual Try On result",
+    });
+    expect(
+      within(result).getByRole("img", { name: "Virtual Try On render 1" }),
     ).toHaveAttribute("src", "/screenshots/try-on-started.jpg");
+    expect(
+      screen.queryByRole("region", { name: "Virtual Try On gallery" }),
+    ).not.toBeInTheDocument();
   });
 
   it("sends the same Virtual Try On payload for a preset profile", async () => {
@@ -347,6 +393,12 @@ describe("VirtualTryOnPage", () => {
     expect(renderOutfit.mock.calls[0]?.[2]).toEqual({
       aiProfileId: "aip_personal01",
     });
+    expect(
+      await screen.findByRole("status"),
+    ).toHaveTextContent("Virtual Try On is processing.");
+    expect(
+      screen.getByRole("img", { name: "Virtual Try On render 1" }),
+    ).toHaveAttribute("src", "/screenshots/try-on-outfit.jpg");
   });
 
   it("renders an empty picker when there are no Virtual Profiles", async () => {

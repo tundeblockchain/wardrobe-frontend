@@ -22,11 +22,6 @@ export type RenderImageSource = {
   render?: { imageUrl?: string | null } | null;
 };
 
-export type DatedRenderImage = {
-  imageUrl: string;
-  createdAt?: string;
-};
-
 const readOptionalUrl = (
   value: string | null | undefined,
 ): string | undefined => {
@@ -70,44 +65,5 @@ export const mapRenderImageUrls = (source: RenderImageSource): string[] => {
   }
 
   uniquePush(urls, seen, readOptionalUrl(source.render?.imageUrl));
-  return urls;
-};
-
-export const mapRenderGalleryEntries = (
-  source: RenderImageSource,
-): DatedRenderImage[] => {
-  const historyByUrl = new Map<string, string>();
-  for (const entry of source.renderHistory ?? []) {
-    const url = readOptionalUrl(entry.imageUrl);
-    const createdAt = entry.createdAt?.trim();
-    if (url && createdAt && !historyByUrl.has(url)) {
-      historyByUrl.set(url, createdAt);
-    }
-  }
-
-  return mapRenderImageUrls(source).map((imageUrl, index) => {
-    const createdAt = historyByUrl.get(imageUrl);
-    return createdAt
-      ? { imageUrl, createdAt }
-      : { imageUrl, createdAt: String(index).padStart(4, "0") };
-  });
-};
-
-export const mapRenderGalleryNewestFirst = (
-  sources: RenderImageSource[],
-): string[] => {
-  const seen = new Set<string>();
-  const entries = sources.flatMap((source) => mapRenderGalleryEntries(source));
-  entries.sort((left, right) => {
-    const leftAt = left.createdAt ?? "";
-    const rightAt = right.createdAt ?? "";
-    return rightAt.localeCompare(leftAt);
-  });
-
-  const urls: string[] = [];
-  for (const entry of entries) {
-    uniquePush(urls, seen, entry.imageUrl);
-  }
-
   return urls;
 };
