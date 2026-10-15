@@ -1,6 +1,7 @@
 import type { CatalogKind, EntitlementLimits } from "../api/resourceTypes";
 import { getFreePlanIncludesCopy } from "./catalogLimitCopy";
 import { dashboardCopy } from "./dashboardCopy";
+import { featureItems } from "./featureItems";
 
 export const pricingCopy = {
   title: "Pricing",
@@ -54,9 +55,12 @@ export const getFreePlanFeatureLines = (
   });
 
   if (limitLines.length === 0) {
+    const catalogCopy = featureItems.find((item) => item.id === "catalog");
+    const outfitsCopy = featureItems.find((item) => item.id === "outfits");
     return [
-      dashboardCopy.upgrade.basic.description,
-      pricingCopy.premiumFeature,
+      catalogCopy?.description ?? dashboardCopy.upgrade.basic.description,
+      outfitsCopy?.description ?? dashboardCopy.home.emptyDescription,
+      pricingCopy.premiumTitle,
     ];
   }
 

@@ -27,6 +27,7 @@ import { StatusCard } from "../components/StatusCard";
 import { SectionSurface } from "../components/surfaces/SectionSurface";
 import { getPublicAppEnv } from "../config/env";
 import { getPaidTier } from "../content/planDisplay";
+import { DashboardThemeProvider } from "../theme/DashboardThemeProvider";
 import {
   getBasicPlanFeatureLines,
   getFreePlanFeatureLines,
@@ -369,22 +370,24 @@ export const PricingPage = ({
   }
 
   return (
-    <SectionSurface
-      component="article"
-      variant="mist"
-      aria-labelledby="pricing-heading"
-      sx={{
-        py: { xs: 6, md: 8 },
-      }}
-    >
-      <Container maxWidth="lg">
-        <DashboardPaper>
-          <Stack spacing={4}>
-            {heading}
-            {body}
-          </Stack>
-        </DashboardPaper>
-      </Container>
-    </SectionSurface>
+    <DashboardThemeProvider>
+      <SectionSurface
+        component="article"
+        variant="mist"
+        aria-labelledby="pricing-heading"
+        sx={{
+          py: { xs: 6, md: 8 },
+        }}
+      >
+        <Container maxWidth="lg">
+          <DashboardPaper>
+            <Stack spacing={4}>
+              {heading}
+              {body}
+            </Stack>
+          </DashboardPaper>
+        </Container>
+      </SectionSurface>
+    </DashboardThemeProvider>
   );
 };
