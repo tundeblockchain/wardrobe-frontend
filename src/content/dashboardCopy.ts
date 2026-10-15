@@ -177,13 +177,13 @@ export const dashboardCopy = {
     description:
       "Looks suggested from clothing items you already own. Refresh for a new set.",
     loadingLabel: "Loading suggested outfits",
-    emptyTitle: "No suggested outfits yet",
-    emptyDescription:
-      "Add more clothing items to this wardrobe, then refresh to see suggested looks.",
+    emptyTitle: "No suggestions yet",
+    emptyDescription: "Add more items to this wardrobe, then refresh.",
     errorTitle: "Couldn't load suggested outfits",
     errorDescription:
       "Try again in a moment. Your saved outfits were not changed.",
     retryLabel: "Try loading suggested outfits again",
+    retryButtonLabel: "Retry",
     refreshLabel: "Refresh",
     refreshAriaLabel: "Refresh suggested outfits",
     backLabel: "Back to wardrobe",

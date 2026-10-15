@@ -1,5 +1,6 @@
+import { useState } from "react";
 import StyleOutlined from "@mui/icons-material/StyleOutlined";
-import { Box, Button } from "@mui/material";
+import { Box, Button, Stack, Typography } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 import { getOutfitImageUrl } from "../../api/resourceDisplay";
 import type { ResourceApi } from "../../api/resourceApi";
@@ -10,6 +11,10 @@ import { ResourceCardGrid } from "../../components/dashboard/ResourceCardGrid";
 import { ResourceEmptyState } from "../../components/dashboard/ResourceEmptyState";
 import { ResourceErrorState } from "../../components/dashboard/ResourceErrorState";
 import { ResourceLoadingState } from "../../components/dashboard/ResourceLoadingState";
+import {
+  SuggestedOutfitsEmptyPanel,
+  SuggestedOutfitsPanel,
+} from "../../components/dashboard/SuggestedOutfitsPanel";
 import { dashboardCopy } from "../../content/dashboardCopy";
 import { useResourceQuery } from "../../hooks/useResourceQuery";
 import { appPaths, getAppOutfitEditPath } from "../../routes/paths";
@@ -32,7 +37,22 @@ export const OutfitsPage = ({
   const defaultResourceApi = useResourceApi();
   const resourceApi = resourceApiProp ?? defaultResourceApi;
   const copy = dashboardCopy.outfits;
-  const query = useResourceQuery("outfits", resourceApi.listOutfits);
+  const outfitsQuery = useResourceQuery("outfits", resourceApi.listOutfits);
+  const wardrobesQuery = useResourceQuery(
+    "wardrobes",
+    resourceApi.listWardrobes,
+  );
+  const [selectedWardrobeId, setSelectedWardrobeId] = useState("");
+  const wardrobes =
+    wardrobesQuery.status === "ready" ? wardrobesQuery.data.wardrobes : [];
+  const wardrobeId = selectedWardrobeId || wardrobes[0]?.wardrobeId || "";
+  const hasSavedOutfits =
+    outfitsQuery.status === "ready" && outfitsQuery.data.outfits.length > 0;
+
+  const handleWardrobeChange = (nextWardrobeId: string) => {
+    setSelectedWardrobeId(nextWardrobeId);
+  };
+
   const addAction = (
     <Button
       component={RouterLink}
@@ -46,60 +66,62 @@ export const OutfitsPage = ({
     </Button>
   );
 
-  if (query.status === "loading") {
-    return (
-      <DashboardPage
-        headingId="outfits-heading"
-        title={copy.title}
-        description={copy.description}
+  const suggestions =
+    wardrobeId.length > 0 ? (
+      <SuggestedOutfitsPanel
+        resourceApi={resourceApi}
+        wardrobeId={wardrobeId}
+        wardrobes={wardrobes}
+        onWardrobeChange={handleWardrobeChange}
+      />
+    ) : wardrobesQuery.status === "loading" ? (
+      <Stack
+        spacing={2}
+        component="section"
+        aria-label={dashboardCopy.recommendations.listLabel}
       >
-        <ResourceLoadingState label={copy.loadingLabel} />
-      </DashboardPage>
+        <Typography variant="h2" component="h2">
+          {dashboardCopy.recommendations.title}
+        </Typography>
+        <ResourceLoadingState
+          label={dashboardCopy.recommendations.loadingLabel}
+        />
+      </Stack>
+    ) : (
+      <SuggestedOutfitsEmptyPanel />
     );
-  }
 
-  if (query.status === "error") {
-    return (
-      <DashboardPage
-        headingId="outfits-heading"
-        title={copy.title}
-        description={copy.description}
-      >
+  const outfitsSection = (() => {
+    if (outfitsQuery.status === "loading") {
+      return <ResourceLoadingState label={copy.loadingLabel} />;
+    }
+
+    if (outfitsQuery.status === "error") {
+      return (
         <ResourceErrorState
           title={copy.errorTitle}
           description={copy.errorDescription}
           retryLabel={copy.retryLabel}
-          onRetry={query.handleRetry}
+          onRetry={outfitsQuery.handleRetry}
         />
-      </DashboardPage>
-    );
-  }
+      );
+    }
 
-  if (query.data.outfits.length === 0) {
+    if (outfitsQuery.data.outfits.length === 0) {
+      return (
+        <Stack spacing={2}>
+          <ResourceEmptyState
+            title={copy.emptyTitle}
+            description={copy.emptyDescription}
+          />
+          {addAction}
+        </Stack>
+      );
+    }
+
     return (
-      <DashboardPage
-        headingId="outfits-heading"
-        title={copy.title}
-        description={copy.description}
-      >
-        <ResourceEmptyState
-          title={copy.emptyTitle}
-          description={copy.emptyDescription}
-        />
-        {addAction}
-      </DashboardPage>
-    );
-  }
-
-  return (
-    <DashboardPage
-      headingId="outfits-heading"
-      title={copy.title}
-      description={copy.description}
-      actions={addAction}
-    >
       <ResourceCardGrid label="Outfits">
-        {query.data.outfits.map((outfit) => {
+        {outfitsQuery.data.outfits.map((outfit) => {
           const titleId = `outfit-${outfit.outfitId}-title`;
           return (
             <Box key={outfit.outfitId} component="li" sx={{ minWidth: 0 }}>
@@ -131,6 +153,20 @@ export const OutfitsPage = ({
           );
         })}
       </ResourceCardGrid>
+    );
+  })();
+
+  return (
+    <DashboardPage
+      headingId="outfits-heading"
+      title={copy.title}
+      description={copy.description}
+      actions={hasSavedOutfits ? addAction : undefined}
+    >
+      <Stack spacing={4}>
+        {outfitsSection}
+        {outfitsQuery.status === "error" ? null : suggestions}
+      </Stack>
     </DashboardPage>
   );
 };

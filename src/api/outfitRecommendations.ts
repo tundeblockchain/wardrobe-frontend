@@ -1,6 +1,7 @@
 import { getItemDisplayName, getItemImageUrl } from "./resourceDisplay";
 import {
   CLOTHING_CATEGORIES,
+  NAME_MAX_LENGTH,
   type ClothingItem,
   type CreateOutfitRequest,
   type OutfitRecommendation,
@@ -10,7 +11,9 @@ import {
 } from "./resourceTypes";
 
 export const SUGGESTED_OUTFIT_STATE_KEY = "suggestedOutfit";
-export const DEFAULT_SUGGESTED_OUTFIT_NAME = "Suggested outfit";
+export const DEFAULT_SUGGESTED_OUTFIT_NAME = "Suggested look";
+export const MAX_RECOMMENDATIONS = 8;
+export const MAX_ITEMS_PER_SLOT = 6;
 
 export type SuggestedOutfitItemView = {
   itemId: string;
@@ -33,6 +36,22 @@ const isOutfitSlot = (value: unknown): value is OutfitSlot => {
     typeof value === "string" &&
     (CLOTHING_CATEGORIES as readonly string[]).includes(value)
   );
+};
+
+const limitItemsPerSlot = (
+  items: OutfitRecommendationItem[],
+): OutfitRecommendationItem[] => {
+  const slotCounts = new Map<OutfitSlot, number>();
+
+  return items.filter((item) => {
+    const used = slotCounts.get(item.slot) ?? 0;
+    if (used >= MAX_ITEMS_PER_SLOT) {
+      return false;
+    }
+
+    slotCounts.set(item.slot, used + 1);
+    return true;
+  });
 };
 
 const readOptionalString = (value: unknown): string | undefined => {
@@ -97,9 +116,11 @@ export const parseOutfitRecommendation = (
     return undefined;
   }
 
-  const items = raw.items
-    .map(parseOutfitRecommendationItem)
-    .filter((item): item is OutfitRecommendationItem => Boolean(item));
+  const items = limitItemsPerSlot(
+    raw.items
+      .map(parseOutfitRecommendationItem)
+      .filter((item): item is OutfitRecommendationItem => Boolean(item)),
+  );
   if (items.length === 0) {
     return undefined;
   }
@@ -127,7 +148,8 @@ export const parseOutfitRecommendations = (
   if (Array.isArray(value)) {
     return value
       .map(parseOutfitRecommendation)
-      .filter((entry): entry is OutfitRecommendation => Boolean(entry));
+      .filter((entry): entry is OutfitRecommendation => Boolean(entry))
+      .slice(0, MAX_RECOMMENDATIONS);
   }
 
   if (value && typeof value === "object") {
@@ -148,13 +170,21 @@ export const toOutfitRecommendationList = (
   };
 };
 
+export const resolveOutfitSaveName = (name: string | undefined): string => {
+  const trimmed = name?.trim() ?? "";
+  if (trimmed.length === 0) {
+    return DEFAULT_SUGGESTED_OUTFIT_NAME;
+  }
+
+  return trimmed.slice(0, NAME_MAX_LENGTH);
+};
+
 export const getRecommendationTitle = (
   recommendation: OutfitRecommendation,
 ): string => {
-  return (
+  return resolveOutfitSaveName(
     readOptionalString(recommendation.name) ??
-    readOptionalString(recommendation.title) ??
-    DEFAULT_SUGGESTED_OUTFIT_NAME
+      readOptionalString(recommendation.title),
   );
 };
 
@@ -205,9 +235,14 @@ export const toSuggestedOutfitView = (
 
 export const toCreateOutfitRequest = (
   recommendation: OutfitRecommendation,
+  nameOverride?: string,
 ): CreateOutfitRequest => {
   return {
-    name: getRecommendationTitle(recommendation),
+    name: resolveOutfitSaveName(
+      nameOverride !== undefined
+        ? nameOverride
+        : getRecommendationTitle(recommendation),
+    ),
     items: recommendation.items.map((item) => ({
       itemId: item.itemId,
       slot: item.slot,

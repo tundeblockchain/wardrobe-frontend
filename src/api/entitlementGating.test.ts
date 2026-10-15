@@ -4,7 +4,9 @@ import {
   canUseOtherAi,
   getCatalogKindForLimitCode,
   getForbiddenUpgradeKind,
+  getRecommendationsPaywallKind,
   isEntitlementAiRequiredError,
+  isForbiddenStatusError,
 } from "./entitlementGating";
 import { ApiError } from "./httpClient";
 import type { Entitlement } from "./resourceTypes";
@@ -115,5 +117,24 @@ describe("403 entitlement code mapping", () => {
         new ApiError({ status: 403, code: "ENTITLEMENT_ITEM_LIMIT" }),
       ),
     ).toBe(false);
+  });
+
+  it("maps any 403 from recommendations to a Premium paywall", () => {
+    expect(
+      getRecommendationsPaywallKind(
+        new ApiError({ status: 403, code: "ENTITLEMENT_AI_REQUIRED" }),
+      ),
+    ).toBe("premium");
+    expect(
+      getRecommendationsPaywallKind(
+        new ApiError({ status: 403, code: "FORBIDDEN" }),
+      ),
+    ).toBe("premium");
+    expect(isForbiddenStatusError(new ApiError({ status: 403 }))).toBe(true);
+    expect(
+      getRecommendationsPaywallKind(
+        new ApiError({ status: 500, code: "INTERNAL" }),
+      ),
+    ).toBeUndefined();
   });
 });
