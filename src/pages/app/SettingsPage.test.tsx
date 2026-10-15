@@ -29,7 +29,6 @@ import {
 } from "../../test/unstableGetMeApi";
 import { DashboardThemeProvider } from "../../theme/DashboardThemeProvider";
 import { THEME_PREFERENCE_STORAGE_KEY } from "../../theme/themePreference";
-import { InboxPage } from "./InboxPage";
 import { SettingsPage } from "./SettingsPage";
 import { VirtualTryOnPage } from "./VirtualTryOnPage";
 
@@ -106,10 +105,6 @@ const renderSettings = (
         <Route
           path={appPaths.appVirtualTryOn}
           element={<VirtualTryOnPage resourceApi={resourceApi} />}
-        />
-        <Route
-          path={appPaths.appInbox}
-          element={<InboxPage resourceApi={resourceApi} />}
         />
         <Route path={appPaths.contact} element={<ContactPage />} />
         <Route path={appPaths.login} element={<LoginRoute />} />
@@ -633,24 +628,26 @@ describe("SettingsPage", () => {
     );
   });
 
-  it("shows an Inbox entry with an unread badge from GET /me/events", async () => {
-    const user = userEvent.setup();
+  it("does not render an Inbox card", async () => {
     renderSettings();
 
-    const inboxLink = await screen.findByRole("link", {
-      name: "Open inbox, unread messages: 1",
-    });
-    expect(inboxLink).toHaveAttribute("href", appPaths.appInbox);
-
-    await user.click(inboxLink);
-
     expect(
-      await screen.findByRole("heading", { level: 1, name: "Inbox" }),
+      await screen.findByRole("heading", {
+        level: 1,
+        name: "Profile & Settings",
+      }),
     ).toBeInTheDocument();
-    expect(screen.getByText("Virtual Try On is ready")).toBeInTheDocument();
-    expect(screen.getByTestId("route-location")).toHaveTextContent(
-      appPaths.appInbox,
-    );
+    expect(
+      screen.queryByRole("heading", { name: "Inbox" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: /open inbox/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Plan" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Virtual Try On" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Support" })).toBeInTheDocument();
   });
 
   it("links Contact us and Report a bug to the existing contact form", async () => {
@@ -915,6 +912,8 @@ describe("SettingsPage", () => {
       }),
     ).toBeInTheDocument();
     expect(authProviderMocks.signOutUser).not.toHaveBeenCalled();
-    expect(screen.getByRole("link", { name: "Open inbox" })).toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: /open inbox/i }),
+    ).not.toBeInTheDocument();
   });
 });

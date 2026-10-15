@@ -88,7 +88,6 @@ describe("login and app paths", () => {
     expect(appPaths.appSettingsPlan).toBe("/app/settings#plan");
     expect(SETTINGS_PLAN_HASH).toBe("plan");
     expect(getAppSettingsPlanPath()).toBe("/app/settings#plan");
-    expect(appPaths.appInbox).toBe("/app/inbox");
     expect(appPaths.appBillingSuccess).toBe("/app/billing/success");
     expect(appPaths.appBillingCancel).toBe("/app/billing/cancel");
     expect(getContactPath()).toBe("/contact");

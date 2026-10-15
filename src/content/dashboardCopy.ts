@@ -63,10 +63,6 @@ export const dashboardCopy = {
     virtualTryOnLabel: "Virtual Try On",
     virtualTryOnAriaLabel: "Open Virtual Try On",
     virtualTryOnPremiumLabel: "Premium",
-    inboxTitle: "Inbox",
-    inboxLabel: "Inbox",
-    inboxAriaLabel: "Open inbox",
-    inboxUnreadAriaLabel: "Open inbox, unread messages",
     supportTitle: "Support",
     contactLabel: "Contact us",
     contactAriaLabel: "Contact us",
@@ -112,18 +108,6 @@ export const dashboardCopy = {
     deleteErrorFallback:
       "Couldn't delete this account. Sign in and try again.",
     cancelLabel: "Cancel",
-  },
-  inbox: {
-    title: "Inbox",
-    description: "Job updates for Virtual Try On and other account activity.",
-    loadingLabel: "Loading inbox",
-    emptyTitle: "No inbox messages",
-    emptyDescription: "Job updates will appear here when they are ready.",
-    errorTitle: "Couldn't load inbox",
-    errorDescription:
-      "Try again in a moment. Your inbox messages were not changed.",
-    retryLabel: "Try loading inbox again",
-    unreadLabel: "unread",
   },
   home: {
     title: "Your closet",

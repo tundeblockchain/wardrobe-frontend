@@ -27,7 +27,6 @@ export const appPaths = {
   appSettings: `${APP_BASE_PATH}/settings`,
   appPlan: `${APP_BASE_PATH}/settings#plan`,
   appSettingsPlan: `${APP_BASE_PATH}/settings#plan`,
-  appInbox: `${APP_BASE_PATH}/inbox`,
   appBillingSuccess: `${APP_BASE_PATH}/billing/success`,
   appBillingCancel: `${APP_BASE_PATH}/billing/cancel`,
 } as const;

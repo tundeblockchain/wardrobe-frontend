@@ -6,7 +6,6 @@ import {
 } from "react";
 import {
   Alert,
-  Badge,
   Button,
   Chip,
   Dialog,
@@ -34,7 +33,6 @@ import { useAuth } from "../../auth/useAuth";
 import { DashboardPage } from "../../components/dashboard/DashboardPage";
 import { dashboardCopy } from "../../content/dashboardCopy";
 import { invalidateResourceQueries } from "../../hooks/resourceQueryInvalidation";
-import { useResourceQuery } from "../../hooks/useResourceQuery";
 import { appPaths, getContactPath } from "../../routes/paths";
 import { useThemePreference } from "../../theme/useThemePreference";
 import type { ThemePreference } from "../../theme/themePreference";
@@ -202,14 +200,6 @@ const SettingsSection = ({
   );
 };
 
-const getInboxAriaLabel = (unreadCount: number): string => {
-  if (unreadCount <= 0) {
-    return copy.inboxAriaLabel;
-  }
-
-  return `${copy.inboxUnreadAriaLabel}: ${unreadCount}`;
-};
-
 export const SettingsPage = ({
   resourceApi: resourceApiProp,
   assignBillingUrl,
@@ -218,7 +208,6 @@ export const SettingsPage = ({
   const resourceApi = resourceApiProp ?? defaultResourceApi;
   const { user, signOut } = useAuth();
   const { preference, handlePreferenceChange } = useThemePreference();
-  const inboxQuery = useResourceQuery("settings-inbox", resourceApi.listJobEvents);
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [signOutError, setSignOutError] = useState("");
   const [isClearOpen, setIsClearOpen] = useState(false);
@@ -231,8 +220,6 @@ export const SettingsPage = ({
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
 
-  const unreadCount =
-    inboxQuery.status === "ready" ? inboxQuery.data.unreadCount : 0;
   const isBusy = isSigningOut || isClearing || isDeleting;
 
   const handleThemeChange = (
@@ -474,26 +461,6 @@ export const SettingsPage = ({
               aria-label={copy.virtualTryOnPremiumLabel}
             />
           </Stack>
-        </SettingsSection>
-
-        <SettingsSection title={copy.inboxTitle} titleId="inbox-heading">
-          <Badge
-            color="primary"
-            badgeContent={unreadCount}
-            invisible={unreadCount <= 0}
-            overlap="rectangular"
-          >
-            <Button
-              component={RouterLink}
-              to={appPaths.appInbox}
-              variant="outlined"
-              color="primary"
-              tabIndex={0}
-              aria-label={getInboxAriaLabel(unreadCount)}
-            >
-              {copy.inboxLabel}
-            </Button>
-          </Badge>
         </SettingsSection>
 
         <SettingsSection title={copy.supportTitle} titleId="support-heading">

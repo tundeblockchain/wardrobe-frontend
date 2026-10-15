@@ -13,34 +13,15 @@ import {
   type ContentWipeResult,
   type Entitlement,
   type EntitlementStore,
-  type JobEventList,
 } from "./resourceTypes";
 
 export const ME_PATH = "/me";
 export const ME_CONTENT_PATH = "/me/content";
-export const ME_EVENTS_PATH = "/me/events";
 export const ACCOUNT_DELETE_TIMEOUT_MS = 60_000;
 export const ME_STORES = ENTITLEMENT_STORES;
 export type MeStore = EntitlementStore;
 export type MeResponse = Entitlement;
-export type { AccountDeleteResult, ContentWipeResult, JobEventList };
-
-export type ListJobEventsOptions = {
-  unreadOnly?: boolean;
-};
-
-export const getMeEventsApiPath = (
-  options: ListJobEventsOptions = {},
-): string => {
-  if (options.unreadOnly === undefined) {
-    return ME_EVENTS_PATH;
-  }
-
-  const params = new URLSearchParams({
-    unreadOnly: options.unreadOnly ? "true" : "false",
-  });
-  return `${ME_EVENTS_PATH}?${params.toString()}`;
-};
+export type { AccountDeleteResult, ContentWipeResult };
 
 export type ApiAuth = Pick<AuthActions, "getIdToken" | "signOut">;
 
@@ -64,7 +45,6 @@ export type AuthenticatedApi = {
   getMe: () => Promise<MeResponse>;
   deleteAccount: () => Promise<AccountDeleteResult>;
   clearContent: () => Promise<ContentWipeResult>;
-  listJobEvents: (options?: ListJobEventsOptions) => Promise<JobEventList>;
 };
 
 const redirectToLogin = (navigate?: (path: string) => void) => {
@@ -162,17 +142,10 @@ export const createAuthenticatedApi = (
     return send<ContentWipeResult>(ME_CONTENT_PATH, { method: "DELETE" });
   };
 
-  const listJobEvents = (
-    options: ListJobEventsOptions = {},
-  ): Promise<JobEventList> => {
-    return send<JobEventList>(getMeEventsApiPath(options));
-  };
-
   return {
     request: send,
     getMe,
     deleteAccount,
     clearContent,
-    listJobEvents,
   };
 };
