@@ -58,4 +58,14 @@ export const legalNavLinks: RouteNavLink[] = [
   },
 ];
 
-export const primaryNavLinks: AppNavLink[] = [...landingNavLinks];
+export const pricingNavLink: RouteNavLink = {
+  kind: "route",
+  to: appPaths.pricing,
+  label: "Pricing",
+  ariaLabel: "Pricing",
+};
+
+export const primaryNavLinks: AppNavLink[] = [
+  ...landingNavLinks,
+  pricingNavLink,
+];

@@ -44,6 +44,18 @@ const getCatalogLimitValue = (
   return limits[USAGE_KEY_BY_KIND[kind]];
 };
 
+export const getFreePlanIncludesCopy = (
+  kind: CatalogKind,
+  limits?: EntitlementLimits | null,
+): string | undefined => {
+  const limit = getCatalogLimitValue(kind, limits);
+  if (typeof limit !== "number") {
+    return undefined;
+  }
+
+  return `The Free plan includes ${limit} ${getCatalogLimitNoun(kind, limit)}.`;
+};
+
 export const getCatalogLimitDescription = (
   kind: CatalogKind,
   context: CatalogLimitCopyContext = {},
@@ -59,7 +71,8 @@ export const getCatalogLimitDescription = (
     return `You've used ${used} of ${limit} ${noun}. Upgrade your plan to add another.`;
   }
 
-  return `The Free plan includes ${limit} ${noun}. Upgrade your plan to add another.`;
+  const includesCopy = getFreePlanIncludesCopy(kind, context.limits);
+  return `${includesCopy} Upgrade your plan to add another.`;
 };
 
 export const getCatalogLimitErrorMessage = (

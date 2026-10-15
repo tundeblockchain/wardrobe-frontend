@@ -8,7 +8,12 @@ describe("landing navigation", () => {
       link.kind === "route" ? link.to : link.href,
     );
 
-    expect(headerHrefs).toEqual(["/#features", "/#screenshots", "/#download"]);
+    expect(headerHrefs).toEqual([
+      "/#features",
+      "/#screenshots",
+      "/#download",
+      appPaths.pricing,
+    ]);
     expect(headerHrefs).not.toContain(appPaths.terms);
     expect(headerHrefs).not.toContain(appPaths.privacy);
     expect(headerHrefs).not.toContain(appPaths.contact);

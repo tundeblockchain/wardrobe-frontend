@@ -156,6 +156,11 @@ describe("SettingsPage", () => {
     ).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Plan" })).toBeInTheDocument();
     expect(document.getElementById("plan")).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", {
+        name: "Compare Free, Basic, and Premium plans",
+      }),
+    ).toHaveAttribute("href", appPaths.appPricing);
     expect(screen.getAllByText("Premium").length).toBeGreaterThan(0);
     expect(
       screen.getByRole("button", { name: "Manage subscription" }),

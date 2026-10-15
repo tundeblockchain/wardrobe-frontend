@@ -1,4 +1,5 @@
-import { Stack } from "@mui/material";
+import { Button, Stack } from "@mui/material";
+import { Link as RouterLink } from "react-router-dom";
 import type {
   CatalogKind,
   Entitlement,
@@ -8,6 +9,7 @@ import type {
 import type { ForbiddenUpgradeKind } from "../../api/entitlementGating";
 import type { CheckoutGetMeFn, StartCheckoutFn } from "../../hooks/useCheckoutAction";
 import { dashboardCopy } from "../../content/dashboardCopy";
+import { appPaths } from "../../routes/paths";
 import { StatusCard } from "../StatusCard";
 import { CheckoutUpgradeAction } from "../billing/CheckoutUpgradeAction";
 import { CatalogLimitPrompt } from "./CatalogLimitPrompt";
@@ -76,15 +78,25 @@ export const ForbiddenUpgradePrompt = ({
   return (
     <Stack spacing={2}>
       <StatusCard title={premiumTitle} description={premiumDescription} />
-      <CheckoutUpgradeAction
-        checkoutTier="premium"
-        paidTier={entitlement?.paidTier}
-        actionLabel={dashboardCopy.upgrade.premium.actionLabel}
-        actionAriaLabel={premiumActionAriaLabel}
-        startCheckout={startCheckout}
-        getMe={getMe}
-        assignLocation={assignLocation}
-      />
-    </Stack>
-  );
+        <CheckoutUpgradeAction
+          checkoutTier="premium"
+          paidTier={entitlement?.paidTier}
+          actionLabel={dashboardCopy.upgrade.premium.actionLabel}
+          actionAriaLabel={premiumActionAriaLabel}
+          startCheckout={startCheckout}
+          getMe={getMe}
+          assignLocation={assignLocation}
+        />
+        <Button
+          component={RouterLink}
+          to={appPaths.appPricing}
+          variant="outlined"
+          color="primary"
+          tabIndex={0}
+          aria-label={dashboardCopy.billing.comparePlansAriaLabel}
+        >
+          {dashboardCopy.billing.comparePlansLabel}
+        </Button>
+      </Stack>
+    );
 };

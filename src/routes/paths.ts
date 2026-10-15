@@ -5,6 +5,7 @@ export const appPaths = {
   terms: "/terms",
   privacy: "/privacy",
   contact: "/contact",
+  pricing: "/pricing",
   share: "/share/:token",
   login: "/login",
   app: APP_BASE_PATH,
@@ -25,6 +26,7 @@ export const appPaths = {
   appVirtualProfileEdit: `${APP_BASE_PATH}/virtual-profiles/:id/edit`,
   appVirtualTryOn: `${APP_BASE_PATH}/virtual-try-on`,
   appSettings: `${APP_BASE_PATH}/settings`,
+  appPricing: `${APP_BASE_PATH}/pricing`,
   appPlan: `${APP_BASE_PATH}/settings#plan`,
   appSettingsPlan: `${APP_BASE_PATH}/settings#plan`,
   appBillingSuccess: `${APP_BASE_PATH}/billing/success`,
@@ -172,6 +174,10 @@ export const isAppPath = (pathname: string): boolean => {
     normalizedPath === appPaths.app ||
     normalizedPath.startsWith(`${appPaths.app}/`)
   );
+};
+
+export const getPricingPath = (pathname = ""): string => {
+  return isAppPath(pathname) ? appPaths.appPricing : appPaths.pricing;
 };
 
 export const getContactPath = (type?: string): string => {

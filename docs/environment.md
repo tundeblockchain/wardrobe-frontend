@@ -14,7 +14,7 @@ Never commit secrets, tokens, or private keys.
 | `VITE_APP_STORE_URL` | No | Public App Store URL for landing download CTAs. Empty values render a disabled button. | `https://apps.apple.com/app/id000000000` |
 | `VITE_PLAY_STORE_URL` | No | Public Play Store URL for landing download CTAs. Empty values render a disabled button. | `https://play.google.com/store/apps/details?id=com.example.wardrobe` |
 | `VITE_PUBLIC_SITE_URL` | No | Public origin for canonical, Open Graph, and Twitter URLs (no trailing slash). When unset, the current origin is used in the browser. | `https://example.com` |
-| `VITE_API_BASE_URL` | No | Public backend API origin (no trailing slash) for public routes (`GET /public/shares/{token}`, `POST /support/contact`) and signed-in app calls (including `GET /me`). Empty values keep public pages rendering with a clear unavailable state. | `https://api.example.com` |
+| `VITE_API_BASE_URL` | No | Public backend API origin (no trailing slash) for public routes (`GET /public/shares/{token}`, `POST /support/contact`, `GET /billing/plans`) and signed-in app calls (including `GET /me`). Empty values keep public pages rendering with a clear unavailable state. | `https://api.example.com` |
 | `VITE_GA_MEASUREMENT_ID` | No | Google Analytics 4 measurement ID. Scripts are injected only when this value is a `G-` ID. | `G-XXXXXXXXXX` |
 | `VITE_META_PIXEL_ID` | No | Meta Pixel ID. The pixel is injected only when this value is a numeric ID. | `000000000000000` |
 | `VITE_LEGAL_CONTACT_EMAIL` | No | Public operator contact email shown on Terms of Service and Privacy Policy. Empty values show a store-listing contact fallback. | `legal@example.com` |
@@ -56,6 +56,12 @@ The backend must allowlist this site’s origin(s) via `SUPPORT_CONTACT_ALLOWED_
 - Netlify deploy-preview origins, using the deploy-preview pattern (for example `https://deploy-preview-*--<site>.netlify.app`)
 
 This frontend never calls an email provider. Delivery is owned by the backend.
+
+## Billing plans
+
+The Pricing page (`/pricing` and `/app/pricing`) GETs `{VITE_API_BASE_URL}/billing/plans` with no auth header and no cookies (`credentials: "omit"`). The response is `{ plans: [...] }` with live Stripe `unitAmount`, `currency`, `tier`, and `interval`. Prices are never hardcoded in the UI.
+
+If `VITE_API_BASE_URL` is unset, or the API returns `503` `{ error: { code: "PLANS_UNAVAILABLE" } }`, the page shows a friendly unavailable state with Retry. This frontend never loads Stripe.js and never stores Stripe secrets.
 
 ## Firebase console setup
 

@@ -32,6 +32,16 @@ export const BillingCancelPage = () => {
           </Button>
           <Button
             component={RouterLink}
+            to={appPaths.appPricing}
+            variant="outlined"
+            color="primary"
+            tabIndex={0}
+            aria-label={copy.comparePlansAriaLabel}
+          >
+            {copy.comparePlansLabel}
+          </Button>
+          <Button
+            component={RouterLink}
             to={appPaths.appSettingsPlan}
             variant="outlined"
             color="primary"
