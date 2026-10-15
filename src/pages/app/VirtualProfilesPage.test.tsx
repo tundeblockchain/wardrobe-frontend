@@ -1,201 +1,46 @@
 import { screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
-import {
-  createAiTryOnOffResourceApi,
-  createEmptyResourceApi,
-  createEntitlementAiRequiredResourceApi,
-  createErrorResourceApi,
-  createMockResourceApi,
-  createOtherAiOffResourceApi,
-} from "../../api/mockResourceApi";
+import { Route, Routes, useLocation } from "react-router-dom";
+import { describe, expect, it } from "vitest";
 import { appPaths } from "../../routes/paths";
 import { renderWithProviders } from "../../test/renderWithProviders";
 import { VirtualProfilesPage } from "./VirtualProfilesPage";
+import { VirtualTryOnPage } from "./VirtualTryOnPage";
 
-const renderPage = (
-  resourceApi: ReturnType<typeof createMockResourceApi>,
-) => {
-  return renderWithProviders(<VirtualProfilesPage resourceApi={resourceApi} />, {
-    auth: { user: { id: "user-1" } },
-  });
+const RouteLocation = () => {
+  const location = useLocation();
+  return <div data-testid="route-location">{location.pathname}</div>;
 };
 
 describe("VirtualProfilesPage", () => {
-  it("renders a loading state", () => {
-    renderPage(
-      createMockResourceApi({
-        getMe: () => new Promise(() => undefined),
-      }),
+  it("redirects the old Virtual Profiles route to Virtual Try On", async () => {
+    renderWithProviders(
+      <>
+        <Routes>
+          <Route
+            path={appPaths.appVirtualProfiles}
+            element={<VirtualProfilesPage />}
+          />
+          <Route
+            path={appPaths.appVirtualTryOn}
+            element={<VirtualTryOnPage />}
+          />
+        </Routes>
+        <RouteLocation />
+      </>,
+      {
+        route: appPaths.appVirtualProfiles,
+        auth: { user: { id: "user-1" } },
+      },
     );
 
     expect(
-      screen.getByRole("status", { name: "Loading Virtual Profiles" }),
+      await screen.findByRole("heading", { level: 1, name: "Virtual Try On" }),
     ).toBeInTheDocument();
-  });
-
-  it("renders own Virtual Profiles next to presets", async () => {
-    renderPage(createMockResourceApi());
-
-    expect(
-      await screen.findByRole("heading", { name: "Weekday look" }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("heading", { level: 1, name: "Virtual Profiles" }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(
-        /Browse Virtual Profiles and preview looks with Virtual Try On/,
-      ),
-    ).toBeInTheDocument();
-    expect(screen.getByText("Used for Virtual Try On on weekdays.")).toBeInTheDocument();
-    expect(screen.getByText("Preset")).toBeInTheDocument();
-    expect(screen.getByText("Personal")).toBeInTheDocument();
-    expect(
-      screen.getByRole("heading", { name: "Catalog model" }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("link", { name: "Add a Virtual Profile" }),
-    ).toHaveAttribute("href", appPaths.appVirtualProfileNew);
-    expect(
-      screen.getByRole("img", { name: "Weekday look" }),
-    ).toHaveAttribute("src", "/screenshots/try-on-blue-mini-390.jpg");
-    expect(
-      screen.getByRole("img", { name: "Catalog model" }),
-    ).toHaveAttribute("src", "/screenshots/try-on-rust-floral-390.jpg");
-  });
-
-  it("hides edit and delete controls on presets", async () => {
-    renderPage(createMockResourceApi());
-
-    expect(
-      await screen.findByRole("heading", { name: "Catalog model" }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: "Delete Weekday look" }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("link", { name: "Edit Weekday look" }),
-    ).toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", { name: "Delete Catalog model" }),
-    ).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole("link", { name: "Edit Catalog model" }),
-    ).not.toBeInTheDocument();
-  });
-
-  it("renders an empty Virtual Profiles state", async () => {
-    renderPage(createEmptyResourceApi());
-
-    expect(
-      await screen.findByRole("heading", { name: "No Virtual Profiles yet" }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(
-        /Add a Virtual Profile to preview looks with Virtual Try On/,
-      ),
-    ).toBeInTheDocument();
-  });
-
-  it("keeps presets when the user has no personal Virtual Profiles", async () => {
-    renderPage(
-      createMockResourceApi({
-        listAiProfiles: async () => ({ aiProfiles: [] }),
-      }),
+    expect(screen.getByTestId("route-location")).toHaveTextContent(
+      appPaths.appVirtualTryOn,
     );
-
     expect(
-      await screen.findByRole("heading", { name: "Catalog model" }),
-    ).toBeInTheDocument();
-    expect(
-      screen.queryByRole("heading", { name: "No Virtual Profiles yet" }),
+      screen.queryByRole("heading", { level: 1, name: "Virtual Profiles" }),
     ).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole("heading", { name: "Weekday look" }),
-    ).not.toBeInTheDocument();
-  });
-
-  it("renders an error state", async () => {
-    renderPage(createErrorResourceApi());
-
-    expect(
-      await screen.findByRole("heading", {
-        name: "Couldn't load Virtual Profiles",
-      }),
-    ).toBeInTheDocument();
-  });
-
-  it("renders an upgrade prompt when /me features.aiTryOn is false", async () => {
-    renderPage(createAiTryOnOffResourceApi());
-
-    expect(
-      await screen.findByRole("heading", {
-        name: "Virtual Try On is a Premium feature",
-      }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", {
-        name: "Upgrade to Premium for Virtual Try On",
-      }),
-    ).toBeInTheDocument();
-    expect(
-      screen.queryByRole("heading", { name: "Weekday look" }),
-    ).not.toBeInTheDocument();
-  });
-
-  it("renders an upgrade prompt for 403 ENTITLEMENT_AI_REQUIRED", async () => {
-    renderPage(createEntitlementAiRequiredResourceApi());
-
-    expect(
-      await screen.findByRole("heading", {
-        name: "Virtual Try On is a Premium feature",
-      }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(
-        /Upgrade to browse Virtual Profiles and preview looks with Virtual Try On/,
-      ),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", {
-        name: "Upgrade to Premium for Virtual Try On",
-      }),
-    ).toBeInTheDocument();
-    expect(
-      screen.queryByRole("heading", { name: "Couldn't load Virtual Profiles" }),
-    ).not.toBeInTheDocument();
-  });
-
-  it("hides write actions when otherAi is off", async () => {
-    renderPage(createOtherAiOffResourceApi());
-
-    expect(
-      await screen.findByRole("heading", { name: "Weekday look" }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("heading", { name: "Catalog model" }),
-    ).toBeInTheDocument();
-    expect(
-      screen.queryByRole("link", { name: "Add a Virtual Profile" }),
-    ).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", { name: "Delete Weekday look" }),
-    ).not.toBeInTheDocument();
-  });
-
-  it("deletes a Virtual Profile after confirm", async () => {
-    const user = userEvent.setup();
-    const deleteAiProfile = vi.fn().mockResolvedValue(undefined);
-    renderPage(createMockResourceApi({ deleteAiProfile }));
-
-    await user.click(
-      await screen.findByRole("button", { name: "Delete Weekday look" }),
-    );
-    await user.click(
-      screen.getByRole("button", { name: "Delete Virtual Profile" }),
-    );
-
-    expect(deleteAiProfile).toHaveBeenCalledWith("aip_personal01");
   });
 });

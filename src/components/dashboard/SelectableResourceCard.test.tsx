@@ -116,4 +116,22 @@ describe("SelectableResourceCard", () => {
       "/screenshots/try-on-blue-mini-390.jpg",
     );
   });
+
+  it("uses a slight theme shadow on picture cards", () => {
+    renderCard();
+
+    expect(screen.getByRole("button", { name: "Weekday look" })).toHaveClass(
+      "MuiPaper-elevation1",
+    );
+  });
+
+  it("does not select when disabled", async () => {
+    const user = userEvent.setup();
+    const { onSelect } = renderCard({ disabled: true });
+
+    const card = screen.getByRole("button", { name: "Weekday look" });
+    expect(card).toBeDisabled();
+    await user.click(card);
+    expect(onSelect).not.toHaveBeenCalled();
+  });
 });

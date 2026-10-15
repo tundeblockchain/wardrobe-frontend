@@ -66,6 +66,7 @@ export const FormCard = ({
       sx={(theme) => ({
         width: "100%",
         maxWidth: FORM_CARD_MAX_WIDTH,
+        minWidth: 0,
         mx: "auto",
         boxSizing: "border-box",
         p: { xs: 2.5, sm: 3 },

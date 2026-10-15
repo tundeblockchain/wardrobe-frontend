@@ -262,7 +262,7 @@ const VirtualProfileFormReady = ({
   const formTitle = mode === "create" ? copy.createTitle : copy.editTitle;
 
   const handleCancel = () => {
-    navigate(appPaths.appVirtualProfiles);
+    navigate(appPaths.appVirtualTryOn);
   };
 
   const handleFileChange = (file: File | undefined) => {
@@ -320,7 +320,7 @@ const VirtualProfileFormReady = ({
           notes: values.notes.trim() || undefined,
           referenceImages: imageKey ? [imageKey] : undefined,
         });
-        navigate(appPaths.appVirtualProfiles);
+        navigate(appPaths.appVirtualTryOn);
         return;
       }
 
@@ -343,7 +343,7 @@ const VirtualProfileFormReady = ({
         label: values.label.trim() || null,
         notes: values.notes.trim() || null,
       });
-      navigate(appPaths.appVirtualProfiles);
+      navigate(appPaths.appVirtualTryOn);
     } catch (error) {
       const nextUpgrade = getForbiddenUpgradeKind(error);
       if (nextUpgrade) {

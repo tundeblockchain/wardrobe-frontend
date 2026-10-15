@@ -16,6 +16,7 @@ export type SelectableResourceCardProps = {
   chips?: string[];
   selected: boolean;
   selection: SelectableCardSelection;
+  disabled?: boolean;
   onSelect: () => void;
 };
 
@@ -29,13 +30,22 @@ export const SelectableResourceCard = ({
   chips = [],
   selected,
   selection,
+  disabled = false,
   onSelect,
 }: SelectableResourceCardProps) => {
   const handleClick = () => {
+    if (disabled) {
+      return;
+    }
+
     onSelect();
   };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
+    if (disabled) {
+      return;
+    }
+
     if (event.key !== "Enter" && event.key !== " ") {
       return;
     }
@@ -50,12 +60,14 @@ export const SelectableResourceCard = ({
     <Paper
       component="button"
       type="button"
-      elevation={0}
+      elevation={selected ? 2 : 1}
       tabIndex={0}
       aria-label={title}
       aria-labelledby={titleId}
       aria-pressed={isMulti ? undefined : selected}
       aria-checked={isMulti ? selected : undefined}
+      aria-disabled={disabled ? true : undefined}
+      disabled={disabled}
       role={isMulti ? "checkbox" : "button"}
       data-selected={selected ? "true" : "false"}
       onClick={handleClick}
@@ -66,10 +78,11 @@ export const SelectableResourceCard = ({
         height: "100%",
         overflow: "hidden",
         textAlign: "left",
-        cursor: "pointer",
+        cursor: disabled ? "default" : "pointer",
         p: 0,
         color: "inherit",
         font: "inherit",
+        opacity: disabled ? theme.palette.action.disabledOpacity : 1,
         borderWidth: 2,
         borderStyle: "solid",
         borderColor: selected
@@ -78,9 +91,6 @@ export const SelectableResourceCard = ({
         bgcolor: selected
           ? theme.palette.action.selected
           : theme.palette.background.paper,
-        boxShadow: selected
-          ? `inset 0 0 0 1px ${theme.palette.primary.main}`
-          : "none",
         "&:focus-visible": {
           outline: "2px solid",
           outlineColor: theme.palette.primary.main,

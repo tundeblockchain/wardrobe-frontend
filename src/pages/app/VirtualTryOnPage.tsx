@@ -19,6 +19,7 @@ import FaceRetouchingNaturalOutlined from "@mui/icons-material/FaceRetouchingNat
 import StyleOutlined from "@mui/icons-material/StyleOutlined";
 import {
   canUseAiTryOn,
+  canUseOtherAi,
   getCatalogKindForLimitCode,
   getForbiddenUpgradeKind,
 } from "../../api/entitlementGating";
@@ -41,10 +42,14 @@ import type {
 } from "../../api/resourceTypes";
 import { useResourceApi } from "../../api/useResourceApi";
 import { loadListedVirtualProfiles } from "../../api/virtualProfiles";
+import { AddVirtualProfileCard } from "../../components/dashboard/AddVirtualProfileCard";
 import { DashboardPage } from "../../components/dashboard/DashboardPage";
 import { FormCard } from "../../components/dashboard/FormCard";
 import { ForbiddenUpgradePrompt } from "../../components/dashboard/ForbiddenUpgradePrompt";
-import { ResourceCardGrid } from "../../components/dashboard/ResourceCardGrid";
+import {
+  HorizontalResourceCardItem,
+  HorizontalResourceCardList,
+} from "../../components/dashboard/HorizontalResourceCardList";
 import { ResourceEmptyState } from "../../components/dashboard/ResourceEmptyState";
 import { ResourceErrorState } from "../../components/dashboard/ResourceErrorState";
 import { ResourceImage } from "../../components/dashboard/ResourceImage";
@@ -53,12 +58,14 @@ import { SelectableResourceCard } from "../../components/dashboard/SelectableRes
 import { dashboardCopy } from "../../content/dashboardCopy";
 import { useResourceQuery } from "../../hooks/useResourceQuery";
 import { appPaths } from "../../routes/paths";
+import {
+  canSelectVirtualProfile,
+  type VirtualTryOnSource,
+} from "./virtualTryOnPickOrder";
 
 export type VirtualTryOnPageProps = {
   resourceApi?: ResourceApi;
 };
-
-type VirtualTryOnSource = "items" | "outfit";
 
 type VirtualTryOnData = {
   entitlement: Entitlement;
@@ -181,17 +188,14 @@ const VirtualTryOnReady = ({
 }: VirtualTryOnReadyProps) => {
   const navigate = useNavigate();
   const copy = dashboardCopy.virtualTryOn;
-  const [aiProfileId, setAiProfileId] = useState(
-    data.profiles[0]?.aiProfileId ?? "",
-  );
+  const canWriteProfiles = canUseOtherAi(data.entitlement);
+  const [aiProfileId, setAiProfileId] = useState("");
   const [source, setSource] = useState<VirtualTryOnSource>("items");
   const [wardrobeId, setWardrobeId] = useState(
     data.wardrobes[0]?.wardrobeId ?? "",
   );
   const [selectedItemIds, setSelectedItemIds] = useState<string[]>([]);
-  const [outfitId, setOutfitId] = useState(
-    data.outfits[0]?.outfitId ?? "",
-  );
+  const [outfitId, setOutfitId] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | undefined>();
   const [fieldError, setFieldError] = useState<string | undefined>();
@@ -208,6 +212,11 @@ const VirtualTryOnReady = ({
   const wardrobeOutfits = data.outfits.filter(
     (outfit) => outfit.wardrobeId === wardrobeId,
   );
+  const profilePickerEnabled = canSelectVirtualProfile(
+    source,
+    selectedItemIds,
+    outfitId,
+  );
 
   const galleryUrls = mapRenderGalleryNewestFirst([
     ...data.items,
@@ -218,11 +227,16 @@ const VirtualTryOnReady = ({
 
   const handleSourceChange = (event: ChangeEvent<HTMLInputElement>) => {
     setSource(event.target.value as VirtualTryOnSource);
+    setAiProfileId("");
     setFieldError(undefined);
     setFormError(undefined);
   };
 
   const handleProfileSelect = (profileId: string) => {
+    if (!profilePickerEnabled) {
+      return;
+    }
+
     setAiProfileId(profileId);
     setFieldError(undefined);
   };
@@ -252,11 +266,6 @@ const VirtualTryOnReady = ({
       return;
     }
 
-    if (!aiProfileId.trim()) {
-      setFieldError(copy.validationProfile);
-      return;
-    }
-
     if (source === "items" && selectedItemIds.length === 0) {
       setFieldError(copy.validationItems);
       return;
@@ -264,6 +273,11 @@ const VirtualTryOnReady = ({
 
     if (source === "outfit" && !outfitId.trim()) {
       setFieldError(copy.validationOutfit);
+      return;
+    }
+
+    if (!aiProfileId.trim()) {
+      setFieldError(copy.validationProfile);
       return;
     }
 
@@ -340,190 +354,16 @@ const VirtualTryOnReady = ({
       title={copy.title}
       description={copy.description}
     >
-      <Stack spacing={4}>
-        <FormCard
-          title={copy.title}
-          onCancel={handleCancel}
-          submitLabel={copy.submitLabel}
-          submittingLabel={copy.submittingLabel}
-          isSubmitting={isSubmitting}
-          onSubmit={() => {
-            void handleSubmit();
-          }}
-        >
-          {formError ? (
-            <Alert severity="error" role="alert">
-              {`${copy.renderErrorTitle}. ${formError}`}
-            </Alert>
-          ) : null}
-          {fieldError ? (
-            <Alert severity="error" role="alert">
-              {fieldError}
-            </Alert>
-          ) : null}
-          <FormControl component="fieldset" variant="standard">
-            <FormLabel component="legend" id="virtual-try-on-profile-label">
-              {copy.profileLabel}
-            </FormLabel>
-            {data.profiles.length === 0 ? (
-              <Typography variant="body2" color="text.secondary">
-                {copy.profileEmpty}
-              </Typography>
-            ) : (
-              <ResourceCardGrid label={copy.profileLabel}>
-                {data.profiles.map((profile) => {
-                  const title = getAiProfileDisplayName(profile);
-                  const titleId = `virtual-try-on-profile-${profile.aiProfileId}-title`;
-                  return (
-                    <Box
-                      key={profile.aiProfileId}
-                      component="li"
-                      sx={{ minWidth: 0 }}
-                    >
-                      <SelectableResourceCard
-                        title={title}
-                        titleId={titleId}
-                        imageUrl={getAiProfileImageUrl(profile)}
-                        imageAlt={title}
-                        fallbackLabel="No photo for this Virtual Profile"
-                        FallbackIcon={FaceRetouchingNaturalOutlined}
-                        chips={[getAiProfileTypeLabel(profile.type)]}
-                        selected={aiProfileId === profile.aiProfileId}
-                        selection="single"
-                        onSelect={() => {
-                          handleProfileSelect(profile.aiProfileId);
-                        }}
-                      />
-                    </Box>
-                  );
-                })}
-              </ResourceCardGrid>
-            )}
-          </FormControl>
-          <FormControl>
-            <FormLabel id="virtual-try-on-source-label">
-              {copy.sourceLabel}
-            </FormLabel>
-            <RadioGroup
-              aria-labelledby="virtual-try-on-source-label"
-              name="source"
-              value={source}
-              onChange={handleSourceChange}
-            >
-              <FormControlLabel
-                value="items"
-                control={<Radio tabIndex={0} />}
-                label={copy.sourceItemsLabel}
-              />
-              <FormControlLabel
-                value="outfit"
-                control={<Radio tabIndex={0} />}
-                label={copy.sourceOutfitLabel}
-              />
-            </RadioGroup>
-          </FormControl>
-          <TextField
-            id="virtual-try-on-wardrobe"
-            name="wardrobeId"
-            label={copy.wardrobeLabel}
-            value={wardrobeId}
-            onChange={(event) => {
-              setWardrobeId(event.target.value);
-              setSelectedItemIds([]);
-              setOutfitId(
-                data.outfits.find(
-                  (outfit) => outfit.wardrobeId === event.target.value,
-                )?.outfitId ?? "",
-              );
-            }}
-            select
-            slotProps={{
-              htmlInput: { "aria-label": copy.wardrobeLabel },
-            }}
-          >
-            {data.wardrobes.map((wardrobe) => (
-              <MenuItem key={wardrobe.wardrobeId} value={wardrobe.wardrobeId}>
-                {wardrobe.name}
-              </MenuItem>
-            ))}
-          </TextField>
-          {source === "items" ? (
-            <FormControl component="fieldset" variant="standard">
-              <FormLabel component="legend">{copy.itemsLabel}</FormLabel>
-              {wardrobeItems.length === 0 ? (
-                <Typography variant="body2" color="text.secondary">
-                  {copy.itemsEmpty}
-                </Typography>
-              ) : (
-                <ResourceCardGrid label={copy.itemsLabel}>
-                  {wardrobeItems.map((item) => {
-                    const titleId = `virtual-try-on-item-${item.itemId}-title`;
-                    return (
-                      <Box key={item.itemId} component="li" sx={{ minWidth: 0 }}>
-                        <SelectableResourceCard
-                          title={item.name}
-                          titleId={titleId}
-                          imageUrl={getItemImageUrl(item)}
-                          imageAlt={item.name}
-                          fallbackLabel="No photo for this clothing item"
-                          FallbackIcon={CheckroomOutlined}
-                          selected={selectedItemIds.includes(item.itemId)}
-                          selection="multi"
-                          onSelect={() => {
-                            handleItemToggle(item.itemId);
-                          }}
-                        />
-                      </Box>
-                    );
-                  })}
-                </ResourceCardGrid>
-              )}
-            </FormControl>
-          ) : wardrobeOutfits.length === 0 ? (
-            <Typography variant="body2" color="text.secondary">
-              {copy.outfitsEmpty}
-            </Typography>
-          ) : (
-            <FormControl component="fieldset" variant="standard">
-              <FormLabel component="legend">{copy.outfitsLabel}</FormLabel>
-              <ResourceCardGrid label={copy.outfitsLabel}>
-                {wardrobeOutfits.map((outfit) => {
-                  const titleId = `virtual-try-on-outfit-${outfit.outfitId}-title`;
-                  return (
-                    <Box
-                      key={outfit.outfitId}
-                      component="li"
-                      sx={{ minWidth: 0 }}
-                    >
-                      <SelectableResourceCard
-                        title={outfit.name}
-                        titleId={titleId}
-                        imageUrl={getOutfitImageUrl(outfit)}
-                        imageAlt={outfit.name}
-                        fallbackLabel="No photo for this outfit"
-                        FallbackIcon={StyleOutlined}
-                        selected={outfitId === outfit.outfitId}
-                        selection="single"
-                        onSelect={() => {
-                          handleOutfitSelect(outfit.outfitId);
-                        }}
-                      />
-                    </Box>
-                  );
-                })}
-              </ResourceCardGrid>
-            </FormControl>
-          )}
-        </FormCard>
-        {statusMessage ? (
-          <Typography variant="body2" color="text.secondary" role="status">
-            {statusMessage}
-          </Typography>
-        ) : null}
+      <Stack spacing={4} sx={{ minWidth: 0, width: "100%" }}>
         <Stack spacing={2} component="section" aria-label={copy.galleryLabel}>
           <Typography variant="h2" component="h2">
             {copy.galleryLabel}
           </Typography>
+          {statusMessage ? (
+            <Typography variant="body2" color="text.secondary" role="status">
+              {statusMessage}
+            </Typography>
+          ) : null}
           {galleryUrls.length === 0 ? (
             <ResourceEmptyState
               title={copy.galleryEmptyTitle}
@@ -566,6 +406,192 @@ const VirtualTryOnReady = ({
             </Box>
           )}
         </Stack>
+        <FormCard
+          title={copy.title}
+          onCancel={handleCancel}
+          submitLabel={copy.submitLabel}
+          submittingLabel={copy.submittingLabel}
+          isSubmitting={isSubmitting}
+          onSubmit={() => {
+            void handleSubmit();
+          }}
+        >
+          {formError ? (
+            <Alert severity="error" role="alert">
+              {`${copy.renderErrorTitle}. ${formError}`}
+            </Alert>
+          ) : null}
+          {fieldError ? (
+            <Alert severity="error" role="alert">
+              {fieldError}
+            </Alert>
+          ) : null}
+          <FormControl>
+            <FormLabel id="virtual-try-on-source-label">
+              {copy.sourceLabel}
+            </FormLabel>
+            <RadioGroup
+              aria-labelledby="virtual-try-on-source-label"
+              name="source"
+              value={source}
+              onChange={handleSourceChange}
+            >
+              <FormControlLabel
+                value="items"
+                control={<Radio tabIndex={0} />}
+                label={copy.sourceItemsLabel}
+              />
+              <FormControlLabel
+                value="outfit"
+                control={<Radio tabIndex={0} />}
+                label={copy.sourceOutfitLabel}
+              />
+            </RadioGroup>
+          </FormControl>
+          <TextField
+            id="virtual-try-on-wardrobe"
+            name="wardrobeId"
+            label={copy.wardrobeLabel}
+            value={wardrobeId}
+            onChange={(event) => {
+              setWardrobeId(event.target.value);
+              setSelectedItemIds([]);
+              setOutfitId("");
+              setAiProfileId("");
+            }}
+            select
+            slotProps={{
+              htmlInput: { "aria-label": copy.wardrobeLabel },
+            }}
+          >
+            {data.wardrobes.map((wardrobe) => (
+              <MenuItem key={wardrobe.wardrobeId} value={wardrobe.wardrobeId}>
+                {wardrobe.name}
+              </MenuItem>
+            ))}
+          </TextField>
+          {source === "items" ? (
+            <FormControl
+              component="fieldset"
+              variant="standard"
+              sx={{ minWidth: 0, width: "100%" }}
+            >
+              <FormLabel component="legend">{copy.itemsLabel}</FormLabel>
+              {wardrobeItems.length === 0 ? (
+                <Typography variant="body2" color="text.secondary">
+                  {copy.itemsEmpty}
+                </Typography>
+              ) : (
+                <HorizontalResourceCardList label={copy.itemsLabel}>
+                  {wardrobeItems.map((item) => {
+                    const titleId = `virtual-try-on-item-${item.itemId}-title`;
+                    return (
+                      <HorizontalResourceCardItem key={item.itemId}>
+                        <SelectableResourceCard
+                          title={item.name}
+                          titleId={titleId}
+                          imageUrl={getItemImageUrl(item)}
+                          imageAlt={item.name}
+                          fallbackLabel="No photo for this clothing item"
+                          FallbackIcon={CheckroomOutlined}
+                          selected={selectedItemIds.includes(item.itemId)}
+                          selection="multi"
+                          onSelect={() => {
+                            handleItemToggle(item.itemId);
+                          }}
+                        />
+                      </HorizontalResourceCardItem>
+                    );
+                  })}
+                </HorizontalResourceCardList>
+              )}
+            </FormControl>
+          ) : wardrobeOutfits.length === 0 ? (
+            <Typography variant="body2" color="text.secondary">
+              {copy.outfitsEmpty}
+            </Typography>
+          ) : (
+            <FormControl
+              component="fieldset"
+              variant="standard"
+              sx={{ minWidth: 0, width: "100%" }}
+            >
+              <FormLabel component="legend">{copy.outfitsLabel}</FormLabel>
+              <HorizontalResourceCardList label={copy.outfitsLabel}>
+                {wardrobeOutfits.map((outfit) => {
+                  const titleId = `virtual-try-on-outfit-${outfit.outfitId}-title`;
+                  return (
+                    <HorizontalResourceCardItem key={outfit.outfitId}>
+                      <SelectableResourceCard
+                        title={outfit.name}
+                        titleId={titleId}
+                        imageUrl={getOutfitImageUrl(outfit)}
+                        imageAlt={outfit.name}
+                        fallbackLabel="No photo for this outfit"
+                        FallbackIcon={StyleOutlined}
+                        selected={outfitId === outfit.outfitId}
+                        selection="single"
+                        onSelect={() => {
+                          handleOutfitSelect(outfit.outfitId);
+                        }}
+                      />
+                    </HorizontalResourceCardItem>
+                  );
+                })}
+              </HorizontalResourceCardList>
+            </FormControl>
+          )}
+          <FormControl
+            component="fieldset"
+            variant="standard"
+            sx={{ minWidth: 0, width: "100%" }}
+          >
+            <FormLabel component="legend" id="virtual-try-on-profile-label">
+              {copy.profileLabel}
+            </FormLabel>
+            {!profilePickerEnabled ? (
+              <Typography variant="body2" color="text.secondary">
+                {copy.profileLocked}
+              </Typography>
+            ) : null}
+            {data.profiles.length === 0 && !canWriteProfiles ? (
+              <Typography variant="body2" color="text.secondary">
+                {copy.profileEmpty}
+              </Typography>
+            ) : (
+              <HorizontalResourceCardList label={copy.profileLabel}>
+                {canWriteProfiles ? (
+                  <HorizontalResourceCardItem>
+                    <AddVirtualProfileCard />
+                  </HorizontalResourceCardItem>
+                ) : null}
+                {data.profiles.map((profile) => {
+                  const title = getAiProfileDisplayName(profile);
+                  const titleId = `virtual-try-on-profile-${profile.aiProfileId}-title`;
+                  return (
+                    <HorizontalResourceCardItem key={profile.aiProfileId}>
+                      <SelectableResourceCard
+                        title={title}
+                        titleId={titleId}
+                        imageUrl={getAiProfileImageUrl(profile)}
+                        imageAlt={title}
+                        fallbackLabel="No photo for this Virtual Profile"
+                        FallbackIcon={FaceRetouchingNaturalOutlined}
+                        chips={[getAiProfileTypeLabel(profile.type)]}
+                        selected={aiProfileId === profile.aiProfileId}
+                        selection="single"
+                        disabled={!profilePickerEnabled}
+                        onSelect={() => {
+                          handleProfileSelect(profile.aiProfileId);
+                        }}
+                      />
+                    </HorizontalResourceCardItem>
+                  );
+                })}
+              </HorizontalResourceCardList>
+            )}
+          </FormControl>
+        </FormCard>
       </Stack>
     </DashboardPage>
   );

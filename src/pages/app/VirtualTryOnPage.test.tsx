@@ -7,11 +7,14 @@ import {
   createEntitlementAiRequiredResourceApi,
   createErrorResourceApi,
   createMockResourceApi,
+  createOtherAiOffResourceApi,
 } from "../../api/mockResourceApi";
+import { HORIZONTAL_RESOURCE_CARD_LIST_TEST_ID } from "../../components/dashboard/HorizontalResourceCardList";
 import {
   expectFormInsideSharedCard,
   expectSharedFormCardAbsent,
 } from "../../test/formCardTest";
+import { appPaths } from "../../routes/paths";
 import { renderWithProviders } from "../../test/renderWithProviders";
 import { VirtualTryOnPage } from "./VirtualTryOnPage";
 
@@ -42,6 +45,10 @@ const renderedItem = {
   ],
 };
 
+const getProfileList = async () => {
+  return screen.findByRole("list", { name: "Virtual Profile" });
+};
+
 describe("VirtualTryOnPage", () => {
   it("renders a loading state", () => {
     renderPage(
@@ -56,14 +63,99 @@ describe("VirtualTryOnPage", () => {
     expectSharedFormCardAbsent();
   });
 
+  it("shows the Virtual Try On gallery above the form", async () => {
+    renderPage(createMockResourceApi());
+
+    await expectFormInsideSharedCard("Start Virtual Try On");
+    const gallery = screen.getByRole("region", {
+      name: "Virtual Try On gallery",
+    });
+    const form = screen.getByRole("form", { name: "Start Virtual Try On" });
+    expect(
+      gallery.compareDocumentPosition(form) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(
+      screen.getByRole("img", { name: "Virtual Try On render 1" }),
+    ).toHaveAttribute("src", "/screenshots/try-on-ivory-maxi-390.jpg");
+  });
+
+  it("puts clothing items before Virtual Profiles in the form", async () => {
+    renderPage(createMockResourceApi());
+
+    const itemList = await screen.findByRole("list", { name: "Clothing items" });
+    const profileList = await getProfileList();
+    expect(itemList).toHaveAttribute(
+      "data-testid",
+      HORIZONTAL_RESOURCE_CARD_LIST_TEST_ID,
+    );
+    expect(profileList).toHaveAttribute(
+      "data-testid",
+      HORIZONTAL_RESOURCE_CARD_LIST_TEST_ID,
+    );
+    expect(
+      itemList.compareDocumentPosition(profileList) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+  });
+
+  it("keeps Virtual Profile cards disabled until clothing items are chosen", async () => {
+    const user = userEvent.setup();
+    renderPage(createMockResourceApi());
+
+    const ownCard = await screen.findByRole("button", { name: "Weekday look" });
+    const presetCard = screen.getByRole("button", { name: "Catalog model" });
+    expect(ownCard).toBeDisabled();
+    expect(presetCard).toBeDisabled();
+    expect(ownCard).toHaveAttribute("aria-pressed", "false");
+    expect(
+      screen.getByText("Choose clothing items or an outfit first."),
+    ).toBeInTheDocument();
+
+    await user.click(ownCard);
+
+    expect(ownCard).toHaveAttribute("aria-pressed", "false");
+    expect(presetCard).toHaveAttribute("aria-pressed", "false");
+
+    await user.click(screen.getByRole("checkbox", { name: "Navy tee" }));
+
+    expect(ownCard).toBeEnabled();
+    expect(presetCard).toBeEnabled();
+    expect(
+      screen.queryByText("Choose clothing items or an outfit first."),
+    ).not.toBeInTheDocument();
+
+    await user.click(presetCard);
+
+    expect(ownCard).toHaveAttribute("aria-pressed", "false");
+    expect(presetCard).toHaveAttribute("aria-pressed", "true");
+  });
+
+  it("requires an outfit before a Virtual Profile can be selected", async () => {
+    const user = userEvent.setup();
+    renderPage(createMockResourceApi());
+
+    await user.click(await screen.findByLabelText("Saved outfit"));
+
+    const ownCard = screen.getByRole("button", { name: "Weekday look" });
+    expect(ownCard).toBeDisabled();
+
+    await user.click(screen.getByRole("button", { name: "Sunday brunch" }));
+
+    expect(ownCard).toBeEnabled();
+    await user.click(ownCard);
+    expect(ownCard).toHaveAttribute("aria-pressed", "true");
+  });
+
   it("renders own and preset Virtual Profile cards as a single-select picker", async () => {
     const user = userEvent.setup();
     renderPage(createMockResourceApi());
 
     await expectFormInsideSharedCard("Start Virtual Try On");
-    const ownCard = await screen.findByRole("button", { name: "Weekday look" });
+    await user.click(await screen.findByRole("checkbox", { name: "Navy tee" }));
+
+    const ownCard = screen.getByRole("button", { name: "Weekday look" });
     const presetCard = screen.getByRole("button", { name: "Catalog model" });
-    expect(ownCard).toHaveAttribute("aria-pressed", "true");
+    expect(ownCard).toHaveAttribute("aria-pressed", "false");
     expect(presetCard).toHaveAttribute("aria-pressed", "false");
     expect(screen.getByText("Personal")).toBeInTheDocument();
     expect(screen.getByText("Preset")).toBeInTheDocument();
@@ -80,6 +172,36 @@ describe("VirtualTryOnPage", () => {
     expect(presetCard).toHaveAttribute("aria-pressed", "true");
     expect(
       screen.queryByRole("combobox", { name: "Virtual Profile" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("places Add Virtual Profile inside the Virtual Profile list", async () => {
+    renderPage(createMockResourceApi());
+
+    const profileList = await getProfileList();
+    const addCard = within(profileList).getByRole("link", {
+      name: "Add a Virtual Profile",
+    });
+    expect(addCard).toHaveAttribute("href", appPaths.appVirtualProfileNew);
+    expect(
+      within(profileList).getByRole("button", { name: "Weekday look" }),
+    ).toBeInTheDocument();
+    expect(
+      within(profileList).getByRole("button", { name: "Catalog model" }),
+    ).toBeInTheDocument();
+  });
+
+  it("hides Add Virtual Profile when otherAi is off", async () => {
+    renderPage(createOtherAiOffResourceApi());
+
+    expect(
+      await screen.findByRole("button", { name: "Weekday look" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Catalog model" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: "Add a Virtual Profile" }),
     ).not.toBeInTheDocument();
   });
 
@@ -126,7 +248,7 @@ describe("VirtualTryOnPage", () => {
     const outfitCard = await screen.findByRole("button", {
       name: "Sunday brunch",
     });
-    expect(outfitCard).toHaveAttribute("aria-pressed", "true");
+    expect(outfitCard).toHaveAttribute("aria-pressed", "false");
     expect(screen.getByRole("img", { name: "Sunday brunch" })).toHaveAttribute(
       "src",
       "/screenshots/try-on-ivory-maxi-390.jpg",
@@ -134,6 +256,9 @@ describe("VirtualTryOnPage", () => {
     expect(
       screen.queryByRole("combobox", { name: "Outfit" }),
     ).not.toBeInTheDocument();
+
+    await user.click(outfitCard);
+    expect(outfitCard).toHaveAttribute("aria-pressed", "true");
   });
 
   it("sends the same Virtual Try On payload for an own profile", async () => {
@@ -150,6 +275,7 @@ describe("VirtualTryOnPage", () => {
     ).toHaveAttribute("src", "/screenshots/try-on-ivory-maxi-390.jpg");
 
     await user.click(screen.getByRole("checkbox", { name: "Navy tee" }));
+    await user.click(screen.getByRole("button", { name: "Weekday look" }));
     await user.click(
       screen.getByRole("button", { name: "Start Virtual Try On" }),
     );
@@ -179,10 +305,8 @@ describe("VirtualTryOnPage", () => {
     });
     renderPage(createMockResourceApi({ renderItem }));
 
-    await user.click(
-      await screen.findByRole("button", { name: "Catalog model" }),
-    );
-    await user.click(screen.getByRole("checkbox", { name: "Navy tee" }));
+    await user.click(await screen.findByRole("checkbox", { name: "Navy tee" }));
+    await user.click(screen.getByRole("button", { name: "Catalog model" }));
     await user.click(
       screen.getByRole("button", { name: "Start Virtual Try On" }),
     );
@@ -210,6 +334,7 @@ describe("VirtualTryOnPage", () => {
 
     await user.click(await screen.findByLabelText("Saved outfit"));
     await user.click(screen.getByRole("button", { name: "Sunday brunch" }));
+    await user.click(screen.getByRole("button", { name: "Weekday look" }));
     await user.click(
       screen.getByRole("button", { name: "Start Virtual Try On" }),
     );
@@ -228,9 +353,7 @@ describe("VirtualTryOnPage", () => {
     renderPage(createEmptyResourceApi());
 
     expect(
-      await screen.findByText(
-        "Add a Virtual Profile or choose a preset to continue.",
-      ),
+      await screen.findByRole("link", { name: "Add a Virtual Profile" }),
     ).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "Weekday look" }),
@@ -275,9 +398,11 @@ describe("VirtualTryOnPage", () => {
     ).toBeInTheDocument();
   });
 
-  it("keeps the Virtual Profile picker keyboard accessible", async () => {
+  it("keeps the Virtual Profile picker keyboard accessible after clothing is chosen", async () => {
     const user = userEvent.setup();
     renderPage(createMockResourceApi());
+
+    await user.click(await screen.findByRole("checkbox", { name: "Navy tee" }));
 
     const profileGrid = await screen.findByRole("list", {
       name: "Virtual Profile",
