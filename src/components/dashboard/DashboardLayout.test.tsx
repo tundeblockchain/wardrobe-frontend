@@ -95,8 +95,8 @@ describe("DashboardLayout", () => {
       within(appNav).getByRole("link", { name: "Outfits" }),
     ).toHaveAttribute("href", appPaths.appOutfits);
     expect(
-      within(appNav).getByRole("link", { name: "Virtual Profiles" }),
-    ).toHaveAttribute("href", appPaths.appVirtualProfiles);
+      within(appNav).queryByRole("link", { name: "Virtual Profiles" }),
+    ).not.toBeInTheDocument();
     expect(
       within(appNav).getByRole("link", { name: "Virtual Try On" }),
     ).toHaveAttribute("href", appPaths.appVirtualTryOn);
@@ -119,14 +119,14 @@ describe("DashboardLayout", () => {
     );
 
     await user.click(
-      within(getAppNav()).getByRole("link", { name: "Virtual Profiles" }),
+      within(getAppNav()).getByRole("link", { name: "Virtual Try On" }),
     );
     expect(
-      await screen.findByRole("heading", { level: 1, name: "Virtual Profiles" }),
+      await screen.findByRole("heading", { level: 1, name: "Virtual Try On" }),
     ).toBeInTheDocument();
     expect(
       screen.getByText(
-        /Browse Virtual Profiles and preview looks with Virtual Try On/,
+        /Pick clothing items or an outfit, then a Virtual Profile/,
       ),
     ).toBeInTheDocument();
   });

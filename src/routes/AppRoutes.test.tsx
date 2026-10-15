@@ -401,6 +401,20 @@ describe("AppRoutes", () => {
     );
   });
 
+  it("redirects /app/virtual-profiles to Virtual Try On", async () => {
+    renderAppRoutes(appPaths.appVirtualProfiles, { user: { id: "user-1" } });
+
+    expect(
+      await screen.findByRole("heading", { level: 1, name: "Virtual Try On" }),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId("route-location")).toHaveTextContent(
+      appPaths.appVirtualTryOn,
+    );
+    expect(
+      screen.queryByRole("heading", { level: 1, name: "Virtual Profiles" }),
+    ).not.toBeInTheDocument();
+  });
+
   it("renders Inbox at /app/inbox", async () => {
     renderAppRoutes(appPaths.appInbox, { user: { id: "user-1" } });
 

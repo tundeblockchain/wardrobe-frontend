@@ -1,7 +1,6 @@
 import type { SvgIconComponent } from "@mui/icons-material";
 import CheckroomOutlined from "@mui/icons-material/CheckroomOutlined";
 import AutoAwesomeOutlined from "@mui/icons-material/AutoAwesomeOutlined";
-import FaceRetouchingNaturalOutlined from "@mui/icons-material/FaceRetouchingNaturalOutlined";
 import HomeOutlined from "@mui/icons-material/HomeOutlined";
 import ManageAccountsOutlined from "@mui/icons-material/ManageAccountsOutlined";
 import StyleOutlined from "@mui/icons-material/StyleOutlined";
@@ -36,12 +35,6 @@ export const dashboardNavItems: DashboardNavItem[] = [
     label: "Outfits",
     path: appPaths.appOutfits,
     Icon: StyleOutlined,
-  },
-  {
-    id: "virtual-profiles",
-    label: "Virtual Profiles",
-    path: appPaths.appVirtualProfiles,
-    Icon: FaceRetouchingNaturalOutlined,
   },
   {
     id: "virtual-try-on",

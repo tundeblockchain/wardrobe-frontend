@@ -424,7 +424,7 @@ export const dashboardCopy = {
   virtualTryOn: {
     title: "Virtual Try On",
     description:
-      "Pick a Virtual Profile plus clothing items or an outfit, then start a render.",
+      "Pick clothing items or an outfit, then a Virtual Profile, and start a render.",
     loadingLabel: "Loading Virtual Try On",
     errorTitle: "Couldn't load Virtual Try On",
     errorDescription:
@@ -432,6 +432,7 @@ export const dashboardCopy = {
     retryLabel: "Try loading Virtual Try On again",
     profileLabel: "Virtual Profile",
     profileEmpty: "Add a Virtual Profile or choose a preset to continue.",
+    profileLocked: "Choose clothing items or an outfit first.",
     sourceLabel: "Try on",
     sourceItemsLabel: "Clothing items",
     sourceOutfitLabel: "Saved outfit",
