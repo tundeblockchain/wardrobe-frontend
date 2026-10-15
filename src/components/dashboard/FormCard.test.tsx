@@ -6,6 +6,7 @@ import { expectOnlySharedFormCardComponent } from "../../test/formCardTest";
 import { renderWithProviders } from "../../test/renderWithProviders";
 import { createDashboardTheme } from "../../theme/createDashboardTheme";
 import { wardrobeDarkPalette } from "../../theme/wardrobeDarkPalette";
+import { DashboardPaper } from "./DashboardPaper";
 import {
   FORM_CARD_CANCEL_TEST_ID,
   FORM_CARD_HEADER_TEST_ID,
@@ -168,5 +169,35 @@ describe("FormCard", () => {
 
   it("is the only form-card component", () => {
     expectOnlySharedFormCardComponent();
+  });
+
+  it("drops nested paper chrome inside the dashboard shell wrapper", () => {
+    renderWithProviders(
+      <DashboardPaper>
+        <FormCard
+          title="Edit wardrobe"
+          onCancel={vi.fn()}
+          submitLabel="Save changes"
+          onSubmit={vi.fn()}
+        >
+          <p>Form fields</p>
+        </FormCard>
+      </DashboardPaper>,
+    );
+
+    const card = screen.getByTestId(FORM_CARD_TEST_ID);
+    expect(card).toHaveClass("MuiPaper-root");
+    expect(card).toHaveStyle({
+      maxWidth: "none",
+      paddingLeft: "0px",
+      paddingRight: "0px",
+      paddingTop: "0px",
+      paddingBottom: "0px",
+      borderWidth: "0px",
+      backgroundColor: "rgba(0, 0, 0, 0)",
+      boxShadow: "none",
+      overflow: "visible",
+      minWidth: "0px",
+    });
   });
 });

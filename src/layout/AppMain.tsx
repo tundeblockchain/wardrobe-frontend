@@ -11,6 +11,9 @@ export const AppMain = ({ children }: AppMainProps) => {
       tabIndex={-1}
       sx={{
         flex: 1,
+        display: "flex",
+        flexDirection: "column",
+        minWidth: 0,
         outline: "none",
       }}
     >

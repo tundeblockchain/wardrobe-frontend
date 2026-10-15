@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
-import { Box, Container, Stack, Typography } from "@mui/material";
+import { Box, Stack, Typography } from "@mui/material";
 import { getPublicAppEnv } from "../../config/env";
-import { SectionSurface } from "../surfaces/SectionSurface";
 
 export type DashboardPageProps = {
   headingId: string;
@@ -21,63 +20,54 @@ export const DashboardPage = ({
   const { appName } = getPublicAppEnv();
 
   return (
-    <SectionSurface
+    <Box
       component="article"
-      variant="mist"
       aria-labelledby={headingId}
+      data-testid="dashboard-page-container"
       sx={{
-        py: { xs: 4, md: 6 },
-        flex: 1,
+        width: "100%",
+        maxWidth: "none",
+        minWidth: 0,
+        mx: 0,
+        px: 0,
+        boxSizing: "border-box",
       }}
     >
-      <Container
-        maxWidth={false}
-        disableGutters
-        data-testid="dashboard-page-container"
-        sx={{
-          width: "100%",
-          maxWidth: "none",
-          mx: 0,
-          px: 3,
-          boxSizing: "border-box",
-        }}
-      >
-        <Stack spacing={3}>
-          <Stack
-            direction={{ xs: "column", sm: "row" }}
-            spacing={2}
-            sx={{
-              alignItems: { sm: "flex-start" },
-              justifyContent: "space-between",
-            }}
-          >
-            <Stack spacing={1} sx={{ minWidth: 0, maxWidth: 720 }}>
-              <Typography
-                variant="overline"
-                component="p"
-                sx={{ color: "secondary.dark", letterSpacing: "0.16em" }}
-              >
-                {appName}
-              </Typography>
-              <Typography
-                id={headingId}
-                variant="h1"
-                component="h1"
-                color="text.primary"
-              >
-                {title}
-              </Typography>
-              <Typography variant="body1" color="text.secondary">
-                {description}
-              </Typography>
-            </Stack>
-            {actions ? (
-              <Box sx={{ flexShrink: 0, pt: { sm: 4 } }}>{actions}</Box>
-            ) : null}
+      <Stack spacing={3} sx={{ minWidth: 0, width: "100%" }}>
+        <Stack
+          direction={{ xs: "column", sm: "row" }}
+          spacing={2}
+          sx={{
+            alignItems: { sm: "flex-start" },
+            justifyContent: "space-between",
+          }}
+        >
+          <Stack spacing={1} sx={{ minWidth: 0, maxWidth: 720 }}>
+            <Typography
+              variant="overline"
+              component="p"
+              sx={{ color: "secondary.dark", letterSpacing: "0.16em" }}
+            >
+              {appName}
+            </Typography>
+            <Typography
+              id={headingId}
+              variant="h1"
+              component="h1"
+              color="text.primary"
+            >
+              {title}
+            </Typography>
+            <Typography variant="body1" color="text.secondary">
+              {description}
+            </Typography>
           </Stack>
-          {children}
+          {actions ? (
+            <Box sx={{ flexShrink: 0, pt: { sm: 4 } }}>{actions}</Box>
+          ) : null}
         </Stack>
-      </Container>
-    </SectionSurface>
+        {children}
+      </Stack>
+    </Box>
   );
 };

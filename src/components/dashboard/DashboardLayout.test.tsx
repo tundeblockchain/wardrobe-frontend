@@ -13,6 +13,7 @@ import { appPaths } from "../../routes/paths";
 import { stubMatchMedia } from "../../test/matchMedia";
 import { renderWithProviders } from "../../test/renderWithProviders";
 import { DashboardLayout } from "./DashboardLayout";
+import { DASHBOARD_PAPER_TEST_ID } from "./DashboardPaper";
 import { SIDEBAR_COLLAPSED_STORAGE_KEY } from "./sidebarCollapsed";
 
 const authProviderMocks = vi.hoisted(() => ({
@@ -232,6 +233,21 @@ describe("DashboardLayout", () => {
     expect(screen.getByTestId("dashboard-content")).toHaveStyle({
       marginLeft: "0px",
     });
+  });
+
+  it("puts signed-in screen content in one centred paper wrapper", () => {
+    renderDashboard();
+
+    const paper = screen.getByTestId(DASHBOARD_PAPER_TEST_ID);
+    const sidebar = getAppNav();
+    expect(screen.getByTestId("dashboard-content")).toContainElement(paper);
+    expect(paper).toContainElement(
+      screen.getByRole("heading", { level: 1, name: "Your closet" }),
+    );
+    expect(paper).not.toContainElement(sidebar);
+    expect(screen.getAllByTestId(DASHBOARD_PAPER_TEST_ID)).toHaveLength(1);
+    expect(screen.getByRole("contentinfo")).not.toEqual(paper);
+    expect(paper.contains(screen.getByRole("contentinfo"))).toBe(false);
   });
 
   it("keeps Terms, Privacy, and Contact in the dashboard footer", () => {
