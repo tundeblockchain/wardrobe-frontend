@@ -431,10 +431,7 @@ export const dashboardCopy = {
     renderErrorDescription:
       "Try again in a moment. No new Virtual Try On render was started.",
     pendingLabel: "Virtual Try On is processing.",
-    galleryLabel: "Virtual Try On gallery",
-    galleryEmptyTitle: "No Virtual Try On renders yet",
-    galleryEmptyDescription:
-      "Start a Virtual Try On to see renders here, newest first.",
+    resultLabel: "Virtual Try On result",
     validationProfile: "Choose a Virtual Profile.",
     validationItems: "Choose at least one clothing item or an outfit.",
     validationOutfit: "Choose an outfit.",

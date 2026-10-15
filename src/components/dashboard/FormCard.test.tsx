@@ -32,6 +32,7 @@ const renderFormCard = (
       isSubmitDisabled={props.isSubmitDisabled}
       cancelLabel={props.cancelLabel}
       cancelAriaLabel={props.cancelAriaLabel}
+      fullWidth={props.fullWidth}
       onSubmit={onSubmit}
     >
       {props.children ?? <p>Form fields</p>}
@@ -169,6 +170,16 @@ describe("FormCard", () => {
 
   it("is the only form-card component", () => {
     expectOnlySharedFormCardComponent();
+  });
+
+  it("stretches to the container width when fullWidth is set", () => {
+    renderFormCard({ fullWidth: true });
+
+    expect(screen.getByTestId(FORM_CARD_TEST_ID)).toHaveStyle({
+      width: "100%",
+      maxWidth: "none",
+      alignSelf: "stretch",
+    });
   });
 
   it("drops nested paper chrome inside the dashboard shell wrapper", () => {
