@@ -9,7 +9,7 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import { useLocation } from "react-router-dom";
+import { Link as RouterLink, useLocation } from "react-router-dom";
 import {
   assignBillingUrl as defaultAssignBillingUrl,
   DEFAULT_BILLING_INTERVAL,
@@ -33,7 +33,7 @@ import {
   isStripePaidTier,
 } from "../../content/planDisplay";
 import { useResourceQuery } from "../../hooks/useResourceQuery";
-import { SETTINGS_PLAN_HASH } from "../../routes/paths";
+import { appPaths, SETTINGS_PLAN_HASH } from "../../routes/paths";
 
 const copy = dashboardCopy.settings;
 
@@ -172,6 +172,16 @@ export const PlanSettingsSection = ({
         <Typography id="plan-heading" variant="h3" component="h2">
           {copy.planTitle}
         </Typography>
+        <Button
+          component={RouterLink}
+          to={appPaths.appPricing}
+          variant="outlined"
+          color="primary"
+          tabIndex={0}
+          aria-label={dashboardCopy.billing.comparePlansAriaLabel}
+        >
+          {dashboardCopy.billing.comparePlansLabel}
+        </Button>
         {planQuery.status === "loading" ? (
           <ResourceLoadingState label={copy.planLoadingLabel} />
         ) : null}

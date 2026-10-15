@@ -129,6 +129,11 @@ describe("dashboard resource states", () => {
         name: "Virtual Try On is a Premium feature",
       }),
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", {
+        name: "Compare Free, Basic, and Premium plans",
+      }),
+    ).toHaveAttribute("href", "/app/pricing");
   });
 
   it("renders fallback catalog limit copy without numbers", () => {

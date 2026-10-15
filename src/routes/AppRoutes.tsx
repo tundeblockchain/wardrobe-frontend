@@ -104,6 +104,11 @@ const BillingCancelPage = lazy(async () => {
   return { default: module.BillingCancelPage };
 });
 
+const PricingPage = lazy(async () => {
+  const module = await import("../pages/PricingPage");
+  return { default: module.PricingPage };
+});
+
 export const AppRoutes = () => {
   return (
     <Routes>
@@ -112,6 +117,14 @@ export const AppRoutes = () => {
         <Route path={appPaths.terms} element={<TermsOfServicePage />} />
         <Route path={appPaths.privacy} element={<PrivacyPolicyPage />} />
         <Route path={appPaths.contact} element={<ContactPage />} />
+        <Route
+          path={appPaths.pricing}
+          element={
+            <Suspense fallback={<RouteFallback />}>
+              <PricingPage />
+            </Suspense>
+          }
+        />
         <Route path={appPaths.share} element={<SharePreviewPage />} />
         <Route
           path={appPaths.login}
@@ -172,6 +185,7 @@ export const AppRoutes = () => {
         />
         <Route path="virtual-try-on" element={<VirtualTryOnPage />} />
         <Route path="settings" element={<SettingsPage />} />
+        <Route path="pricing" element={<PricingPage />} />
         <Route path="plan" element={<PlanPage />} />
         <Route path="billing/success" element={<BillingSuccessPage />} />
         <Route path="billing/cancel" element={<BillingCancelPage />} />

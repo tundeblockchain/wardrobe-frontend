@@ -3,6 +3,7 @@ import type { EntitlementLimits, EntitlementUsage } from "../api/resourceTypes";
 import {
   getCatalogLimitDescription,
   getCatalogLimitErrorMessage,
+  getFreePlanIncludesCopy,
 } from "./catalogLimitCopy";
 
 const customLimits: EntitlementLimits = {
@@ -18,6 +19,16 @@ const customUsage: EntitlementUsage = {
 };
 
 describe("catalog limit copy", () => {
+  it("returns Free plan include copy without an upgrade suffix", () => {
+    expect(getFreePlanIncludesCopy("wardrobe", customLimits)).toBe(
+      "The Free plan includes 3 wardrobes.",
+    );
+    expect(getFreePlanIncludesCopy("item", customLimits)).toBe(
+      "The Free plan includes 12 clothing items.",
+    );
+    expect(getFreePlanIncludesCopy("outfit")).toBeUndefined();
+  });
+
   it("interpolates non-default /me limits into upgrade descriptions", () => {
     expect(getCatalogLimitDescription("wardrobe", { limits: customLimits })).toBe(
       "The Free plan includes 3 wardrobes. Upgrade your plan to add another.",

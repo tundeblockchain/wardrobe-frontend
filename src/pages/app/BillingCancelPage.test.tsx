@@ -22,6 +22,9 @@ describe("BillingCancelPage", () => {
       screen.getByRole("link", { name: "Go to the dashboard" }),
     ).toHaveAttribute("href", appPaths.app);
     expect(
+      screen.getByRole("link", { name: "Compare Free, Basic, and Premium plans" }),
+    ).toHaveAttribute("href", appPaths.appPricing);
+    expect(
       screen.getByRole("link", { name: "View plan in Settings" }),
     ).toHaveAttribute("href", appPaths.appSettingsPlan);
   });

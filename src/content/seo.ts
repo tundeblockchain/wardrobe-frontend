@@ -112,6 +112,14 @@ export const getContactDescription = (appName: string): string => {
   return `Contact the ${appName} operator with product questions or support requests.`;
 };
 
+export const getPricingTitle = (appName: string): string => {
+  return `Pricing — ${appName}`;
+};
+
+export const getPricingDescription = (appName: string): string => {
+  return `Compare Free, Basic, and Premium ${appName} plans. Paid prices come from the live billing catalog.`;
+};
+
 export const getShareFallbackTitle = (appName: string): string => {
   return `Shared look — ${appName}`;
 };
@@ -488,6 +496,30 @@ export const getPageSeo = ({
   if (path === appPaths.contact) {
     const title = getContactTitle(env.appName);
     const description = getContactDescription(env.appName);
+
+    return {
+      title,
+      description,
+      path,
+      siteName: env.appName,
+      canonicalUrl,
+      ogType: "website",
+      ogImageUrl,
+      ogImageAlt,
+      robots: "index,follow",
+      jsonLd: getWebPageJsonLd({
+        name: title,
+        description,
+        url: canonicalUrl,
+        siteName: env.appName,
+        siteUrl,
+      }),
+    };
+  }
+
+  if (path === appPaths.pricing) {
+    const title = getPricingTitle(env.appName);
+    const description = getPricingDescription(env.appName);
 
     return {
       title,

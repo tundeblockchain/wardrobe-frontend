@@ -29,6 +29,10 @@ describe("AppHeader", () => {
       "href",
       "/#download",
     );
+    expect(screen.getByRole("link", { name: "Pricing" })).toHaveAttribute(
+      "href",
+      appPaths.pricing,
+    );
     expect(
       within(header).queryByRole("link", { name: "Terms of Service" }),
     ).not.toBeInTheDocument();
@@ -103,6 +107,10 @@ describe("AppHeader", () => {
     expect(
       within(mobileMenu).queryByRole("link", { name: "Contact us" }),
     ).not.toBeInTheDocument();
+    expect(within(mobileMenu).getByRole("link", { name: "Pricing" })).toHaveAttribute(
+      "href",
+      appPaths.pricing,
+    );
   });
 
   it("shows Dashboard in the mobile menu when signed in", async () => {

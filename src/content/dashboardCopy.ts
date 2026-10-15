@@ -347,6 +347,8 @@ export const dashboardCopy = {
     cancelDashboardAriaLabel: "Go to the dashboard",
     cancelSettingsLabel: "View plan in Settings",
     cancelSettingsAriaLabel: "View plan in Settings",
+    comparePlansLabel: "Compare plans",
+    comparePlansAriaLabel: "Compare Free, Basic, and Premium plans",
   },
   virtualProfiles: {
     title: "Virtual Profiles",

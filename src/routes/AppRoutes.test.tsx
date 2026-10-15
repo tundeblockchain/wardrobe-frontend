@@ -80,6 +80,7 @@ describe("AppRoutes", () => {
       appPaths.terms,
       appPaths.privacy,
       appPaths.contact,
+      appPaths.pricing,
     ];
 
     publicRoutes.forEach((route) => {
@@ -115,6 +116,21 @@ describe("AppRoutes", () => {
       screen.getByRole("heading", { name: "Acceptable use" }),
     ).toBeInTheDocument();
     expect(getApps()).toHaveLength(0);
+  });
+
+  it("renders the public pricing page at /pricing without auth", async () => {
+    renderAppRoutes(appPaths.pricing);
+
+    expect(
+      await screen.findByRole("heading", { level: 1, name: "Pricing" }),
+    ).toBeInTheDocument();
+    expect(getApps()).toHaveLength(0);
+    expect(
+      screen.getByRole("navigation", { name: "Primary" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("navigation", { name: "App" }),
+    ).not.toBeInTheDocument();
   });
 
   it("renders Contact us at /contact", () => {
@@ -315,6 +331,20 @@ describe("AppRoutes", () => {
     ).not.toBeInTheDocument();
     expectHeaderHasNoLegalLinks();
     expectLegalFooterLinks();
+  });
+
+  it("renders in-app pricing for a signed-in user", async () => {
+    renderAppRoutes(appPaths.appPricing, { user: { id: "user-1" } });
+
+    expect(
+      await screen.findByRole("heading", { level: 1, name: "Pricing" }),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId("route-location")).toHaveTextContent(
+      appPaths.appPricing,
+    );
+    expect(
+      screen.getByRole("navigation", { name: "App" }),
+    ).toBeInTheDocument();
   });
 
   it("renders Profile & Settings and redirects /app/plan there", async () => {

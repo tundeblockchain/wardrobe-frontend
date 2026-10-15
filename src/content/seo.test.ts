@@ -100,6 +100,20 @@ describe("getPageSeo", () => {
     expect(jsonLdText(contactSeo.jsonLd)).not.toContain("dateModified");
   });
 
+  it("uses WebPage structured data for the pricing route", () => {
+    const pricingSeo = getPageSeo({
+      pathname: "/pricing",
+      env: exampleEnv,
+    });
+
+    expect(pricingSeo.title).toBe("Pricing — Pocket Closet");
+    expect(pricingSeo.description).toContain("Free, Basic, and Premium");
+    expect(pricingSeo.canonicalUrl).toBe("https://example.com/pricing");
+    expect(jsonLdText(pricingSeo.jsonLd)).toContain("WebPage");
+    expect(jsonLdText(pricingSeo.jsonLd)).not.toContain("SoftwareApplication");
+    expect(jsonLdText(pricingSeo.jsonLd)).not.toContain("Offer");
+  });
+
   it("uses share-friendly title and OG image when a preview is loaded", () => {
     const pageSeo = getPageSeo({
       pathname: "/share/shr_abcdefghijklmnopqrstu",

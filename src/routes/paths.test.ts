@@ -9,6 +9,7 @@ import {
   getAppVirtualProfileEditPath,
   getAppPath,
   getAppSettingsPlanPath,
+  getPricingPath,
   getAppWardrobeEditPath,
   getAppWardrobePath,
   getAppWardrobeRecommendationDetailPath,
@@ -45,6 +46,7 @@ describe("share paths", () => {
     expect(isSharePreviewPath("/terms")).toBe(false);
     expect(isSharePreviewPath("/privacy")).toBe(false);
     expect(isSharePreviewPath("/contact")).toBe(false);
+    expect(isSharePreviewPath("/pricing")).toBe(false);
     expect(isSharePreviewPath("/login")).toBe(false);
     expect(isSharePreviewPath("/app")).toBe(false);
     expect(isSharePreviewPath("/share")).toBe(false);
@@ -58,6 +60,7 @@ describe("login and app paths", () => {
     expect(appPaths.terms).toBe("/terms");
     expect(appPaths.privacy).toBe("/privacy");
     expect(appPaths.contact).toBe("/contact");
+    expect(appPaths.pricing).toBe("/pricing");
     expect(appPaths.share).toBe("/share/:token");
     expect(appPaths.login).toBe("/login");
     expect(appPaths.app).toBe("/app");
@@ -84,10 +87,14 @@ describe("login and app paths", () => {
     );
     expect(appPaths.appVirtualTryOn).toBe("/app/virtual-try-on");
     expect(appPaths.appSettings).toBe("/app/settings");
+    expect(appPaths.appPricing).toBe("/app/pricing");
     expect(appPaths.appPlan).toBe("/app/settings#plan");
     expect(appPaths.appSettingsPlan).toBe("/app/settings#plan");
     expect(SETTINGS_PLAN_HASH).toBe("plan");
     expect(getAppSettingsPlanPath()).toBe("/app/settings#plan");
+    expect(getPricingPath()).toBe("/pricing");
+    expect(getPricingPath("/pricing")).toBe("/pricing");
+    expect(getPricingPath("/app/settings")).toBe("/app/pricing");
     expect(appPaths.appBillingSuccess).toBe("/app/billing/success");
     expect(appPaths.appBillingCancel).toBe("/app/billing/cancel");
     expect(getContactPath()).toBe("/contact");
