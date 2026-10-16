@@ -1,8 +1,9 @@
+import { isApiError } from "../../api/httpClient";
 import type { ClothingItem, Outfit, OutfitRender } from "../../api/resourceTypes";
-import { mapRenderImageUrls } from "../../api/renderImages";
 
 export const VIRTUAL_TRY_ON_POLL_INTERVAL_MS = 2_000;
 export const VIRTUAL_TRY_ON_MAX_POLL_ATTEMPTS = 30;
+export const RENDER_NOT_FOUND_CODE = "RENDER_NOT_FOUND";
 
 export type PollVirtualTryOnRenderOptions = {
   initial?: OutfitRender;
@@ -37,6 +38,12 @@ export const isVirtualTryOnRenderFailed = (
   return render?.status === "FAILED";
 };
 
+export const isVirtualTryOnRenderInProgress = (
+  render: OutfitRender | undefined,
+): boolean => {
+  return render?.status === "PENDING" || render?.status === "PROCESSING";
+};
+
 export const isVirtualTryOnRenderReady = (
   render: OutfitRender | undefined,
 ): boolean => {
@@ -46,21 +53,12 @@ export const isVirtualTryOnRenderReady = (
   );
 };
 
-const isOutfitRender = (
-  source: ClothingItem | Outfit | OutfitRender,
-): source is OutfitRender => {
-  return "status" in source && !("wardrobeId" in source);
-};
-
-export const collectVirtualTryOnImageUrls = (
-  source: ClothingItem | Outfit | OutfitRender,
-): string[] => {
-  if (isOutfitRender(source)) {
-    const imageUrl = getVirtualTryOnRenderImageUrl(source);
-    return imageUrl ? [imageUrl] : [];
-  }
-
-  return mapRenderImageUrls(source);
+export const isVirtualTryOnRenderNotFound = (error: unknown): boolean => {
+  return (
+    isApiError(error) &&
+    error.status === 404 &&
+    error.code === RENDER_NOT_FOUND_CODE
+  );
 };
 
 export const pollVirtualTryOnRender = async (
@@ -83,7 +81,16 @@ export const pollVirtualTryOnRender = async (
       await waitForPollInterval(intervalMs);
     }
 
-    latest = await getRender();
+    try {
+      latest = await getRender();
+    } catch (error) {
+      if (!isVirtualTryOnRenderNotFound(error)) {
+        throw error;
+      }
+
+      continue;
+    }
+
     if (
       isVirtualTryOnRenderReady(latest) ||
       isVirtualTryOnRenderFailed(latest)
@@ -100,9 +107,9 @@ export const resolveVirtualTryOnImageUrls = async (
   getRender: () => Promise<OutfitRender>,
   options: PollVirtualTryOnRenderOptions = {},
 ): Promise<string[]> => {
-  const postedUrls = collectVirtualTryOnImageUrls(posted);
-  if (postedUrls.length > 0) {
-    return postedUrls;
+  if (isVirtualTryOnRenderReady(posted.render)) {
+    const postedUrl = getVirtualTryOnRenderImageUrl(posted.render);
+    return postedUrl ? [postedUrl] : [];
   }
 
   const render = await pollVirtualTryOnRender(getRender, {
@@ -116,5 +123,6 @@ export const resolveVirtualTryOnImageUrls = async (
     );
   }
 
-  return collectVirtualTryOnImageUrls(render);
+  const imageUrl = getVirtualTryOnRenderImageUrl(render);
+  return imageUrl ? [imageUrl] : [];
 };

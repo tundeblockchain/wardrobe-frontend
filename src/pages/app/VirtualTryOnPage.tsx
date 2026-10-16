@@ -229,6 +229,7 @@ const VirtualTryOnReady = ({
   const [upgradeKind, setUpgradeKind] = useState<
     ReturnType<typeof getForbiddenUpgradeKind>
   >(undefined);
+  // Presigned GET URLs from render.imageUrl; display only, never persist.
   const [resultUrls, setResultUrls] = useState<string[]>([]);
 
   const wardrobeItems = data.items.filter(
