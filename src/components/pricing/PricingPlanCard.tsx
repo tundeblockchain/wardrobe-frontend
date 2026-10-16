@@ -4,6 +4,7 @@ import CloseOutlined from "@mui/icons-material/CloseOutlined";
 import { Box, Button, Chip, Paper, Stack, Typography } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 import type { PricingPlanFeature } from "../../content/pricingCopy";
+import { getDashboardPaperBoxShadow } from "../dashboard/dashboardPaperShadow";
 
 export const PRICING_PLAN_CARD_TEST_ID = "pricing-plan-card";
 
@@ -81,6 +82,9 @@ export const PricingPlanCard = ({
         borderColor: isCurrent ? theme.palette.primary.main : theme.palette.divider,
         bgcolor: theme.palette.background.paper,
         color: theme.palette.text.primary,
+        boxShadow: getDashboardPaperBoxShadow(theme.palette.mode, isCurrent),
+        overflow: "visible",
+        zIndex: isCurrent ? 1 : 0,
         display: "flex",
         flexDirection: "column",
       })}

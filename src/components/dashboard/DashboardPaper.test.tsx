@@ -26,6 +26,11 @@ import {
   DASHBOARD_PAPER_TEST_ID,
   DashboardPaper,
 } from "./DashboardPaper";
+import {
+  DASHBOARD_PAPER_DARK_EMPHASIS_SHADOW,
+  DASHBOARD_PAPER_LIGHT_EMPHASIS_SHADOW,
+  getDashboardPaperBoxShadow,
+} from "./dashboardPaperShadow";
 import { SIDEBAR_COLLAPSED_STORAGE_KEY } from "./sidebarCollapsed";
 
 const authProviderMocks = vi.hoisted(() => ({
@@ -80,6 +85,17 @@ describe("DashboardPaper", () => {
     authProviderMocks.getIdToken.mockResolvedValue("test-id-token");
     window.localStorage.removeItem(SIDEBAR_COLLAPSED_STORAGE_KEY);
     stubMatchMedia(false);
+  });
+
+  it("uses a stronger shared shadow for the current-plan emphasis", () => {
+    expect(getDashboardPaperBoxShadow("light")).toBe(DASHBOARD_PAPER_LIGHT_SHADOW);
+    expect(getDashboardPaperBoxShadow("dark")).toBe(DASHBOARD_PAPER_DARK_SHADOW);
+    expect(getDashboardPaperBoxShadow("light", true)).toBe(
+      DASHBOARD_PAPER_LIGHT_EMPHASIS_SHADOW,
+    );
+    expect(getDashboardPaperBoxShadow("dark", true)).toBe(
+      DASHBOARD_PAPER_DARK_EMPHASIS_SHADOW,
+    );
   });
 
   it("renders a narrower centred paper with a slight shadow", () => {

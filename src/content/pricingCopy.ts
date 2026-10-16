@@ -44,14 +44,19 @@ export const pricingCopy = {
   premiumName: "Premium",
   freePriceLabel: "Free",
   basicSummary: "Unlimited wardrobes, items, and outfits",
-  premiumSummary: "Unlimited catalog plus Virtual Try On and styling",
-  unlimitedCatalog: "Unlimited catalog",
+  premiumSummary:
+    "Unlimited wardrobes, items, and outfits plus Virtual Try On, Virtual Profile, and Outfit suggestions",
+  unlimitedWardrobes: "Unlimited wardrobes",
+  unlimitedItems: "Unlimited items",
+  unlimitedOutfits: "Unlimited outfits",
   currentPlanLabel: "Current plan",
   currentPlanAriaLabel: "Current plan",
   upgradeBasicLabel: "Upgrade to Basic",
   upgradeBasicAriaLabel: "Upgrade to Basic",
   upgradePremiumLabel: "Upgrade to Premium",
   upgradePremiumAriaLabel: "Upgrade to Premium",
+  choosePlanLabel: "Choose plan",
+  choosePlanAriaLabel: "Choose plan",
   upgradeUnavailableLabel: "Upgrade unavailable",
   upgradeUnavailableAriaLabel: "Upgrade unavailable for this plan",
   signInToUpgradeLabel: "Sign in to upgrade",
@@ -76,6 +81,14 @@ const getPremiumOnlyFeatures = (included: boolean): PricingPlanFeature[] => {
   ];
 };
 
+const getUnlimitedCatalogFeatureLines = (): PricingPlanFeature[] => {
+  return [
+    { label: pricingCopy.unlimitedWardrobes, included: true },
+    { label: pricingCopy.unlimitedItems, included: true },
+    { label: pricingCopy.unlimitedOutfits, included: true },
+  ];
+};
+
 export const getFreePlanFeatureLines = (): PricingPlanFeature[] => {
   const { wardrobes, items, outfits } = FREE_CATALOG_LIMITS;
   return [
@@ -94,14 +107,14 @@ export const getFreePlanFeatureLines = (): PricingPlanFeature[] => {
 
 export const getBasicPlanFeatureLines = (): PricingPlanFeature[] => {
   return [
-    { label: pricingCopy.unlimitedCatalog, included: true },
+    ...getUnlimitedCatalogFeatureLines(),
     ...getPremiumOnlyFeatures(false),
   ];
 };
 
 export const getPremiumPlanFeatureLines = (): PricingPlanFeature[] => {
   return [
-    { label: pricingCopy.unlimitedCatalog, included: true },
+    ...getUnlimitedCatalogFeatureLines(),
     ...getPremiumOnlyFeatures(true),
   ];
 };
@@ -111,7 +124,9 @@ export const getAllPricingPlanCopy = (): string[] => {
     getFreePlanSummary(),
     pricingCopy.basicSummary,
     pricingCopy.premiumSummary,
-    pricingCopy.unlimitedCatalog,
+    pricingCopy.unlimitedWardrobes,
+    pricingCopy.unlimitedItems,
+    pricingCopy.unlimitedOutfits,
     ...getFreePlanFeatureLines().map((feature) => feature.label),
     ...getBasicPlanFeatureLines().map((feature) => feature.label),
     ...getPremiumPlanFeatureLines().map((feature) => feature.label),

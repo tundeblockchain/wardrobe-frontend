@@ -11,11 +11,19 @@ import {
   type BillingPlansResponse,
 } from "../api/billingPlans";
 import { mockFreeAtLimitEntitlement } from "../api/mockResourceApi";
+import {
+  DASHBOARD_PAPER_LIGHT_EMPHASIS_SHADOW,
+  DASHBOARD_PAPER_LIGHT_SHADOW,
+} from "../components/dashboard/DashboardPaper";
 import { PRICING_PLAN_CARD_TEST_ID } from "../components/pricing/PricingPlanCard";
 import { pricingCopy } from "../content/pricingCopy";
 import { appPaths, getLoginPath, getLoginSignupPath } from "../routes/paths";
 import { renderWithProviders } from "../test/renderWithProviders";
-import type { CheckoutGetMeFn, StartCheckoutFn } from "../hooks/useCheckoutAction";
+import type {
+  CheckoutGetMeFn,
+  StartCheckoutFn,
+  StartPortalFn,
+} from "../hooks/useCheckoutAction";
 import { DashboardThemeProvider } from "../theme/DashboardThemeProvider";
 import { PricingPage } from "./PricingPage";
 
@@ -39,6 +47,7 @@ const renderPricing = ({
   user,
   fetchPlans = async () => ({ plans: MOCK_BILLING_PLANS }),
   startCheckout,
+  startPortal,
   getMe,
   assignLocation,
 }: {
@@ -46,6 +55,7 @@ const renderPricing = ({
   user?: { id: string } | null;
   fetchPlans?: () => Promise<BillingPlansResponse>;
   startCheckout?: StartCheckoutFn;
+  startPortal?: StartPortalFn;
   getMe?: CheckoutGetMeFn;
   assignLocation?: (url: string) => void;
 } = {}) => {
@@ -58,6 +68,7 @@ const renderPricing = ({
             <PricingPage
               fetchPlans={fetchPlans}
               startCheckout={startCheckout}
+              startPortal={startPortal}
               getMe={getMe}
               assignLocation={assignLocation}
             />
@@ -69,6 +80,7 @@ const renderPricing = ({
             <PricingPage
               fetchPlans={fetchPlans}
               startCheckout={startCheckout}
+              startPortal={startPortal}
               getMe={getMe}
               assignLocation={assignLocation}
             />
@@ -164,15 +176,36 @@ describe("PricingPage", () => {
       ),
     ).toBeInTheDocument();
     expect(
+      within(getPlanCard("Basic")).getByLabelText("Unlimited wardrobes included"),
+    ).toBeInTheDocument();
+    expect(
+      within(getPlanCard("Basic")).getByLabelText("Unlimited items included"),
+    ).toBeInTheDocument();
+    expect(
+      within(getPlanCard("Basic")).getByLabelText("Unlimited outfits included"),
+    ).toBeInTheDocument();
+    expect(
       within(getPlanCard("Basic")).getByLabelText(
         "Virtual Try On not included",
       ),
     ).toBeInTheDocument();
     expect(
       within(getPlanCard("Premium")).getByText(
-        "Unlimited catalog plus Virtual Try On and styling",
+        "Unlimited wardrobes, items, and outfits plus Virtual Try On, Virtual Profile, and Outfit suggestions",
       ),
     ).toBeInTheDocument();
+    expect(
+      within(getPlanCard("Premium")).getByLabelText(
+        "Unlimited wardrobes included",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      within(getPlanCard("Premium")).getByLabelText("Unlimited items included"),
+    ).toBeInTheDocument();
+    expect(getPlanCard("Basic").textContent).not.toContain("Unlimited catalog");
+    expect(getPlanCard("Premium").textContent).not.toContain(
+      "Unlimited catalog",
+    );
     expect(
       within(getPlanCard("Premium")).getByLabelText("Virtual Try On included"),
     ).toBeInTheDocument();
@@ -265,6 +298,24 @@ describe("PricingPage", () => {
     expect(
       within(getPlanCard("Free")).getByText("1 wardrobe, 5 items, 5 outfits"),
     ).toBeInTheDocument();
+    expect(
+      within(getPlanCard("Free")).queryByRole("button"),
+    ).not.toBeInTheDocument();
+    expect(
+      within(getPlanCard("Free")).queryByRole("link"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Upgrade to Basic" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Upgrade to Premium" }),
+    ).toBeInTheDocument();
+    expect(getPlanCard("Free")).toHaveStyle({
+      boxShadow: DASHBOARD_PAPER_LIGHT_EMPHASIS_SHADOW,
+    });
+    expect(getPlanCard("Basic")).toHaveStyle({
+      boxShadow: DASHBOARD_PAPER_LIGHT_SHADOW,
+    });
     expect(getPlanCard("Free").textContent).not.toMatch(/\bAI\b/);
   });
 
@@ -286,8 +337,20 @@ describe("PricingPage", () => {
       }),
     ).not.toBeInTheDocument();
     expect(
+      within(getPlanCard("Free")).queryByRole("button"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Choose plan" }),
+    ).not.toBeInTheDocument();
+    expect(
       screen.getByRole("button", { name: "Upgrade to Premium" }),
     ).toBeInTheDocument();
+    expect(getPlanCard("Basic")).toHaveStyle({
+      boxShadow: DASHBOARD_PAPER_LIGHT_EMPHASIS_SHADOW,
+    });
+    expect(getPlanCard("Premium")).toHaveStyle({
+      boxShadow: DASHBOARD_PAPER_LIGHT_SHADOW,
+    });
   });
 
   it("starts checkout with the selected tier and interval", async () => {
@@ -393,5 +456,117 @@ describe("PricingPage", () => {
     expect(
       await screen.findByRole("heading", { level: 2, name: "Free" }),
     ).toBeInTheDocument();
+  });
+
+  it("opens the Stripe portal from Choose plan for a Premium user on Basic", async () => {
+    const user = userEvent.setup();
+    const startCheckout = vi.fn();
+    const startPortal = vi.fn().mockResolvedValue({
+      url: "https://billing.example.test/session/portal",
+    });
+    const assignLocation = vi.fn();
+
+    renderPricing({
+      user: { id: "user-1" },
+      getMe: vi.fn().mockResolvedValue({
+        paidTier: { tier: "premium", source: "stripe" },
+      }),
+      startCheckout,
+      startPortal,
+      assignLocation,
+    });
+
+    expect(
+      await screen.findByRole("heading", { level: 2, name: "Premium" }),
+    ).toBeInTheDocument();
+    expect(getPlanCard("Premium")).toHaveAttribute("aria-current", "true");
+    expect(
+      within(getPlanCard("Premium")).getByLabelText("Current plan"),
+    ).toBeInTheDocument();
+    expect(
+      within(getPlanCard("Free")).queryByRole("button"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Upgrade to Basic" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Upgrade to Premium" }),
+    ).not.toBeInTheDocument();
+    expect(getPlanCard("Premium")).toHaveStyle({
+      boxShadow: DASHBOARD_PAPER_LIGHT_EMPHASIS_SHADOW,
+    });
+    expect(getPlanCard("Basic")).toHaveStyle({
+      boxShadow: DASHBOARD_PAPER_LIGHT_SHADOW,
+    });
+
+    await user.click(screen.getByRole("button", { name: "Choose plan" }));
+
+    await waitFor(() => {
+      expect(startPortal).toHaveBeenCalledTimes(1);
+      expect(assignLocation).toHaveBeenCalledWith(
+        "https://billing.example.test/session/portal",
+      );
+    });
+    expect(startCheckout).not.toHaveBeenCalled();
+  });
+
+  it("opens the portal from Choose plan on in-app /app/pricing for Premium", async () => {
+    const user = userEvent.setup();
+    const startCheckout = vi.fn();
+    const startPortal = vi.fn().mockResolvedValue({
+      url: "https://billing.example.test/session/portal-app",
+    });
+    const assignLocation = vi.fn();
+
+    renderPricing({
+      route: appPaths.appPricing,
+      user: { id: "user-1" },
+      getMe: vi.fn().mockResolvedValue({
+        paidTier: { tier: "premium", source: "stripe" },
+      }),
+      startCheckout,
+      startPortal,
+      assignLocation,
+    });
+
+    expect(
+      await screen.findByRole("button", { name: "Choose plan" }),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Choose plan" }));
+
+    await waitFor(() => {
+      expect(startPortal).toHaveBeenCalledTimes(1);
+      expect(assignLocation).toHaveBeenCalledWith(
+        "https://billing.example.test/session/portal-app",
+      );
+    });
+    expect(startCheckout).not.toHaveBeenCalled();
+    expect(
+      screen.queryByRole("button", { name: "Upgrade to Basic" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("hides Choose plan for a store-managed Premium user", async () => {
+    renderPricing({
+      user: { id: "user-1" },
+      getMe: vi.fn().mockResolvedValue({
+        paidTier: { tier: "premium", source: "ios" },
+      }),
+    });
+
+    expect(
+      await screen.findByRole("heading", { level: 2, name: "Premium" }),
+    ).toBeInTheDocument();
+    expect(getPlanCard("Premium")).toHaveAttribute("aria-current", "true");
+    expect(
+      screen.queryByRole("button", { name: "Choose plan" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Upgrade to Basic" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Upgrade to Premium" }),
+    ).not.toBeInTheDocument();
   });
 });

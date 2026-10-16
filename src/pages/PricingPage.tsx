@@ -15,7 +15,7 @@ import {
   getPlansUnavailableMessage,
   type FetchBillingPlansFn,
 } from "../api/billingPlans";
-import type { Entitlement, PaidPlanTier, PaidTier } from "../api/resourceTypes";
+import type { Entitlement, PaidTier } from "../api/resourceTypes";
 import { useApi } from "../api/useApi";
 import { useAuth } from "../auth/useAuth";
 import { BillingIntervalToggle } from "../components/billing/BillingIntervalToggle";
@@ -35,11 +35,16 @@ import {
   getPremiumPlanFeatureLines,
   pricingCopy,
 } from "../content/pricingCopy";
+import {
+  getPricingPlanActionKind,
+  type PricingTier,
+} from "../content/pricingPlanActions";
 import { dashboardCopy } from "../content/dashboardCopy";
 import {
   useCheckoutAction,
   type CheckoutGetMeFn,
   type StartCheckoutFn,
+  type StartPortalFn,
 } from "../hooks/useCheckoutAction";
 import { useResourceQuery } from "../hooks/useResourceQuery";
 import {
@@ -51,11 +56,10 @@ import {
 export type PricingPageProps = {
   fetchPlans?: FetchBillingPlansFn;
   startCheckout?: StartCheckoutFn;
+  startPortal?: StartPortalFn;
   getMe?: CheckoutGetMeFn;
   assignLocation?: (url: string) => void;
 };
-
-type PricingTier = "free" | PaidPlanTier;
 
 type PricingEntitlement = Pick<Entitlement, "paidTier"> &
   Partial<Pick<Entitlement, "limits" | "tier">>;
@@ -94,6 +98,7 @@ const getPaidTierFromEntitlement = (
 export const PricingPage = ({
   fetchPlans = fetchBillingPlans,
   startCheckout,
+  startPortal,
   getMe,
   assignLocation,
 }: PricingPageProps) => {
@@ -113,7 +118,8 @@ export const PricingPage = ({
     alreadySubscribedMessage,
     existingPaidTier,
     handleCheckout,
-  } = useCheckoutAction({ startCheckout, getMe, assignLocation });
+    handlePortal,
+  } = useCheckoutAction({ startCheckout, startPortal, getMe, assignLocation });
 
   const plansQuery = useResourceQuery("billing-plans", fetchPlans);
   const entitlementLoader = (): Promise<PricingEntitlement | null> => {
@@ -158,6 +164,15 @@ export const PricingPage = ({
     void handleCheckout(tier, billingInterval);
   };
 
+  const handleChoosePlan = () => {
+    if (!user) {
+      handleSignedOutUpgrade();
+      return;
+    }
+
+    void handlePortal();
+  };
+
   const entitlement =
     entitlementQuery.status === "ready" ? entitlementQuery.data : undefined;
   const currentTier = getCurrentPricingTier(user?.id, entitlement);
@@ -174,7 +189,14 @@ export const PricingPage = ({
 
   const getPaidCardAction = (tier: CheckoutTier) => {
     const selectedPlan = findBillingPlan(plans, tier, billingInterval);
-    const isCurrent = currentTier === tier;
+    const actionKind = getPricingPlanActionKind({
+      planTier: tier,
+      currentTier,
+      isSignedIn: Boolean(user),
+      isStoreManaged: storeManaged,
+      canCheckout,
+      hasSelectedPlan: Boolean(selectedPlan),
+    });
     const actionLabel =
       tier === "basic" ? copy.upgradeBasicLabel : copy.upgradePremiumLabel;
     const actionAriaLabel =
@@ -182,15 +204,7 @@ export const PricingPage = ({
         ? copy.upgradeBasicAriaLabel
         : copy.upgradePremiumAriaLabel;
 
-    if (isCurrent) {
-      return undefined;
-    }
-
-    if (storeManaged) {
-      return undefined;
-    }
-
-    if (!user) {
+    if (actionKind === "sign-in") {
       return {
         label: copy.signInToUpgradeLabel,
         ariaLabel:
@@ -201,7 +215,7 @@ export const PricingPage = ({
       };
     }
 
-    if (!selectedPlan) {
+    if (actionKind === "unavailable") {
       return {
         label: copy.upgradeUnavailableLabel,
         ariaLabel: copy.upgradeUnavailableAriaLabel,
@@ -209,31 +223,47 @@ export const PricingPage = ({
       };
     }
 
-    if (!canCheckout) {
+    if (actionKind === "portal") {
       return {
-        label: copy.upgradeUnavailableLabel,
-        ariaLabel: copy.upgradeUnavailableAriaLabel,
-        disabled: true,
+        label: isStarting
+          ? dashboardCopy.settings.planManagingLabel
+          : copy.choosePlanLabel,
+        ariaLabel: copy.choosePlanAriaLabel,
+        disabled: isStarting,
+        onClick: handleChoosePlan,
       };
     }
 
-    return {
-      label: isStarting ? dashboardCopy.billing.startingLabel : actionLabel,
-      ariaLabel: actionAriaLabel,
-      disabled: isStarting,
-      onClick: () => {
-        handleUpgrade(tier);
-      },
-    };
+    if (actionKind === "checkout") {
+      return {
+        label: isStarting ? dashboardCopy.billing.startingLabel : actionLabel,
+        ariaLabel: actionAriaLabel,
+        disabled: isStarting,
+        onClick: () => {
+          handleUpgrade(tier);
+        },
+      };
+    }
+
+    return undefined;
   };
 
-  const freeAction = !user
-    ? {
-        label: copy.signUpLabel,
-        ariaLabel: copy.signUpAriaLabel,
-        to: getLoginSignupPath(pricingPath),
-      }
-    : undefined;
+  const freeActionKind = getPricingPlanActionKind({
+    planTier: "free",
+    currentTier,
+    isSignedIn: Boolean(user),
+    isStoreManaged: storeManaged,
+    canCheckout,
+    hasSelectedPlan: true,
+  });
+  const freeAction =
+    freeActionKind === "sign-up"
+      ? {
+          label: copy.signUpLabel,
+          ariaLabel: copy.signUpAriaLabel,
+          to: getLoginSignupPath(pricingPath),
+        }
+      : undefined;
 
   const heading = (
     <Stack spacing={1}>
@@ -307,7 +337,7 @@ export const PricingPage = ({
           <Stack
             direction={{ xs: "column", md: "row" }}
             spacing={2}
-            sx={{ alignItems: "stretch" }}
+            sx={{ alignItems: "stretch", overflow: "visible", py: 0.5 }}
           >
             <PricingPlanCard
               name={copy.freeName}

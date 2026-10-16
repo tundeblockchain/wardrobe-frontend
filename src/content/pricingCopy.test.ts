@@ -31,38 +31,46 @@ describe("pricing copy", () => {
     ]);
   });
 
-  it("lists Basic unlimited catalog and excluded Premium features", () => {
+  it("lists Basic unlimited wardrobes, items, and outfits", () => {
     expect(pricingCopy.basicName).toBe("Basic");
     expect(pricingCopy.basicSummary).toBe(
       "Unlimited wardrobes, items, and outfits",
     );
     expect(getBasicPlanFeatureLines()).toEqual([
-      { label: pricingCopy.unlimitedCatalog, included: true },
+      { label: pricingCopy.unlimitedWardrobes, included: true },
+      { label: pricingCopy.unlimitedItems, included: true },
+      { label: pricingCopy.unlimitedOutfits, included: true },
       { label: pricingFeatureLabels.virtualTryOn, included: false },
       { label: pricingFeatureLabels.virtualProfile, included: false },
       { label: pricingFeatureLabels.outfitSuggestions, included: false },
     ]);
   });
 
-  it("lists Premium unlimited catalog plus styling features", () => {
+  it("lists Premium unlimited wardrobes, items, outfits, and styling features", () => {
     expect(pricingCopy.premiumName).toBe("Premium");
     expect(pricingCopy.premiumSummary).toBe(
-      "Unlimited catalog plus Virtual Try On and styling",
+      "Unlimited wardrobes, items, and outfits plus Virtual Try On, Virtual Profile, and Outfit suggestions",
     );
     expect(getPremiumPlanFeatureLines()).toEqual([
-      { label: pricingCopy.unlimitedCatalog, included: true },
+      { label: pricingCopy.unlimitedWardrobes, included: true },
+      { label: pricingCopy.unlimitedItems, included: true },
+      { label: pricingCopy.unlimitedOutfits, included: true },
       { label: pricingFeatureLabels.virtualTryOn, included: true },
       { label: pricingFeatureLabels.virtualProfile, included: true },
       { label: pricingFeatureLabels.outfitSuggestions, included: true },
     ]);
   });
 
-  it("uses the required feature names and never mentions AI or try-on caps", () => {
+  it("uses the required feature names and never mentions AI, catalog, or try-on caps", () => {
     const copy = getAllPricingPlanCopy().join("\n");
 
+    expect(copy).toContain("Unlimited wardrobes");
+    expect(copy).toContain("Unlimited items");
+    expect(copy).toContain("Unlimited outfits");
     expect(copy).toContain("Virtual Try On");
     expect(copy).toContain("Virtual Profile");
     expect(copy).toContain("Outfit suggestions");
+    expect(copy).not.toContain("Unlimited catalog");
     expect(copy).not.toMatch(/\bAI\b/);
     expect(copy).not.toContain("AI Profile");
     expect(copy).not.toMatch(/\d+\s+try-?ons?\b/i);

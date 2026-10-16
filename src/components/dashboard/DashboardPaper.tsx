@@ -1,12 +1,17 @@
 import type { ReactNode } from "react";
 import { Box, Paper } from "@mui/material";
 import { DashboardPaperContext } from "./dashboardPaperContext";
+import { getDashboardPaperBoxShadow } from "./dashboardPaperShadow";
 
 export const DASHBOARD_PAPER_TEST_ID = "dashboard-paper";
 export const DASHBOARD_PAPER_GUTTER_TEST_ID = "dashboard-paper-gutter";
 export const DASHBOARD_PAPER_MAX_WIDTH = 960;
-export const DASHBOARD_PAPER_LIGHT_SHADOW = "0 1px 6px rgba(42, 18, 28, 0.12)";
-export const DASHBOARD_PAPER_DARK_SHADOW = "0 1px 6px rgba(0, 0, 0, 0.45)";
+export {
+  DASHBOARD_PAPER_DARK_EMPHASIS_SHADOW,
+  DASHBOARD_PAPER_DARK_SHADOW,
+  DASHBOARD_PAPER_LIGHT_EMPHASIS_SHADOW,
+  DASHBOARD_PAPER_LIGHT_SHADOW,
+} from "./dashboardPaperShadow";
 
 export type DashboardPaperProps = {
   children: ReactNode;
@@ -40,10 +45,7 @@ export const DashboardPaper = ({ children }: DashboardPaperProps) => {
           overflow: "visible",
           bgcolor: theme.palette.background.paper,
           color: theme.palette.text.primary,
-          boxShadow:
-            theme.palette.mode === "dark"
-              ? DASHBOARD_PAPER_DARK_SHADOW
-              : DASHBOARD_PAPER_LIGHT_SHADOW,
+          boxShadow: getDashboardPaperBoxShadow(theme.palette.mode),
         })}
       >
         <DashboardPaperContext.Provider value={true}>
