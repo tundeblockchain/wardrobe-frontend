@@ -12,7 +12,12 @@ import {
 import { ENTITLEMENT_AI_REQUIRED_CODE } from "../../api/resourceTypes";
 import type { ClothingItem } from "../../api/resourceTypes";
 import type { ResourceApi } from "../../api/resourceApi";
-import { appPaths, getAppItemEditPath, getAppItemPath } from "../../routes/paths";
+import {
+  appPaths,
+  getAppItemEditPath,
+  getAppItemPath,
+  getAppVirtualTryOnPath,
+} from "../../routes/paths";
 import { renderWithProviders } from "../../test/renderWithProviders";
 import { ItemDetailPage } from "./ItemDetailPage";
 
@@ -97,7 +102,13 @@ describe("ItemDetailPage", () => {
     ).toHaveAttribute("href", getAppItemEditPath("item_navytee01", "wd_weekend01"));
     expect(
       screen.getByRole("link", { name: "Virtual Try On this clothing item" }),
-    ).toHaveAttribute("href", appPaths.appVirtualTryOn);
+    ).toHaveAttribute(
+      "href",
+      getAppVirtualTryOnPath({
+        itemId: "item_navytee01",
+        wardrobeId: "wd_weekend01",
+      }),
+    );
     expect(
       screen.queryByRole("heading", { name: "Virtual Try On gallery" }),
     ).not.toBeInTheDocument();

@@ -45,9 +45,9 @@ import { ResourceLoadingState } from "../../components/dashboard/ResourceLoading
 import { dashboardCopy } from "../../content/dashboardCopy";
 import { useResourceQuery } from "../../hooks/useResourceQuery";
 import {
-  appPaths,
   getAppItemEditPath,
   getAppOutfitEditPath,
+  getAppVirtualTryOnPath,
   getAppWardrobePath,
   WARDROBE_ID_QUERY_PARAM,
 } from "../../routes/paths";
@@ -533,7 +533,10 @@ export const ItemDetailPage = ({
                 ) : (
                   <Button
                     component={RouterLink}
-                    to={appPaths.appVirtualTryOn}
+                    to={getAppVirtualTryOnPath({
+                      itemId: item.itemId,
+                      wardrobeId: item.wardrobeId,
+                    })}
                     variant="outlined"
                     color="primary"
                     tabIndex={0}

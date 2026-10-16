@@ -280,6 +280,8 @@ export const dashboardCopy = {
     addLabel: "Add outfit",
     addAriaLabel: "Add an outfit",
     editLabel: "Edit outfit",
+    virtualTryOnLabel: "Virtual Try On",
+    virtualTryOnAriaLabel: "Virtual Try On this outfit",
   },
   outfitForm: {
     createTitle: "Add outfit",
@@ -428,11 +430,11 @@ export const dashboardCopy = {
     outfitsLabel: "Outfit",
     outfitsEmpty: "Add an outfit before starting Virtual Try On.",
     submitLabel: "Start Virtual Try On",
-    submittingLabel: "Starting Virtual Try On",
+    submittingLabel: "Creating your try-on…",
+    creatingLabel: "Creating your try-on…",
     renderErrorTitle: "Couldn't start Virtual Try On",
     renderErrorDescription:
       "Try again in a moment. No new Virtual Try On render was started.",
-    pendingLabel: "Virtual Try On is processing.",
     resultLabel: "Virtual Try On result",
     validationProfile: "Choose a Virtual Profile.",
     validationItems: "Choose at least one clothing item or an outfit.",

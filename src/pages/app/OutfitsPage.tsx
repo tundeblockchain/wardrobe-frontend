@@ -17,7 +17,11 @@ import {
 } from "../../components/dashboard/SuggestedOutfitsPanel";
 import { dashboardCopy } from "../../content/dashboardCopy";
 import { useResourceQuery } from "../../hooks/useResourceQuery";
-import { appPaths, getAppOutfitEditPath } from "../../routes/paths";
+import {
+  appPaths,
+  getAppOutfitEditPath,
+  getAppVirtualTryOnPath,
+} from "../../routes/paths";
 
 export type OutfitsPageProps = {
   resourceApi?: ResourceApi;
@@ -147,6 +151,22 @@ export const OutfitsPage = ({
                   }}
                 >
                   {copy.editLabel}
+                </Button>
+                <Button
+                  component={RouterLink}
+                  to={getAppVirtualTryOnPath({
+                    outfitId: outfit.outfitId,
+                    wardrobeId: outfit.wardrobeId,
+                  })}
+                  variant="outlined"
+                  color="primary"
+                  tabIndex={0}
+                  aria-label={`${copy.virtualTryOnLabel} ${outfit.name}`}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                  }}
+                >
+                  {copy.virtualTryOnLabel}
                 </Button>
               </ResourceCard>
             </Box>

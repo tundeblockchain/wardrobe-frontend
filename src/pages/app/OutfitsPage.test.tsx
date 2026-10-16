@@ -71,6 +71,12 @@ describe("OutfitsPage", () => {
       "href",
       "/app/outfits/outfit_brunch01/edit?wardrobeId=wd_weekend01",
     );
+    expect(
+      screen.getByRole("link", { name: "Virtual Try On Sunday brunch" }),
+    ).toHaveAttribute(
+      "href",
+      "/app/virtual-try-on?wardrobeId=wd_weekend01&outfitId=outfit_brunch01",
+    );
     expect(screen.getByRole("img", { name: "Sunday brunch" })).toHaveAttribute(
       "src",
       "/screenshots/try-on-ivory-maxi-390.jpg",

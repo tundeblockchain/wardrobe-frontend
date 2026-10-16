@@ -52,6 +52,7 @@ const renderDashboard = (route = appPaths.app) => {
           <Route path="outfits" element={<OutfitsPage />} />
           <Route path="virtual-profiles" element={<VirtualProfilesPage />} />
           <Route path="virtual-try-on" element={<VirtualTryOnPage />} />
+          <Route path="pricing" element={<h1>Pricing</h1>} />
           <Route path="settings" element={<SettingsPage />} />
         </Route>
         <Route path={appPaths.login} element={<p>Sign in page</p>} />
@@ -102,6 +103,9 @@ describe("DashboardLayout", () => {
       within(appNav).getByRole("link", { name: "Virtual Try On" }),
     ).toHaveAttribute("href", appPaths.appVirtualTryOn);
     expect(
+      within(appNav).getByRole("link", { name: "Upgrade" }),
+    ).toHaveAttribute("href", appPaths.appPricing);
+    expect(
       within(appNav).getByRole("link", { name: "Profile & Settings" }),
     ).toHaveAttribute("href", appPaths.appSettings);
     expect(
@@ -130,6 +134,29 @@ describe("DashboardLayout", () => {
         /Pick clothing items or an outfit, then a Virtual Profile/,
       ),
     ).toBeInTheDocument();
+  });
+
+  it("opens Upgrade from the sidebar on the existing pricing page", async () => {
+    const user = userEvent.setup();
+    renderDashboard();
+
+    const upgradeLink = within(getAppNav()).getByRole("link", {
+      name: "Upgrade",
+    });
+    expect(upgradeLink).toHaveAttribute("href", appPaths.appPricing);
+    expect(upgradeLink).not.toHaveAttribute("aria-current", "page");
+
+    await user.click(upgradeLink);
+
+    expect(
+      await screen.findByRole("heading", { level: 1, name: "Pricing" }),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId("route-location")).toHaveTextContent(
+      appPaths.appPricing,
+    );
+    expect(
+      within(getAppNav()).getByRole("link", { name: "Upgrade" }),
+    ).toHaveAttribute("aria-current", "page");
   });
 
   it("persists sidebar collapse in localStorage", async () => {
@@ -216,6 +243,9 @@ describe("DashboardLayout", () => {
     expect(
       within(appNav).getByRole("link", { name: "Wardrobes" }),
     ).toBeInTheDocument();
+    expect(
+      within(appNav).getByRole("link", { name: "Upgrade" }),
+    ).toHaveAttribute("href", appPaths.appPricing);
 
     await user.click(within(appNav).getByRole("link", { name: "Outfits" }));
 
