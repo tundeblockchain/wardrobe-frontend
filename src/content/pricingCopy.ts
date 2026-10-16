@@ -1,7 +1,32 @@
-import type { CatalogKind, EntitlementLimits } from "../api/resourceTypes";
-import { getFreePlanIncludesCopy } from "./catalogLimitCopy";
-import { dashboardCopy } from "./dashboardCopy";
-import { featureItems } from "./featureItems";
+import { FREE_CATALOG_LIMITS } from "../api/resourceTypes";
+
+export type PricingPlanFeature = {
+  label: string;
+  included: boolean;
+};
+
+export const pricingFeatureLabels = {
+  virtualTryOn: "Virtual Try On",
+  virtualProfile: "Virtual Profile",
+  outfitSuggestions: "Outfit suggestions",
+} as const;
+
+const formatCatalogCount = (
+  count: number,
+  singular: string,
+  plural: string,
+): string => {
+  return `${count} ${count === 1 ? singular : plural}`;
+};
+
+export const getFreePlanSummary = (): string => {
+  const { wardrobes, items, outfits } = FREE_CATALOG_LIMITS;
+  return [
+    formatCatalogCount(wardrobes, "wardrobe", "wardrobes"),
+    formatCatalogCount(items, "item", "items"),
+    formatCatalogCount(outfits, "outfit", "outfits"),
+  ].join(", ");
+};
 
 export const pricingCopy = {
   title: "Pricing",
@@ -18,6 +43,9 @@ export const pricingCopy = {
   basicName: "Basic",
   premiumName: "Premium",
   freePriceLabel: "Free",
+  basicSummary: "Unlimited wardrobes, items, and outfits",
+  premiumSummary: "Unlimited catalog plus Virtual Try On and styling",
+  unlimitedCatalog: "Unlimited catalog",
   currentPlanLabel: "Current plan",
   currentPlanAriaLabel: "Current plan",
   upgradeBasicLabel: "Upgrade to Basic",
@@ -38,39 +66,54 @@ export const pricingCopy = {
   comparePlansAriaLabel: "Compare Free, Basic, and Premium plans",
   monthlyPriceSuffix: "per month",
   yearlyPriceSuffix: "per year",
-  basicUnlimitedCatalog:
-    "Upgrade to Basic to add more wardrobes, clothing items, or outfits.",
-  premiumFeature: dashboardCopy.upgrade.premium.description,
-  premiumTitle: dashboardCopy.upgrade.premium.title,
 } as const;
 
-const FREE_LIMIT_KINDS: CatalogKind[] = ["wardrobe", "item", "outfit"];
-
-export const getFreePlanFeatureLines = (
-  limits?: EntitlementLimits | null,
-): string[] => {
-  const limitLines = FREE_LIMIT_KINDS.flatMap((kind) => {
-    const line = getFreePlanIncludesCopy(kind, limits);
-    return line ? [line] : [];
-  });
-
-  if (limitLines.length === 0) {
-    const catalogCopy = featureItems.find((item) => item.id === "catalog");
-    const outfitsCopy = featureItems.find((item) => item.id === "outfits");
-    return [
-      catalogCopy?.description ?? dashboardCopy.upgrade.basic.description,
-      outfitsCopy?.description ?? dashboardCopy.home.emptyDescription,
-      pricingCopy.premiumTitle,
-    ];
-  }
-
-  return [...limitLines, pricingCopy.premiumFeature];
+const getPremiumOnlyFeatures = (included: boolean): PricingPlanFeature[] => {
+  return [
+    { label: pricingFeatureLabels.virtualTryOn, included },
+    { label: pricingFeatureLabels.virtualProfile, included },
+    { label: pricingFeatureLabels.outfitSuggestions, included },
+  ];
 };
 
-export const getBasicPlanFeatureLines = (): string[] => {
-  return [pricingCopy.basicUnlimitedCatalog, pricingCopy.premiumFeature];
+export const getFreePlanFeatureLines = (): PricingPlanFeature[] => {
+  const { wardrobes, items, outfits } = FREE_CATALOG_LIMITS;
+  return [
+    {
+      label: formatCatalogCount(wardrobes, "wardrobe", "wardrobes"),
+      included: true,
+    },
+    { label: formatCatalogCount(items, "item", "items"), included: true },
+    {
+      label: formatCatalogCount(outfits, "outfit", "outfits"),
+      included: true,
+    },
+    ...getPremiumOnlyFeatures(false),
+  ];
 };
 
-export const getPremiumPlanFeatureLines = (): string[] => {
-  return [pricingCopy.basicUnlimitedCatalog, pricingCopy.premiumFeature];
+export const getBasicPlanFeatureLines = (): PricingPlanFeature[] => {
+  return [
+    { label: pricingCopy.unlimitedCatalog, included: true },
+    ...getPremiumOnlyFeatures(false),
+  ];
+};
+
+export const getPremiumPlanFeatureLines = (): PricingPlanFeature[] => {
+  return [
+    { label: pricingCopy.unlimitedCatalog, included: true },
+    ...getPremiumOnlyFeatures(true),
+  ];
+};
+
+export const getAllPricingPlanCopy = (): string[] => {
+  return [
+    getFreePlanSummary(),
+    pricingCopy.basicSummary,
+    pricingCopy.premiumSummary,
+    pricingCopy.unlimitedCatalog,
+    ...getFreePlanFeatureLines().map((feature) => feature.label),
+    ...getBasicPlanFeatureLines().map((feature) => feature.label),
+    ...getPremiumPlanFeatureLines().map((feature) => feature.label),
+  ];
 };

@@ -199,6 +199,13 @@ export type EntitlementStore = (typeof ENTITLEMENT_STORES)[number];
 export const ENTITLEMENT_PERIODS = ["MONTHLY", "YEARLY", "UNKNOWN"] as const;
 export type EntitlementPeriod = (typeof ENTITLEMENT_PERIODS)[number];
 
+/** Free catalog caps. Matches backend `FREE_CATALOG_LIMITS`. */
+export const FREE_CATALOG_LIMITS = {
+  wardrobes: 1,
+  items: 5,
+  outfits: 5,
+} as const;
+
 export type EntitlementFeatures = {
   unlimitedCatalog: boolean;
   aiTryOn: boolean;

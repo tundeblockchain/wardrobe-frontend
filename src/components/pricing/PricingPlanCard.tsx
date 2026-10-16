@@ -1,6 +1,9 @@
 import type { KeyboardEvent, ReactNode } from "react";
+import CheckOutlined from "@mui/icons-material/CheckOutlined";
+import CloseOutlined from "@mui/icons-material/CloseOutlined";
 import { Box, Button, Chip, Paper, Stack, Typography } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
+import type { PricingPlanFeature } from "../../content/pricingCopy";
 
 export const PRICING_PLAN_CARD_TEST_ID = "pricing-plan-card";
 
@@ -17,7 +20,8 @@ export type PricingPlanCardProps = {
   headingId: string;
   priceLabel: string;
   priceHint?: string;
-  features: readonly string[];
+  summary?: string;
+  features: readonly PricingPlanFeature[];
   isCurrent?: boolean;
   currentPlanLabel: string;
   currentPlanAriaLabel: string;
@@ -30,6 +34,7 @@ export const PricingPlanCard = ({
   headingId,
   priceLabel,
   priceHint,
+  summary,
   features,
   isCurrent = false,
   currentPlanLabel,
@@ -116,18 +121,52 @@ export const PricingPlanCard = ({
               {priceHint}
             </Typography>
           ) : null}
-        </Box>
-        <Box component="ul" sx={{ m: 0, pl: 2.5, flex: 1 }}>
-          {features.map((feature) => (
-            <Typography
-              key={feature}
-              component="li"
-              variant="body2"
-              color="text.secondary"
-              sx={{ mb: 1 }}
-            >
-              {feature}
+          {summary ? (
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+              {summary}
             </Typography>
+          ) : null}
+        </Box>
+        <Box component="ul" sx={{ m: 0, pl: 0, flex: 1, listStyle: "none" }}>
+          {features.map((feature) => (
+            <Stack
+              key={feature.label}
+              component="li"
+              direction="row"
+              spacing={1}
+              sx={{ alignItems: "flex-start", mb: 1 }}
+              aria-label={
+                feature.included
+                  ? `${feature.label} included`
+                  : `${feature.label} not included`
+              }
+            >
+              {feature.included ? (
+                <CheckOutlined
+                  fontSize="small"
+                  aria-hidden
+                  sx={(theme) => ({
+                    mt: "2px",
+                    color: theme.palette.primary.main,
+                  })}
+                />
+              ) : (
+                <CloseOutlined
+                  fontSize="small"
+                  aria-hidden
+                  sx={(theme) => ({
+                    mt: "2px",
+                    color: theme.palette.text.disabled,
+                  })}
+                />
+              )}
+              <Typography
+                variant="body2"
+                color={feature.included ? "text.primary" : "text.secondary"}
+              >
+                {feature.label}
+              </Typography>
+            </Stack>
           ))}
         </Box>
         {extra}
