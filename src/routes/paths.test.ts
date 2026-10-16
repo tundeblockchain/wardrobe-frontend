@@ -7,6 +7,10 @@ import {
   getAppOutfitEditPath,
   getAppOutfitNewPath,
   getAppVirtualProfileEditPath,
+  getAppVirtualTryOnPath,
+  VIRTUAL_TRY_ON_ITEM_QUERY_PARAM,
+  VIRTUAL_TRY_ON_OUTFIT_QUERY_PARAM,
+  WARDROBE_ID_QUERY_PARAM,
   getAppPath,
   getAppSettingsPlanPath,
   getPricingPath,
@@ -138,6 +142,23 @@ describe("login and app paths", () => {
     );
     expect(getAppVirtualProfileEditPath("aip_personal01")).toBe(
       "/app/virtual-profiles/aip_personal01/edit",
+    );
+    expect(getAppVirtualTryOnPath()).toBe("/app/virtual-try-on");
+    expect(
+      getAppVirtualTryOnPath({
+        itemId: "item_navytee01",
+        wardrobeId: "wd_weekend01",
+      }),
+    ).toBe(
+      `/app/virtual-try-on?${WARDROBE_ID_QUERY_PARAM}=wd_weekend01&${VIRTUAL_TRY_ON_ITEM_QUERY_PARAM}=item_navytee01`,
+    );
+    expect(
+      getAppVirtualTryOnPath({
+        outfitId: "outfit_brunch01",
+        wardrobeId: "wd_weekend01",
+      }),
+    ).toBe(
+      `/app/virtual-try-on?${WARDROBE_ID_QUERY_PARAM}=wd_weekend01&${VIRTUAL_TRY_ON_OUTFIT_QUERY_PARAM}=outfit_brunch01`,
     );
   });
 

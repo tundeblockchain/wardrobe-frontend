@@ -1,6 +1,6 @@
 import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   createAiTryOnOffResourceApi,
   createEmptyResourceApi,
@@ -19,16 +19,30 @@ import {
   expectFormInsideSharedCard,
   expectSharedFormCardAbsent,
 } from "../../test/formCardTest";
-import { appPaths } from "../../routes/paths";
+import { appPaths, getAppVirtualTryOnPath } from "../../routes/paths";
 import { renderWithProviders } from "../../test/renderWithProviders";
+import { VIRTUAL_TRY_ON_RESULT_TEST_ID } from "./VirtualTryOnResultCard";
 import { VirtualTryOnPage } from "./VirtualTryOnPage";
 
 const renderPage = (
   resourceApi: ReturnType<typeof createMockResourceApi>,
+  options: {
+    route?: string;
+    routeState?: unknown;
+    pollIntervalMs?: number;
+  } = {},
 ) => {
-  return renderWithProviders(<VirtualTryOnPage resourceApi={resourceApi} />, {
-    auth: { user: { id: "user-1" } },
-  });
+  return renderWithProviders(
+    <VirtualTryOnPage
+      resourceApi={resourceApi}
+      pollIntervalMs={options.pollIntervalMs}
+    />,
+    {
+      auth: { user: { id: "user-1" } },
+      route: options.route ?? appPaths.appVirtualTryOn,
+      routeState: options.routeState,
+    },
+  );
 };
 
 const renderedItem = {
@@ -39,6 +53,11 @@ const renderedItem = {
   processingStatus: "READY" as const,
   createdAt: "2026-09-03T18:40:00.000Z",
   updatedAt: "2026-10-13T12:00:00.000Z",
+  render: {
+    status: "READY" as const,
+    aiProfileId: "aip_personal01",
+    imageUrl: "/screenshots/try-on-started.jpg",
+  },
   renderImageUrls: ["/screenshots/try-on-started.jpg"],
   renderHistory: [
     {
@@ -54,7 +73,13 @@ const getProfileList = async () => {
   return screen.findByRole("list", { name: "Virtual Profile" });
 };
 
+const originalScrollIntoView = HTMLElement.prototype.scrollIntoView;
+
 describe("VirtualTryOnPage", () => {
+  afterEach(() => {
+    HTMLElement.prototype.scrollIntoView = originalScrollIntoView;
+  });
+
   it("renders a loading state", () => {
     renderPage(
       createMockResourceApi({
@@ -324,15 +349,16 @@ describe("VirtualTryOnPage", () => {
     expect(renderItem.mock.calls[0]?.[2]).toEqual({
       aiProfileId: "aip_personal01",
     });
-    expect(
-      await screen.findByRole("status"),
-    ).toHaveTextContent("Virtual Try On is processing.");
-    const result = screen.getByRole("region", {
+    const result = await screen.findByRole("region", {
       name: "Virtual Try On result",
     });
+    expect(result).toHaveAttribute("data-testid", VIRTUAL_TRY_ON_RESULT_TEST_ID);
     expect(
       within(result).getByRole("img", { name: "Virtual Try On render 1" }),
     ).toHaveAttribute("src", "/screenshots/try-on-started.jpg");
+    expect(
+      screen.queryByRole("status", { name: "Creating your try-on…" }),
+    ).not.toBeInTheDocument();
     expect(
       screen.queryByRole("region", { name: "Virtual Try On gallery" }),
     ).not.toBeInTheDocument();
@@ -374,7 +400,11 @@ describe("VirtualTryOnPage", () => {
       items: [],
       createdAt: "2026-09-20T14:00:00.000Z",
       updatedAt: "2026-10-13T12:00:00.000Z",
-      renderImageUrls: ["/screenshots/try-on-outfit.jpg"],
+      render: {
+        status: "READY" as const,
+        aiProfileId: "aip_personal01",
+        imageUrl: "/screenshots/try-on-outfit.jpg",
+      },
     });
     renderPage(createMockResourceApi({ renderOutfit }));
 
@@ -393,12 +423,15 @@ describe("VirtualTryOnPage", () => {
     expect(renderOutfit.mock.calls[0]?.[2]).toEqual({
       aiProfileId: "aip_personal01",
     });
+    const result = await screen.findByRole("region", {
+      name: "Virtual Try On result",
+    });
     expect(
-      await screen.findByRole("status"),
-    ).toHaveTextContent("Virtual Try On is processing.");
-    expect(
-      screen.getByRole("img", { name: "Virtual Try On render 1" }),
+      within(result).getByRole("img", { name: "Virtual Try On render 1" }),
     ).toHaveAttribute("src", "/screenshots/try-on-outfit.jpg");
+    expect(
+      screen.queryByRole("status", { name: "Creating your try-on…" }),
+    ).not.toBeInTheDocument();
   });
 
   it("renders an empty picker when there are no Virtual Profiles", async () => {
@@ -470,4 +503,182 @@ describe("VirtualTryOnPage", () => {
       within(profileGrid).getByRole("button", { name: "Weekday look" }),
     ).toHaveAttribute("aria-pressed", "false");
   });
+
+  it("hides profile and item photos while creating a try-on", async () => {
+    const user = userEvent.setup();
+    const renderItem = vi.fn(() => new Promise<typeof renderedItem>(() => undefined));
+    renderPage(createMockResourceApi({ renderItem }));
+
+    await user.click(await screen.findByRole("checkbox", { name: "Navy tee" }));
+    await user.click(screen.getByRole("button", { name: "Weekday look" }));
+    expect(screen.getByRole("img", { name: "Navy tee" })).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "Weekday look" })).toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole("button", { name: "Start Virtual Try On" }),
+    );
+
+    expect(
+      await screen.findByRole("status", { name: "Creating your try-on…" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("img", { name: "Navy tee" })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("img", { name: "Weekday look" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("img", { name: "Virtual Try On render 1" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("checkbox", { name: "Navy tee" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("list", { name: "Virtual Profile" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("scrolls the result card to the top when the render is ready", async () => {
+    const user = userEvent.setup();
+    const scrollIntoView = vi.fn();
+    HTMLElement.prototype.scrollIntoView = scrollIntoView;
+    renderPage(createMockResourceApi({ renderItem: vi.fn().mockResolvedValue(renderedItem) }));
+
+    await user.click(await screen.findByRole("checkbox", { name: "Navy tee" }));
+    await user.click(screen.getByRole("button", { name: "Weekday look" }));
+    await user.click(
+      screen.getByRole("button", { name: "Start Virtual Try On" }),
+    );
+
+    const result = await screen.findByRole("region", {
+      name: "Virtual Try On result",
+    });
+    expect(result).toHaveAttribute("data-testid", VIRTUAL_TRY_ON_RESULT_TEST_ID);
+    expect(
+      within(result).getByRole("img", { name: "Virtual Try On render 1" }),
+    ).toHaveAttribute("src", "/screenshots/try-on-started.jpg");
+    expect(scrollIntoView).toHaveBeenCalledWith({
+      behavior: "smooth",
+      block: "start",
+    });
+  });
+
+  it("opens in Clothing items mode with an item from the Items screen preselected", async () => {
+    renderPage(createMockResourceApi(), {
+      route: getAppVirtualTryOnPath({
+        itemId: "item_navytee01",
+        wardrobeId: "wd_weekend01",
+      }),
+    });
+
+    expect(
+      await screen.findByRole("radio", { name: "Clothing items" }),
+    ).toBeChecked();
+    expect(screen.getByRole("checkbox", { name: "Navy tee" })).toHaveAttribute(
+      "aria-checked",
+      "true",
+    );
+    expect(screen.getByRole("button", { name: "Weekday look" })).toBeEnabled();
+  });
+
+  it("opens with an outfit from the Outfits screen preselected", async () => {
+    renderPage(createMockResourceApi(), {
+      route: getAppVirtualTryOnPath({
+        outfitId: "outfit_brunch01",
+        wardrobeId: "wd_weekend01",
+      }),
+    });
+
+    expect(await screen.findByRole("radio", { name: "Saved outfit" })).toBeChecked();
+    expect(
+      screen.getByRole("button", { name: "Sunday brunch" }),
+    ).toHaveAttribute("aria-pressed", "true");
+    expect(
+      screen.getByRole("radio", { name: "Clothing items" }),
+    ).not.toBeChecked();
+  });
+
+  it("polls the existing render endpoint until the image is ready", async () => {
+    const user = userEvent.setup();
+    const pendingItem = {
+      ...renderedItem,
+      processingStatus: "READY" as const,
+      renderImageUrls: undefined,
+      renderHistory: undefined,
+      render: {
+        status: "PENDING" as const,
+        aiProfileId: "aip_personal01",
+      },
+    };
+    const getItemRender = vi
+      .fn()
+      .mockResolvedValueOnce({
+        status: "PROCESSING",
+        aiProfileId: "aip_personal01",
+      })
+      .mockResolvedValueOnce({
+        status: "READY",
+        aiProfileId: "aip_personal01",
+        imageUrl: "/screenshots/try-on-started.jpg",
+      });
+    renderPage(
+      createMockResourceApi({
+        renderItem: vi.fn().mockResolvedValue(pendingItem),
+        getItemRender,
+      }),
+      { pollIntervalMs: 0 },
+    );
+
+    await user.click(await screen.findByRole("checkbox", { name: "Navy tee" }));
+    await user.click(screen.getByRole("button", { name: "Weekday look" }));
+    await user.click(
+      screen.getByRole("button", { name: "Start Virtual Try On" }),
+    );
+
+    expect(
+      await screen.findByRole("img", { name: "Virtual Try On render 1" }),
+    ).toHaveAttribute("src", "/screenshots/try-on-started.jpg");
+    expect(getItemRender).toHaveBeenCalledWith("wd_weekend01", "item_navytee01");
+  });
+
+  it("keeps polling when GET /render is READY without imageUrl", async () => {
+    const user = userEvent.setup();
+    const pendingItem = {
+      ...renderedItem,
+      renderImageUrls: undefined,
+      renderHistory: undefined,
+      render: {
+        status: "PENDING" as const,
+        aiProfileId: "aip_personal01",
+      },
+    };
+    const getItemRender = vi
+      .fn()
+      .mockResolvedValueOnce({
+        status: "READY",
+        aiProfileId: "aip_personal01",
+      })
+      .mockResolvedValueOnce({
+        status: "READY",
+        aiProfileId: "aip_personal01",
+        imageUrl: "/screenshots/try-on-started.jpg",
+      });
+    renderPage(
+      createMockResourceApi({
+        renderItem: vi.fn().mockResolvedValue(pendingItem),
+        getItemRender,
+      }),
+      { pollIntervalMs: 0 },
+    );
+
+    await user.click(await screen.findByRole("checkbox", { name: "Navy tee" }));
+    await user.click(screen.getByRole("button", { name: "Weekday look" }));
+    await user.click(
+      screen.getByRole("button", { name: "Start Virtual Try On" }),
+    );
+
+    expect(
+      await screen.findByRole("img", { name: "Virtual Try On render 1" }),
+    ).toHaveAttribute("src", "/screenshots/try-on-started.jpg");
+    expect(getItemRender).toHaveBeenCalledTimes(2);
+  });
 });
+

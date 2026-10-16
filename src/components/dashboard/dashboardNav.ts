@@ -4,6 +4,7 @@ import AutoAwesomeOutlined from "@mui/icons-material/AutoAwesomeOutlined";
 import HomeOutlined from "@mui/icons-material/HomeOutlined";
 import ManageAccountsOutlined from "@mui/icons-material/ManageAccountsOutlined";
 import StyleOutlined from "@mui/icons-material/StyleOutlined";
+import WorkspacePremiumOutlined from "@mui/icons-material/WorkspacePremiumOutlined";
 import { appPaths } from "../../routes/paths";
 
 export type DashboardNavItem = {
@@ -41,6 +42,12 @@ export const dashboardNavItems: DashboardNavItem[] = [
     label: "Virtual Try On",
     path: appPaths.appVirtualTryOn,
     Icon: AutoAwesomeOutlined,
+  },
+  {
+    id: "upgrade",
+    label: "Upgrade",
+    path: appPaths.appPricing,
+    Icon: WorkspacePremiumOutlined,
   },
   {
     id: "settings",

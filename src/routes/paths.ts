@@ -40,6 +40,14 @@ export const getAppSettingsPlanPath = (): string => {
 };
 
 export const WARDROBE_ID_QUERY_PARAM = "wardrobeId";
+export const VIRTUAL_TRY_ON_ITEM_QUERY_PARAM = "itemId";
+export const VIRTUAL_TRY_ON_OUTFIT_QUERY_PARAM = "outfitId";
+
+export type VirtualTryOnPathSelection = {
+  wardrobeId?: string;
+  itemId?: string;
+  outfitId?: string;
+};
 
 export type AppPath = (typeof appPaths)[keyof typeof appPaths];
 
@@ -152,6 +160,28 @@ export const getAppOutfitEditPath = (
 
 export const getAppVirtualProfileEditPath = (aiProfileId: string): string => {
   return `${appPaths.appVirtualProfiles}/${encodeURIComponent(aiProfileId)}/edit`;
+};
+
+export const getAppVirtualTryOnPath = (
+  selection: VirtualTryOnPathSelection = {},
+): string => {
+  const searchParams = new URLSearchParams();
+  const wardrobeId = selection.wardrobeId?.trim();
+  const itemId = selection.itemId?.trim();
+  const outfitId = selection.outfitId?.trim();
+
+  if (wardrobeId) {
+    searchParams.set(WARDROBE_ID_QUERY_PARAM, wardrobeId);
+  }
+  if (itemId) {
+    searchParams.set(VIRTUAL_TRY_ON_ITEM_QUERY_PARAM, itemId);
+  }
+  if (outfitId) {
+    searchParams.set(VIRTUAL_TRY_ON_OUTFIT_QUERY_PARAM, outfitId);
+  }
+
+  const query = searchParams.toString();
+  return query ? `${appPaths.appVirtualTryOn}?${query}` : appPaths.appVirtualTryOn;
 };
 
 export const getAppPath = (subPath = ""): string => {
