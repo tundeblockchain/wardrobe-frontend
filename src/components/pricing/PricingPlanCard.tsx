@@ -4,7 +4,7 @@ import CloseOutlined from "@mui/icons-material/CloseOutlined";
 import { Box, Button, Chip, Paper, Stack, Typography } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 import type { PricingPlanFeature } from "../../content/pricingCopy";
-import { getDashboardPaperBoxShadow } from "../dashboard/DashboardPaper";
+import { getDashboardPaperBoxShadow } from "../dashboard/dashboardPaperShadow";
 
 export const PRICING_PLAN_CARD_TEST_ID = "pricing-plan-card";
 

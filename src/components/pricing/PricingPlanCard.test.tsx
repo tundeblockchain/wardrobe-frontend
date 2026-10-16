@@ -7,7 +7,7 @@ import {
   DASHBOARD_PAPER_DARK_SHADOW,
   DASHBOARD_PAPER_LIGHT_EMPHASIS_SHADOW,
   DASHBOARD_PAPER_LIGHT_SHADOW,
-} from "../dashboard/DashboardPaper";
+} from "../dashboard/dashboardPaperShadow";
 import { createDashboardTheme } from "../../theme/createDashboardTheme";
 import {
   PRICING_PLAN_CARD_TEST_ID,

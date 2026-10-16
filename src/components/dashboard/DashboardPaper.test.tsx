@@ -19,16 +19,18 @@ import {
 } from "./HorizontalResourceCardList";
 import { DashboardLayout } from "./DashboardLayout";
 import {
-  DASHBOARD_PAPER_DARK_EMPHASIS_SHADOW,
   DASHBOARD_PAPER_DARK_SHADOW,
   DASHBOARD_PAPER_GUTTER_TEST_ID,
-  DASHBOARD_PAPER_LIGHT_EMPHASIS_SHADOW,
   DASHBOARD_PAPER_LIGHT_SHADOW,
   DASHBOARD_PAPER_MAX_WIDTH,
   DASHBOARD_PAPER_TEST_ID,
   DashboardPaper,
-  getDashboardPaperBoxShadow,
 } from "./DashboardPaper";
+import {
+  DASHBOARD_PAPER_DARK_EMPHASIS_SHADOW,
+  DASHBOARD_PAPER_LIGHT_EMPHASIS_SHADOW,
+  getDashboardPaperBoxShadow,
+} from "./dashboardPaperShadow";
 import { SIDEBAR_COLLAPSED_STORAGE_KEY } from "./sidebarCollapsed";
 
 const authProviderMocks = vi.hoisted(() => ({
