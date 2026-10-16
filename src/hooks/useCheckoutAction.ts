@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import {
   assignBillingUrl,
   createCheckoutSession,
+  createPortalSession,
   DEFAULT_BILLING_INTERVAL,
   getAlreadySubscribedMessage,
   getBillingCheckoutErrorMessage,
@@ -21,10 +22,13 @@ export type StartCheckoutFn = (
   interval?: BillingInterval,
 ) => Promise<BillingSession>;
 
+export type StartPortalFn = () => Promise<BillingSession>;
+
 export type CheckoutGetMeFn = () => Promise<Pick<Entitlement, "paidTier">>;
 
 export type UseCheckoutActionOptions = {
   startCheckout?: StartCheckoutFn;
+  startPortal?: StartPortalFn;
   getMe?: CheckoutGetMeFn;
   assignLocation?: (url: string) => void;
 };
@@ -41,6 +45,7 @@ export type UseCheckoutActionResult = CheckoutActionState & {
     tier: CheckoutTier,
     interval?: BillingInterval,
   ) => Promise<void>;
+  handlePortal: () => Promise<void>;
 };
 
 export const useCheckoutAction = (
@@ -52,6 +57,16 @@ export const useCheckoutAction = (
   const [error, setError] = useState("");
   const [alreadySubscribedMessage, setAlreadySubscribedMessage] = useState("");
   const [existingPaidTier, setExistingPaidTier] = useState<PaidTier>(null);
+
+  const redirectToBillingSession = (session: BillingSession) => {
+    const url = readBillingSessionUrl(session);
+    if (options.assignLocation) {
+      options.assignLocation(url);
+      return;
+    }
+
+    assignBillingUrl(url);
+  };
 
   const handleCheckout = async (
     tier: CheckoutTier,
@@ -75,12 +90,7 @@ export const useCheckoutAction = (
 
     try {
       const session = await startCheckout(tier, interval);
-      const url = readBillingSessionUrl(session);
-      if (options.assignLocation) {
-        options.assignLocation(url);
-      } else {
-        assignBillingUrl(url);
-      }
+      redirectToBillingSession(session);
     } catch (caughtError) {
       if (isAlreadySubscribedError(caughtError)) {
         let paidTier: PaidTier = null;
@@ -112,11 +122,41 @@ export const useCheckoutAction = (
     }
   };
 
+  const handlePortal = async () => {
+    if (isStartingRef.current) {
+      return;
+    }
+
+    isStartingRef.current = true;
+    setIsStarting(true);
+    setError("");
+    setAlreadySubscribedMessage("");
+
+    const startPortal =
+      options.startPortal ?? (() => createPortalSession(api));
+
+    try {
+      const session = await startPortal();
+      redirectToBillingSession(session);
+    } catch (caughtError) {
+      setError(
+        getBillingCheckoutErrorMessage(
+          caughtError,
+          dashboardCopy.settings.planManageErrorFallback,
+        ),
+      );
+    } finally {
+      isStartingRef.current = false;
+      setIsStarting(false);
+    }
+  };
+
   return {
     isStarting,
     error,
     alreadySubscribedMessage,
     existingPaidTier,
     handleCheckout,
+    handlePortal,
   };
 };

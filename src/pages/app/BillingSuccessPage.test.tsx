@@ -86,9 +86,46 @@ describe("BillingSuccessPage", () => {
       screen.getByRole("heading", { level: 1, name: "You are subscribed" }),
     ).toBeInTheDocument();
     expect(
+      screen.getAllByRole("heading", { name: "You are subscribed" }),
+    ).toHaveLength(1);
+    expect(
+      screen.getAllByText("Your plan is active. Open the dashboard to continue."),
+    ).toHaveLength(1);
+    expect(
       screen.getByRole("link", { name: "Go to the dashboard" }),
     ).toHaveAttribute("href", appPaths.app);
     expect(getMe).toHaveBeenCalledTimes(3);
+  });
+
+  it("renders the subscribed heading and message exactly once with Go to dashboard", async () => {
+    const getMe = vi.fn().mockResolvedValue({
+      ...mockEntitlement,
+      paidTier: { tier: "premium", source: "stripe" },
+    });
+
+    renderWithProviders(<BillingSuccessPage getMe={getMe} />, {
+      route: appPaths.appBillingSuccess,
+      auth: { user: { id: "user-1" } },
+    });
+
+    expect(
+      await screen.findByRole("heading", {
+        level: 1,
+        name: "You are subscribed",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getAllByRole("heading", { name: "You are subscribed" }),
+    ).toHaveLength(1);
+    expect(
+      screen.getAllByText("Your plan is active. Open the dashboard to continue."),
+    ).toHaveLength(1);
+    expect(
+      screen.getByRole("link", { name: "Go to the dashboard" }),
+    ).toHaveAttribute("href", appPaths.app);
+    expect(
+      screen.queryByRole("heading", { level: 2, name: "You are subscribed" }),
+    ).not.toBeInTheDocument();
   });
 
   it("caps /me polling and Retry starts one more capped round", async () => {

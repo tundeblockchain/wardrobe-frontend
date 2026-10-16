@@ -2,10 +2,9 @@ import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { Button, Stack } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 import { ME_PATH } from "../../api/authenticatedApi";
-import type { Entitlement, PaidTier } from "../../api/resourceTypes";
+import type { Entitlement } from "../../api/resourceTypes";
 import { useApi } from "../../api/useApi";
 import { DashboardPage } from "../../components/dashboard/DashboardPage";
-import { StatusCard } from "../../components/StatusCard";
 import { dashboardCopy } from "../../content/dashboardCopy";
 import { appPaths } from "../../routes/paths";
 
@@ -34,7 +33,6 @@ export const BillingSuccessPage = ({
   const api = useApi();
   const [round, setRound] = useState(0);
   const [view, setView] = useState<SuccessView>("polling");
-  const [paidTier, setPaidTier] = useState<PaidTier | null>(null);
   const getMeRef = useRef<BillingSuccessGetMeFn>(
     getMeProp ?? ((signal) => api.request<Entitlement>(ME_PATH, { signal })),
   );
@@ -67,7 +65,6 @@ export const BillingSuccessPage = ({
         }
 
         if (me.paidTier) {
-          setPaidTier(me.paidTier);
           setView("ready");
           return;
         }
@@ -99,7 +96,6 @@ export const BillingSuccessPage = ({
   }, [round, pollIntervalMs, maxAttempts]);
 
   const handleRetry = () => {
-    setPaidTier(null);
     setView("polling");
     setRound((currentRound) => currentRound + 1);
   };
@@ -133,14 +129,6 @@ export const BillingSuccessPage = ({
       description={description}
     >
       <Stack spacing={2}>
-        <StatusCard
-          title={title}
-          description={
-            view === "ready" && paidTier
-              ? copy.successReadyDescription
-              : description
-          }
-        />
         {view === "timeout" ? (
           <Button
             type="button"
