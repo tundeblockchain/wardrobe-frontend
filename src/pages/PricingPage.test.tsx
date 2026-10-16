@@ -142,6 +142,53 @@ describe("PricingPage", () => {
       "aria-pressed",
       "true",
     );
+    expect(
+      within(getPlanCard("Free")).getByText("1 wardrobe, 5 items, 5 outfits"),
+    ).toBeInTheDocument();
+    expect(
+      within(getPlanCard("Free")).getByLabelText("Virtual Try On not included"),
+    ).toBeInTheDocument();
+    expect(
+      within(getPlanCard("Free")).getByLabelText(
+        "Virtual Profile not included",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      within(getPlanCard("Free")).getByLabelText(
+        "Outfit suggestions not included",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      within(getPlanCard("Basic")).getByText(
+        "Unlimited wardrobes, items, and outfits",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      within(getPlanCard("Basic")).getByLabelText(
+        "Virtual Try On not included",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      within(getPlanCard("Premium")).getByText(
+        "Unlimited catalog plus Virtual Try On and styling",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      within(getPlanCard("Premium")).getByLabelText("Virtual Try On included"),
+    ).toBeInTheDocument();
+    expect(
+      within(getPlanCard("Premium")).getByLabelText(
+        "Virtual Profile included",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      within(getPlanCard("Premium")).getByLabelText(
+        "Outfit suggestions included",
+      ),
+    ).toBeInTheDocument();
+    expect(getPlanCard("Free").textContent).not.toMatch(/\bAI\b/);
+    expect(getPlanCard("Basic").textContent).not.toMatch(/\bAI\b/);
+    expect(getPlanCard("Premium").textContent).not.toMatch(/\bAI\b/);
   });
 
   it("toggles monthly and yearly catalog prices", async () => {
@@ -216,8 +263,9 @@ describe("PricingPage", () => {
     ).toBeInTheDocument();
     expect(getPlanCard("Basic")).not.toHaveAttribute("aria-current");
     expect(
-      screen.getByText("The Free plan includes 1 wardrobe."),
+      within(getPlanCard("Free")).getByText("1 wardrobe, 5 items, 5 outfits"),
     ).toBeInTheDocument();
+    expect(getPlanCard("Free").textContent).not.toMatch(/\bAI\b/);
   });
 
   it("highlights Basic when GET /me says the signed-in user is on Basic", async () => {

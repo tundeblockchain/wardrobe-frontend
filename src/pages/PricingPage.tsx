@@ -31,6 +31,7 @@ import { DashboardThemeProvider } from "../theme/DashboardThemeProvider";
 import {
   getBasicPlanFeatureLines,
   getFreePlanFeatureLines,
+  getFreePlanSummary,
   getPremiumPlanFeatureLines,
   pricingCopy,
 } from "../content/pricingCopy";
@@ -312,7 +313,8 @@ export const PricingPage = ({
               name={copy.freeName}
               headingId="pricing-free-heading"
               priceLabel={copy.freePriceLabel}
-              features={getFreePlanFeatureLines(entitlement?.limits)}
+              summary={getFreePlanSummary()}
+              features={getFreePlanFeatureLines()}
               isCurrent={currentTier === "free"}
               currentPlanLabel={copy.currentPlanLabel}
               currentPlanAriaLabel={copy.currentPlanAriaLabel}
@@ -327,6 +329,7 @@ export const PricingPage = ({
                   : copy.upgradeUnavailableLabel
               }
               priceHint={basicPlan ? intervalHint : undefined}
+              summary={copy.basicSummary}
               features={getBasicPlanFeatureLines()}
               isCurrent={currentTier === "basic"}
               currentPlanLabel={copy.currentPlanLabel}
@@ -345,6 +348,7 @@ export const PricingPage = ({
                   : copy.upgradeUnavailableLabel
               }
               priceHint={premiumPlan ? intervalHint : undefined}
+              summary={copy.premiumSummary}
               features={getPremiumPlanFeatureLines()}
               isCurrent={currentTier === "premium"}
               currentPlanLabel={copy.currentPlanLabel}
