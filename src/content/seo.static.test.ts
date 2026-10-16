@@ -28,5 +28,7 @@ describe("static SEO fallback", () => {
     expect(indexHtml).not.toContain("facebook.com/tr");
     expect(indexHtml).not.toContain("G-XXXXXXXXXX");
     expect(indexHtml).not.toContain("fbq(");
+    expect(indexHtml).not.toContain("fonts.google");
+    expect(indexHtml).not.toContain("fonts.gstatic");
   });
 });
