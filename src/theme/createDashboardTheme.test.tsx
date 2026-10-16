@@ -15,6 +15,18 @@ describe("createDashboardTheme", () => {
     expect(createDashboardTheme("light")).toBe(appTheme);
   });
 
+  it("keeps Sora headings and Inter body text in dark mode", () => {
+    const darkTheme = createDashboardTheme("dark");
+
+    expect(darkTheme.typography.fontFamily).toBe(appTheme.typography.fontFamily);
+    expect(darkTheme.typography.h1.fontFamily).toBe(
+      appTheme.typography.h1.fontFamily,
+    );
+    expect(darkTheme.typography.h1.fontFamily).toContain("Sora");
+    expect(darkTheme.typography.body1.fontFamily).toContain("Inter");
+    expect(darkTheme.typography.button.fontFamily).toContain("Inter");
+  });
+
   it("meets WCAG AA contrast for key dark-palette pairs", () => {
     const {
       textPrimary,

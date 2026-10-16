@@ -1,4 +1,5 @@
 import { alpha, createTheme } from "@mui/material/styles";
+import { appTypography } from "./typography";
 import { wardrobeGradients } from "./wardrobeGradients";
 import { wardrobePalette } from "./wardrobePalette";
 
@@ -31,24 +32,7 @@ export const appTheme = createTheme({
     divider: wardrobePalette.divider,
   },
   gradients: wardrobeGradients,
-  typography: {
-    fontFamily: '"Inter", "Helvetica", "Arial", sans-serif',
-    h1: {
-      fontSize: "2.5rem",
-      fontWeight: 700,
-      letterSpacing: "-0.03em",
-      lineHeight: 1.15,
-    },
-    h2: {
-      fontSize: "2rem",
-      fontWeight: 700,
-      letterSpacing: "-0.02em",
-    },
-    h3: {
-      fontSize: "1.25rem",
-      fontWeight: 600,
-    },
-  },
+  typography: appTypography,
   shape: {
     borderRadius: 12,
   },

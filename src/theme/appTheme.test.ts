@@ -78,9 +78,47 @@ describe("wardrobePalette", () => {
   });
 });
 
+const HEADING_VARIANTS = ["h1", "h2", "h3", "h4", "h5", "h6"] as const;
+const BODY_VARIANTS = [
+  "body1",
+  "body2",
+  "button",
+  "caption",
+  "subtitle1",
+  "subtitle2",
+] as const;
+
 describe("appTheme", () => {
-  it("uses Inter as the site font", () => {
+  it("uses Sora for headings and Inter for body text", () => {
     expect(appTheme.typography.fontFamily).toContain("Inter");
+    expect(appTheme.typography.fontFamily).not.toContain("Sora");
+    expect(appTheme.typography.fontFamily).toContain("system-ui");
+
+    for (const variant of HEADING_VARIANTS) {
+      expect(appTheme.typography[variant].fontFamily).toContain("Sora");
+      expect(appTheme.typography[variant].fontFamily).not.toContain("Inter");
+    }
+
+    expect(appTheme.typography.h1.fontWeight).toBe(700);
+    expect(appTheme.typography.h2.fontWeight).toBe(700);
+    expect(appTheme.typography.h3.fontWeight).toBe(600);
+    expect(appTheme.typography.h4.fontWeight).toBe(600);
+    expect(appTheme.typography.h5.fontWeight).toBe(600);
+    expect(appTheme.typography.h6.fontWeight).toBe(600);
+
+    for (const variant of BODY_VARIANTS) {
+      expect(appTheme.typography[variant].fontFamily).toContain("Inter");
+      expect(appTheme.typography[variant].fontFamily).not.toContain("Sora");
+    }
+
+    expect(appTheme.typography.body1.fontWeight).toBe(400);
+    expect(appTheme.typography.body2.fontWeight).toBe(400);
+    expect(appTheme.typography.button.fontWeight).toBe(600);
+    expect(appTheme.typography.caption.fontWeight).toBe(400);
+    expect(appTheme.typography.subtitle1.fontWeight).toBe(500);
+    expect(appTheme.typography.subtitle2.fontWeight).toBe(500);
+    expect(appTheme.typography.overline.fontFamily).toContain("Sora");
+    expect(appTheme.typography.overline.fontWeight).toBe(600);
   });
 
   it("exposes the original light palette tokens on the MUI theme", () => {
