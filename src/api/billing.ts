@@ -1,3 +1,7 @@
+import {
+  alreadySubscribedCopy,
+  getStripeAlreadySubscribedMessage,
+} from "../content/alreadySubscribed";
 import type { AuthenticatedApi } from "./authenticatedApi";
 import { ApiError, isApiError } from "./httpClient";
 import type { PaidPlanTier, PaidTier, PaidTierSource } from "./resourceTypes";
@@ -197,16 +201,16 @@ export const getAlreadySubscribedMessage = (
 ): string => {
   const normalized = normalizePaidTierSource(source);
   if (normalized === "ios") {
-    return "You already have a plan from the App Store.";
+    return alreadySubscribedCopy.ios;
   }
   if (normalized === "android") {
-    return "You already have a plan from Google Play.";
+    return alreadySubscribedCopy.android;
   }
   if (normalized === "stripe") {
-    return "You already have a plan from web/Stripe.";
+    return getStripeAlreadySubscribedMessage();
   }
 
-  return "You already have a plan from the App Store / Google Play.";
+  return alreadySubscribedCopy.unknown;
 };
 
 export const resolvePaidTierSource = (

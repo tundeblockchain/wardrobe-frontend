@@ -18,6 +18,7 @@ import {
 import type { Entitlement, PaidTier } from "../api/resourceTypes";
 import { useApi } from "../api/useApi";
 import { useAuth } from "../auth/useAuth";
+import { AlreadySubscribedBanner } from "../components/billing/AlreadySubscribedBanner";
 import { BillingIntervalToggle } from "../components/billing/BillingIntervalToggle";
 import { DashboardPage } from "../components/dashboard/DashboardPage";
 import { DashboardPaper } from "../components/dashboard/DashboardPaper";
@@ -310,11 +311,7 @@ export const PricingPage = ({
       ) : null}
       {plansQuery.status === "ready" ? (
         <Stack spacing={3}>
-          {alreadySubscribedMessage ? (
-            <Alert severity="info" role="status" aria-live="polite">
-              {alreadySubscribedMessage}
-            </Alert>
-          ) : null}
+          <AlreadySubscribedBanner message={alreadySubscribedMessage} />
           {error ? (
             <Alert severity="error" role="alert" aria-live="assertive">
               {error}

@@ -2,6 +2,7 @@ import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Route, Routes, useLocation } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
+import { ALREADY_SUBSCRIBED_CODE } from "../api/billing";
 import { ApiError } from "../api/httpClient";
 import {
   formatBillingPrice,
@@ -16,6 +17,10 @@ import {
   DASHBOARD_PAPER_LIGHT_SHADOW,
 } from "../components/dashboard/DashboardPaper";
 import { PRICING_PLAN_CARD_TEST_ID } from "../components/pricing/PricingPlanCard";
+import {
+  alreadySubscribedCopy,
+  getStripeAlreadySubscribedMessage,
+} from "../content/alreadySubscribed";
 import { pricingCopy } from "../content/pricingCopy";
 import { appPaths, getLoginPath, getLoginSignupPath } from "../routes/paths";
 import { renderWithProviders } from "../test/renderWithProviders";
@@ -386,6 +391,42 @@ describe("PricingPage", () => {
     await waitFor(() => {
       expect(startCheckout).toHaveBeenCalledWith("premium", "yearly");
     });
+  });
+
+  it("links a Stripe already-subscribed banner to Settings", async () => {
+    const user = userEvent.setup();
+    const startCheckout = vi.fn().mockRejectedValue(
+      new ApiError({
+        status: 409,
+        code: ALREADY_SUBSCRIBED_CODE,
+        source: "stripe",
+      }),
+    );
+    const assignLocation = vi.fn();
+
+    renderPricing({
+      user: { id: "user-1" },
+      getMe: vi.fn().mockResolvedValue({
+        paidTier: { tier: "basic", source: "stripe" },
+      }),
+      startCheckout,
+      assignLocation,
+    });
+
+    await user.click(
+      await screen.findByRole("button", { name: "Upgrade to Premium" }),
+    );
+
+    const banner = await screen.findByRole("status", {
+      name: getStripeAlreadySubscribedMessage(),
+    });
+    expect(banner).toHaveTextContent(getStripeAlreadySubscribedMessage());
+    expect(
+      within(banner).getByRole("link", {
+        name: alreadySubscribedCopy.stripeLink,
+      }),
+    ).toHaveAttribute("href", appPaths.appSettings);
+    expect(assignLocation).not.toHaveBeenCalled();
   });
 
   it("sends a signed-out upgrade to sign in and keeps a sign-up path back to pricing", async () => {
