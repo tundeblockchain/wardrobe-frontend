@@ -1,4 +1,4 @@
-import { Button, Stack } from "@mui/material";
+import { Button } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 import type {
   CatalogKind,
@@ -14,6 +14,7 @@ import { appPaths } from "../../routes/paths";
 import { StatusCard } from "../StatusCard";
 import { CheckoutUpgradeAction } from "../billing/CheckoutUpgradeAction";
 import { CatalogLimitPrompt } from "./CatalogLimitPrompt";
+import { DashboardNarrowContent } from "./DashboardNarrowContent";
 
 export type ForbiddenUpgradePromptProps = {
   kind: ForbiddenUpgradeKind;
@@ -61,7 +62,7 @@ export const ForbiddenUpgradePrompt = ({
     }
 
     return (
-      <Stack spacing={2}>
+      <DashboardNarrowContent>
         <StatusCard
           title={dashboardCopy.upgrade.basic.title}
           description={dashboardCopy.upgrade.basic.description}
@@ -76,33 +77,33 @@ export const ForbiddenUpgradePrompt = ({
           assignLocation={assignLocation}
           fetchPlans={fetchPlans}
         />
-      </Stack>
+      </DashboardNarrowContent>
     );
   }
 
   return (
-    <Stack spacing={2}>
+    <DashboardNarrowContent>
       <StatusCard title={premiumTitle} description={premiumDescription} />
-        <CheckoutUpgradeAction
-          checkoutTier="premium"
-          paidTier={entitlement?.paidTier}
-          actionLabel={dashboardCopy.upgrade.premium.actionLabel}
-          actionAriaLabel={premiumActionAriaLabel}
-          startCheckout={startCheckout}
-          getMe={getMe}
-          assignLocation={assignLocation}
-          fetchPlans={fetchPlans}
-        />
-        <Button
-          component={RouterLink}
-          to={appPaths.appPricing}
-          variant="outlined"
-          color="primary"
-          tabIndex={0}
-          aria-label={dashboardCopy.billing.comparePlansAriaLabel}
-        >
-          {dashboardCopy.billing.comparePlansLabel}
-        </Button>
-      </Stack>
-    );
+      <CheckoutUpgradeAction
+        checkoutTier="premium"
+        paidTier={entitlement?.paidTier}
+        actionLabel={dashboardCopy.upgrade.premium.actionLabel}
+        actionAriaLabel={premiumActionAriaLabel}
+        startCheckout={startCheckout}
+        getMe={getMe}
+        assignLocation={assignLocation}
+        fetchPlans={fetchPlans}
+      />
+      <Button
+        component={RouterLink}
+        to={appPaths.appPricing}
+        variant="outlined"
+        color="primary"
+        tabIndex={0}
+        aria-label={dashboardCopy.billing.comparePlansAriaLabel}
+      >
+        {dashboardCopy.billing.comparePlansLabel}
+      </Button>
+    </DashboardNarrowContent>
+  );
 };

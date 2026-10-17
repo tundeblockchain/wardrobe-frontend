@@ -15,6 +15,10 @@ import {
   YEARLY_BILLING_UNAVAILABLE_MESSAGE,
 } from "../../api/billing";
 import { appPaths } from "../../routes/paths";
+import {
+  expectActionButtonNotFullWidth,
+  expectInsideNarrowContent,
+} from "../../test/dashboardNarrowContentTest";
 import { renderWithProviders } from "../../test/renderWithProviders";
 import { ForbiddenUpgradePrompt } from "../dashboard/ForbiddenUpgradePrompt";
 import { CatalogLimitPrompt } from "../dashboard/CatalogLimitPrompt";
@@ -490,6 +494,14 @@ describe("CheckoutUpgradeAction", () => {
       { auth: { user: { id: "user-1" } } },
     );
 
+    expectInsideNarrowContent(
+      screen.getByRole("heading", {
+        name: "Virtual Try On is a Premium feature",
+      }),
+    );
+    expectActionButtonNotFullWidth(
+      screen.getByRole("link", { name: "Manage this plan in Settings" }),
+    );
     expect(
       screen.getByRole("link", { name: "Manage this plan in Settings" }),
     ).toHaveAttribute("href", appPaths.appSettingsPlan);

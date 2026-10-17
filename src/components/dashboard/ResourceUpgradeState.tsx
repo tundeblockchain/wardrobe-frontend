@@ -1,6 +1,7 @@
-import { Button, Stack } from "@mui/material";
+import { Button } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 import { StatusCard } from "../StatusCard";
+import { DashboardNarrowContent } from "./DashboardNarrowContent";
 
 export type ResourceUpgradeStateProps = {
   title: string;
@@ -18,7 +19,7 @@ export const ResourceUpgradeState = ({
   actionAriaLabel,
 }: ResourceUpgradeStateProps) => {
   return (
-    <Stack spacing={2}>
+    <DashboardNarrowContent>
       <StatusCard title={title} description={description} />
       <Button
         component={RouterLink}
@@ -30,6 +31,6 @@ export const ResourceUpgradeState = ({
       >
         {actionLabel}
       </Button>
-    </Stack>
+    </DashboardNarrowContent>
   );
 };

@@ -22,6 +22,10 @@ import {
   getAppWardrobePath,
   getAppWardrobeRecommendationsPath,
 } from "../../routes/paths";
+import {
+  expectActionButtonNotFullWidth,
+  expectInsideNarrowContent,
+} from "../../test/dashboardNarrowContentTest";
 import { renderWithProviders } from "../../test/renderWithProviders";
 import { RecommendationDetailPage } from "./RecommendationDetailPage";
 import { RecommendationsPage } from "./RecommendationsPage";
@@ -134,9 +138,9 @@ describe("RecommendationsPage", () => {
   it("renders an empty state", async () => {
     renderList("wd_work02", createEmptyResourceApi());
 
-    expect(
+    expectInsideNarrowContent(
       await screen.findByRole("heading", { name: "No suggestions yet" }),
-    ).toBeInTheDocument();
+    );
     expect(
       screen.getByText("Add more items to this wardrobe, then refresh."),
     ).toBeInTheDocument();
@@ -163,21 +167,21 @@ describe("RecommendationsPage", () => {
   it("maps 403 ENTITLEMENT_AI_REQUIRED to the existing Premium upgrade prompt", async () => {
     renderList("wd_weekend01", createEntitlementAiRequiredResourceApi());
 
-    expect(
+    expectInsideNarrowContent(
       await screen.findByRole("heading", {
         name: "Virtual Try On is a Premium feature",
       }),
-    ).toBeInTheDocument();
+    );
     expect(
       screen.getByText(
         /Upgrade to browse Virtual Profiles and preview looks with Virtual Try On/,
       ),
     ).toBeInTheDocument();
-    expect(
+    expectActionButtonNotFullWidth(
       screen.getByRole("button", {
         name: "Upgrade to Premium for Virtual Try On",
       }),
-    ).toBeInTheDocument();
+    );
     expect(
       screen.queryByRole("heading", {
         name: "Couldn't load suggested outfits",

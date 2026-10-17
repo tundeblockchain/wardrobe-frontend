@@ -80,8 +80,9 @@ export const WardrobesPage = ({
         <ResourceEmptyState
           title={copy.emptyTitle}
           description={copy.emptyDescription}
-        />
-        {addAction}
+        >
+          {addAction}
+        </ResourceEmptyState>
       </DashboardPage>
     );
   }

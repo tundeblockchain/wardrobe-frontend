@@ -19,6 +19,7 @@ import {
   getAppWardrobePath,
   getAppWardrobeRecommendationsPath,
 } from "../../routes/paths";
+import { expectInsideNarrowContent } from "../../test/dashboardNarrowContentTest";
 import { renderWithProviders } from "../../test/renderWithProviders";
 import { AppHomePage } from "./AppHomePage";
 import { WardrobeDetailPage } from "./WardrobeDetailPage";
@@ -92,9 +93,9 @@ describe("WardrobeDetailPage", () => {
     expect(
       await screen.findByRole("heading", { level: 1, name: "Workwear" }),
     ).toBeInTheDocument();
-    expect(
+    expectInsideNarrowContent(
       screen.getByRole("heading", { name: "No clothing items yet" }),
-    ).toBeInTheDocument();
+    );
     expect(
       screen.getByRole("button", { name: "Delete this wardrobe" }),
     ).toBeInTheDocument();

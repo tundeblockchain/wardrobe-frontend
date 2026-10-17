@@ -19,6 +19,10 @@ import {
 import { FORM_CARD_TEST_ID } from "../../components/dashboard/FormCard";
 import { HORIZONTAL_RESOURCE_CARD_LIST_TEST_ID } from "../../components/dashboard/HorizontalResourceCardList";
 import {
+  expectActionButtonNotFullWidth,
+  expectInsideNarrowContent,
+} from "../../test/dashboardNarrowContentTest";
+import {
   expectFormInsideSharedCard,
   expectSharedFormCardAbsent,
 } from "../../test/formCardTest";
@@ -453,16 +457,16 @@ describe("VirtualTryOnPage", () => {
   it("renders an upgrade prompt when /me features.aiTryOn is false", async () => {
     renderPage(createAiTryOnOffResourceApi());
 
-    expect(
+    expectInsideNarrowContent(
       await screen.findByRole("heading", {
         name: "Virtual Try On is a Premium feature",
       }),
-    ).toBeInTheDocument();
-    expect(
+    );
+    expectActionButtonNotFullWidth(
       screen.getByRole("button", {
         name: "Upgrade to Premium for Virtual Try On",
       }),
-    ).toBeInTheDocument();
+    );
     expect(
       screen.queryByRole("button", { name: "Start Virtual Try On" }),
     ).not.toBeInTheDocument();
@@ -500,11 +504,11 @@ describe("VirtualTryOnPage", () => {
   it("maps 403 ENTITLEMENT_AI_REQUIRED to a Premium upgrade prompt", async () => {
     renderPage(createEntitlementAiRequiredResourceApi());
 
-    expect(
+    expectInsideNarrowContent(
       await screen.findByRole("heading", {
         name: "Virtual Try On is a Premium feature",
       }),
-    ).toBeInTheDocument();
+    );
   });
 
   it("renders an error state", async () => {

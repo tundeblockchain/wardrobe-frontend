@@ -12,6 +12,10 @@ import {
 import type { Outfit, OutfitRecommendationList } from "../../api/resourceTypes";
 import { ENTITLEMENT_AI_REQUIRED_CODE } from "../../api/resourceTypes";
 import * as resourceQueryCache from "../../hooks/resourceQueryCache";
+import {
+  expectActionButtonNotFullWidth,
+  expectInsideNarrowContent,
+} from "../../test/dashboardNarrowContentTest";
 import { expectFormInsideSharedCard } from "../../test/formCardTest";
 import { renderWithProviders } from "../../test/renderWithProviders";
 import { OutfitsPage } from "./OutfitsPage";
@@ -109,29 +113,32 @@ describe("OutfitsPage", () => {
       }),
     );
 
-    expect(
+    expectInsideNarrowContent(
       await screen.findByRole("heading", { name: "No outfits yet" }),
-    ).toBeInTheDocument();
+    );
     expect(
       await screen.findByRole("heading", { name: "Navy + cream look" }),
     ).toBeInTheDocument();
-    expect(
+    expectActionButtonNotFullWidth(
       screen.getByRole("link", { name: "Add an outfit" }),
-    ).toBeInTheDocument();
+    );
   });
 
   it("renders an empty state", async () => {
     renderPage(createEmptyResourceApi());
 
-    expect(
+    expectInsideNarrowContent(
       await screen.findByRole("heading", { name: "No outfits yet" }),
-    ).toBeInTheDocument();
-    expect(
+    );
+    expectInsideNarrowContent(
       await screen.findByRole("heading", { name: "No suggestions yet" }),
-    ).toBeInTheDocument();
+    );
     expect(
       screen.getByText("Add more items to this wardrobe, then refresh."),
     ).toBeInTheDocument();
+    expectActionButtonNotFullWidth(
+      screen.getByRole("link", { name: "Add an outfit" }),
+    );
   });
 
   it("renders an empty suggestions state when the API returns no looks", async () => {
@@ -170,16 +177,16 @@ describe("OutfitsPage", () => {
       }),
     );
 
-    expect(
+    expectInsideNarrowContent(
       await screen.findByRole("heading", {
         name: "Virtual Try On is a Premium feature",
       }),
-    ).toBeInTheDocument();
-    expect(
+    );
+    expectActionButtonNotFullWidth(
       screen.getByRole("button", {
         name: "Upgrade to Premium for Virtual Try On",
       }),
-    ).toBeInTheDocument();
+    );
   });
 
   it("maps any other 403 from recommendations to the Premium paywall", async () => {

@@ -18,6 +18,10 @@ import {
   getAppItemPath,
   getAppVirtualTryOnPath,
 } from "../../routes/paths";
+import {
+  expectActionButtonNotFullWidth,
+  expectInsideNarrowContent,
+} from "../../test/dashboardNarrowContentTest";
 import { renderWithProviders } from "../../test/renderWithProviders";
 import { ItemDetailPage } from "./ItemDetailPage";
 
@@ -292,11 +296,16 @@ describe("ItemDetailPage", () => {
       }),
     );
 
-    expect(
+    expectInsideNarrowContent(
       screen.getByRole("heading", {
         name: "Virtual Try On is a Premium feature",
       }),
-    ).toBeInTheDocument();
+    );
+    expectActionButtonNotFullWidth(
+      screen.getByRole("button", {
+        name: "Upgrade to Premium for Virtual Try On",
+      }),
+    );
     expect(
       screen.queryByRole("link", { name: "Virtual Try On this clothing item" }),
     ).not.toBeInTheDocument();
@@ -319,6 +328,9 @@ describe("ItemDetailPage", () => {
     expect(
       await screen.findByRole("heading", { level: 1, name: "Item not found" }),
     ).toBeInTheDocument();
+    expectInsideNarrowContent(
+      screen.getByRole("heading", { level: 2, name: "Item not found" }),
+    );
     expect(
       screen.queryByRole("heading", { name: "Couldn't load this item" }),
     ).not.toBeInTheDocument();
