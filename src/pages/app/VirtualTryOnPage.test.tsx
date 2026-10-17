@@ -467,9 +467,47 @@ describe("VirtualTryOnPage", () => {
         name: "Upgrade to Premium for Virtual Try On",
       }),
     );
+    expectActionButtonNotFullWidth(
+      screen.getByRole("link", {
+        name: dashboardCopy.billing.comparePlansAriaLabel,
+      }),
+    );
     expect(
       screen.queryByRole("button", { name: "Start Virtual Try On" }),
     ).not.toBeInTheDocument();
+  });
+
+  it("keeps the Premium lock in the shared wrapper with content-sized Upgrade and Compare plans", async () => {
+    renderPage(createAiTryOnOffResourceApi(), {
+      fetchPlans: async () => ({ plans: MOCK_BILLING_PLANS }),
+    });
+
+    const pricedAriaLabel = getUpgradePriceLabel({
+      actionLabel: dashboardCopy.upgrade.premium.actionAriaLabel,
+      plans: MOCK_BILLING_PLANS,
+      tier: "premium",
+      interval: "monthly",
+    });
+    const pricedActionLabel = getUpgradePriceLabel({
+      actionLabel: dashboardCopy.upgrade.premium.actionLabel,
+      plans: MOCK_BILLING_PLANS,
+      tier: "premium",
+      interval: "monthly",
+    });
+
+    expectInsideNarrowContent(
+      await screen.findByRole("heading", {
+        name: "Virtual Try On is a Premium feature",
+      }),
+    );
+    const upgrade = screen.getByRole("button", { name: pricedAriaLabel });
+    expect(upgrade).toHaveTextContent(pricedActionLabel);
+    expectActionButtonNotFullWidth(upgrade);
+    expectActionButtonNotFullWidth(
+      screen.getByRole("link", {
+        name: dashboardCopy.billing.comparePlansAriaLabel,
+      }),
+    );
   });
 
   it("shows the live Premium price on the Virtual Try On lock card", async () => {
