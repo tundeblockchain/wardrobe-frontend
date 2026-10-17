@@ -19,6 +19,7 @@ import {
   readBillingSessionUrl,
   type BillingInterval,
 } from "../../api/billing";
+import type { FetchBillingPlansFn } from "../../api/billingPlans";
 import type { ResourceApi } from "../../api/resourceApi";
 import type { PaidPlanTier } from "../../api/resourceTypes";
 import { BillingIntervalToggle } from "../../components/billing/BillingIntervalToggle";
@@ -32,6 +33,8 @@ import {
   getPlanExpiresLabel,
   isStripePaidTier,
 } from "../../content/planDisplay";
+import { getUpgradePriceLabel } from "../../content/upgradePriceLabel";
+import { useBillingPlans } from "../../hooks/useBillingPlans";
 import { useResourceQuery } from "../../hooks/useResourceQuery";
 import { appPaths, SETTINGS_PLAN_HASH } from "../../routes/paths";
 
@@ -40,6 +43,7 @@ const copy = dashboardCopy.settings;
 export type PlanSettingsSectionProps = {
   resourceApi: ResourceApi;
   assignBillingUrl?: (url: string) => void;
+  fetchPlans?: FetchBillingPlansFn;
 };
 
 type BillingAction = "portal" | PaidPlanTier;
@@ -47,9 +51,11 @@ type BillingAction = "portal" | PaidPlanTier;
 export const PlanSettingsSection = ({
   resourceApi,
   assignBillingUrl = defaultAssignBillingUrl,
+  fetchPlans,
 }: PlanSettingsSectionProps) => {
   const { hash } = useLocation();
   const planQuery = useResourceQuery("settings-plan", resourceApi.getMe);
+  const plansQuery = useBillingPlans({ fetchPlans });
   const [billingAction, setBillingAction] = useState<BillingAction | null>(
     null,
   );
@@ -150,6 +156,31 @@ export const PlanSettingsSection = ({
     planQuery.status === "ready"
       ? getPlanExpiresLabel(paidTier?.expiresAt ?? planQuery.data.expiresAt)
       : undefined;
+  const plans = plansQuery.status === "ready" ? plansQuery.data.plans : undefined;
+  const basicUpgradeLabel = getUpgradePriceLabel({
+    actionLabel: copy.planUpgradeBasicLabel,
+    plans,
+    tier: "basic",
+    interval: billingInterval,
+  });
+  const basicUpgradeAriaLabel = getUpgradePriceLabel({
+    actionLabel: copy.planUpgradeBasicAriaLabel,
+    plans,
+    tier: "basic",
+    interval: billingInterval,
+  });
+  const premiumUpgradeLabel = getUpgradePriceLabel({
+    actionLabel: copy.planUpgradePremiumLabel,
+    plans,
+    tier: "premium",
+    interval: billingInterval,
+  });
+  const premiumUpgradeAriaLabel = getUpgradePriceLabel({
+    actionLabel: copy.planUpgradePremiumAriaLabel,
+    plans,
+    tier: "premium",
+    interval: billingInterval,
+  });
 
   return (
     <Paper
@@ -235,12 +266,12 @@ export const PlanSettingsSection = ({
                       handleUpgradeKeyDown(event, "basic");
                     }}
                     tabIndex={0}
-                    aria-label={copy.planUpgradeBasicAriaLabel}
+                    aria-label={basicUpgradeAriaLabel}
                     disabled={isBillingBusy}
                   >
                     {billingAction === "basic"
                       ? copy.planUpgradingLabel
-                      : copy.planUpgradeBasicLabel}
+                      : basicUpgradeLabel}
                   </Button>
                   <Button
                     type="button"
@@ -253,12 +284,12 @@ export const PlanSettingsSection = ({
                       handleUpgradeKeyDown(event, "premium");
                     }}
                     tabIndex={0}
-                    aria-label={copy.planUpgradePremiumAriaLabel}
+                    aria-label={premiumUpgradeAriaLabel}
                     disabled={isBillingBusy}
                   >
                     {billingAction === "premium"
                       ? copy.planUpgradingLabel
-                      : copy.planUpgradePremiumLabel}
+                      : premiumUpgradeLabel}
                   </Button>
                 </Stack>
               </Stack>

@@ -7,6 +7,7 @@ import type {
   EntitlementUsage,
 } from "../../api/resourceTypes";
 import type { ForbiddenUpgradeKind } from "../../api/entitlementGating";
+import type { FetchBillingPlansFn } from "../../api/billingPlans";
 import type { CheckoutGetMeFn, StartCheckoutFn } from "../../hooks/useCheckoutAction";
 import { dashboardCopy } from "../../content/dashboardCopy";
 import { appPaths } from "../../routes/paths";
@@ -26,6 +27,7 @@ export type ForbiddenUpgradePromptProps = {
   startCheckout?: StartCheckoutFn;
   getMe?: CheckoutGetMeFn;
   assignLocation?: (url: string) => void;
+  fetchPlans?: FetchBillingPlansFn;
 };
 
 export const ForbiddenUpgradePrompt = ({
@@ -40,6 +42,7 @@ export const ForbiddenUpgradePrompt = ({
   startCheckout,
   getMe,
   assignLocation,
+  fetchPlans,
 }: ForbiddenUpgradePromptProps) => {
   if (kind === "basic") {
     if (catalogKind) {
@@ -52,6 +55,7 @@ export const ForbiddenUpgradePrompt = ({
           startCheckout={startCheckout}
           getMe={getMe}
           assignLocation={assignLocation}
+          fetchPlans={fetchPlans}
         />
       );
     }
@@ -70,6 +74,7 @@ export const ForbiddenUpgradePrompt = ({
           startCheckout={startCheckout}
           getMe={getMe}
           assignLocation={assignLocation}
+          fetchPlans={fetchPlans}
         />
       </Stack>
     );
@@ -86,6 +91,7 @@ export const ForbiddenUpgradePrompt = ({
           startCheckout={startCheckout}
           getMe={getMe}
           assignLocation={assignLocation}
+          fetchPlans={fetchPlans}
         />
         <Button
           component={RouterLink}

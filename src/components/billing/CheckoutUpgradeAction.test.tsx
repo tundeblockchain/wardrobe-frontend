@@ -2,7 +2,13 @@ import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { ApiError } from "../../api/httpClient";
+import {
+  MOCK_BILLING_PLANS,
+  PLANS_UNAVAILABLE_CODE,
+  PLANS_UNAVAILABLE_MESSAGE,
+} from "../../api/billingPlans";
 import { mockFreeAtLimitEntitlement } from "../../api/mockResourceApi";
+import { getUpgradePriceLabel } from "../../content/upgradePriceLabel";
 import {
   ALREADY_SUBSCRIBED_CODE,
   BILLING_PRICE_NOT_FOUND_CODE,
@@ -49,6 +55,82 @@ describe("CheckoutUpgradeAction", () => {
       );
     });
     expect(assignLocation.mock.calls[0]?.[0]).not.toMatch(/stripe\.com/);
+  });
+
+  it("shows the live price on checkout upgrade buttons and follows the interval toggle", async () => {
+    const user = userEvent.setup();
+    const loadMockPlans = async () => ({ plans: MOCK_BILLING_PLANS });
+
+    renderWithProviders(
+      <CheckoutUpgradeAction
+        checkoutTier="premium"
+        actionLabel="Upgrade to Premium"
+        actionAriaLabel="Upgrade to Premium"
+        fetchPlans={loadMockPlans}
+      />,
+      { auth: { user: { id: "user-1" } } },
+    );
+
+    const monthlyLabel = getUpgradePriceLabel({
+      actionLabel: "Upgrade to Premium",
+      plans: MOCK_BILLING_PLANS,
+      tier: "premium",
+      interval: "monthly",
+    });
+    expect(
+      await screen.findByRole("button", { name: monthlyLabel }),
+    ).toHaveTextContent(monthlyLabel);
+
+    await user.click(screen.getByRole("button", { name: "Bill yearly" }));
+
+    const yearlyLabel = getUpgradePriceLabel({
+      actionLabel: "Upgrade to Premium",
+      plans: MOCK_BILLING_PLANS,
+      tier: "premium",
+      interval: "yearly",
+    });
+    expect(
+      await screen.findByRole("button", { name: yearlyLabel }),
+    ).toHaveTextContent(yearlyLabel);
+  });
+
+  it("starts checkout without a price when GET /billing/plans fails", async () => {
+    const user = userEvent.setup();
+    const startCheckout = vi.fn().mockResolvedValue({
+      url: "https://checkout.example.test/premium",
+    });
+    const assignLocation = vi.fn();
+
+    renderWithProviders(
+      <CheckoutUpgradeAction
+        checkoutTier="premium"
+        actionLabel="Upgrade to Premium"
+        actionAriaLabel="Upgrade to Premium"
+        startCheckout={startCheckout}
+        assignLocation={assignLocation}
+        fetchPlans={async () => {
+          throw new ApiError({
+            status: 503,
+            code: PLANS_UNAVAILABLE_CODE,
+            message: PLANS_UNAVAILABLE_MESSAGE,
+          });
+        }}
+      />,
+      { auth: { user: { id: "user-1" } } },
+    );
+
+    const button = await screen.findByRole("button", {
+      name: "Upgrade to Premium",
+    });
+    expect(button).toHaveTextContent("Upgrade to Premium");
+    await user.click(button);
+
+    await waitFor(() => {
+      expect(startCheckout).toHaveBeenCalledWith("premium", "monthly");
+      expect(assignLocation).toHaveBeenCalledWith(
+        "https://checkout.example.test/premium",
+      );
+    });
   });
 
   it("starts Premium checkout from an AI 403 upgrade prompt", async () => {

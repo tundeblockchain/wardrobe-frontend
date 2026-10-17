@@ -5,6 +5,7 @@ import type {
   EntitlementLimits,
   EntitlementUsage,
 } from "../../api/resourceTypes";
+import type { FetchBillingPlansFn } from "../../api/billingPlans";
 import type { CheckoutGetMeFn, StartCheckoutFn } from "../../hooks/useCheckoutAction";
 import { getCatalogLimitDescription } from "../../content/catalogLimitCopy";
 import { dashboardCopy } from "../../content/dashboardCopy";
@@ -19,6 +20,7 @@ export type CatalogLimitPromptProps = {
   startCheckout?: StartCheckoutFn;
   getMe?: CheckoutGetMeFn;
   assignLocation?: (url: string) => void;
+  fetchPlans?: FetchBillingPlansFn;
 };
 
 export const CatalogLimitPrompt = ({
@@ -29,6 +31,7 @@ export const CatalogLimitPrompt = ({
   startCheckout,
   getMe,
   assignLocation,
+  fetchPlans,
 }: CatalogLimitPromptProps) => {
   const copy = dashboardCopy.catalogLimit[kind];
 
@@ -46,6 +49,7 @@ export const CatalogLimitPrompt = ({
         startCheckout={startCheckout}
         getMe={getMe}
         assignLocation={assignLocation}
+        fetchPlans={fetchPlans}
       />
     </Stack>
   );
