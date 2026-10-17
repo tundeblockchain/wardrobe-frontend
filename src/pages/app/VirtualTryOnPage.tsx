@@ -29,6 +29,7 @@ import {
   getItemImageUrl,
   getOutfitImageUrl,
 } from "../../api/resourceDisplay";
+import type { FetchBillingPlansFn } from "../../api/billingPlans";
 import type { ResourceApi } from "../../api/resourceApi";
 import type {
   AiProfile,
@@ -70,6 +71,7 @@ export type VirtualTryOnPageProps = {
   resourceApi?: ResourceApi;
   pollIntervalMs?: number;
   maxPollAttempts?: number;
+  fetchPlans?: FetchBillingPlansFn;
 };
 
 type VirtualTryOnData = {
@@ -109,6 +111,7 @@ export const VirtualTryOnPage = ({
   resourceApi: resourceApiProp,
   pollIntervalMs = VIRTUAL_TRY_ON_POLL_INTERVAL_MS,
   maxPollAttempts = VIRTUAL_TRY_ON_MAX_POLL_ATTEMPTS,
+  fetchPlans,
 }: VirtualTryOnPageProps) => {
   const location = useLocation();
   const defaultResourceApi = useResourceApi();
@@ -144,6 +147,7 @@ export const VirtualTryOnPage = ({
           <ForbiddenUpgradePrompt
             kind={upgradeKind}
             catalogKind={getCatalogKindForLimitCode(query.error.code)}
+            fetchPlans={fetchPlans}
           />
         </DashboardPage>
       );
@@ -175,6 +179,7 @@ export const VirtualTryOnPage = ({
         <ForbiddenUpgradePrompt
           kind="premium"
           entitlement={query.data.entitlement}
+          fetchPlans={fetchPlans}
         />
       </DashboardPage>
     );
@@ -187,6 +192,7 @@ export const VirtualTryOnPage = ({
       data={query.data}
       pollIntervalMs={pollIntervalMs}
       maxPollAttempts={maxPollAttempts}
+      fetchPlans={fetchPlans}
     />
   );
 };
@@ -196,6 +202,7 @@ type VirtualTryOnReadyProps = {
   data: VirtualTryOnData;
   pollIntervalMs: number;
   maxPollAttempts: number;
+  fetchPlans?: FetchBillingPlansFn;
 };
 
 const VirtualTryOnReady = ({
@@ -203,6 +210,7 @@ const VirtualTryOnReady = ({
   data,
   pollIntervalMs,
   maxPollAttempts,
+  fetchPlans,
 }: VirtualTryOnReadyProps) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -388,6 +396,7 @@ const VirtualTryOnReady = ({
         <ForbiddenUpgradePrompt
           kind={upgradeKind}
           entitlement={data.entitlement}
+          fetchPlans={fetchPlans}
         />
       </DashboardPage>
     );

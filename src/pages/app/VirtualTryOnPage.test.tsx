@@ -1,6 +1,7 @@
 import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { MOCK_BILLING_PLANS } from "../../api/billingPlans";
 import {
   createAiTryOnOffResourceApi,
   createEmptyResourceApi,
@@ -9,6 +10,8 @@ import {
   createMockResourceApi,
   createOtherAiOffResourceApi,
 } from "../../api/mockResourceApi";
+import { dashboardCopy } from "../../content/dashboardCopy";
+import { getUpgradePriceLabel } from "../../content/upgradePriceLabel";
 import {
   DASHBOARD_PAPER_TEST_ID,
   DashboardPaper,
@@ -30,12 +33,14 @@ const renderPage = (
     route?: string;
     routeState?: unknown;
     pollIntervalMs?: number;
+    fetchPlans?: () => Promise<{ plans: typeof MOCK_BILLING_PLANS }>;
   } = {},
 ) => {
   return renderWithProviders(
     <VirtualTryOnPage
       resourceApi={resourceApi}
       pollIntervalMs={options.pollIntervalMs}
+      fetchPlans={options.fetchPlans}
     />,
     {
       auth: { user: { id: "user-1" } },
@@ -461,6 +466,35 @@ describe("VirtualTryOnPage", () => {
     expect(
       screen.queryByRole("button", { name: "Start Virtual Try On" }),
     ).not.toBeInTheDocument();
+  });
+
+  it("shows the live Premium price on the Virtual Try On lock card", async () => {
+    renderPage(createAiTryOnOffResourceApi(), {
+      fetchPlans: async () => ({ plans: MOCK_BILLING_PLANS }),
+    });
+
+    const pricedAriaLabel = getUpgradePriceLabel({
+      actionLabel: dashboardCopy.upgrade.premium.actionAriaLabel,
+      plans: MOCK_BILLING_PLANS,
+      tier: "premium",
+      interval: "monthly",
+    });
+
+    expect(
+      await screen.findByRole("heading", {
+        name: "Virtual Try On is a Premium feature",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: pricedAriaLabel }),
+    ).toHaveTextContent(
+      getUpgradePriceLabel({
+        actionLabel: dashboardCopy.upgrade.premium.actionLabel,
+        plans: MOCK_BILLING_PLANS,
+        tier: "premium",
+        interval: "monthly",
+      }),
+    );
   });
 
   it("maps 403 ENTITLEMENT_AI_REQUIRED to a Premium upgrade prompt", async () => {

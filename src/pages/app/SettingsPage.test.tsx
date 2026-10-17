@@ -8,7 +8,14 @@ import {
   BILLING_PRICE_NOT_FOUND_CODE,
   YEARLY_BILLING_UNAVAILABLE_MESSAGE,
 } from "../../api/billing";
+import {
+  MOCK_BILLING_PLANS,
+  PLANS_UNAVAILABLE_CODE,
+  PLANS_UNAVAILABLE_MESSAGE,
+  type BillingPlansResponse,
+} from "../../api/billingPlans";
 import { ApiError } from "../../api/httpClient";
+import { getUpgradePriceLabel } from "../../content/upgradePriceLabel";
 import {
   createAiTryOnOffResourceApi,
   createErrorResourceApi,
@@ -86,6 +93,7 @@ const renderSettings = (
   options: {
     route?: string;
     assignBillingUrl?: (url: string) => void;
+    fetchPlans?: () => Promise<BillingPlansResponse>;
   } = {},
 ) => {
   return renderWithProviders(
@@ -98,6 +106,7 @@ const renderSettings = (
               <SettingsPage
                 resourceApi={resourceApi}
                 assignBillingUrl={options.assignBillingUrl}
+                fetchPlans={options.fetchPlans}
               />
             </ProtectedRoute>
           }
@@ -257,6 +266,134 @@ describe("SettingsPage", () => {
     expect(
       screen.queryByRole("button", { name: "Manage subscription" }),
     ).not.toBeInTheDocument();
+  });
+
+  it("shows live catalog prices on Free plan upgrade buttons and the Premium lock", async () => {
+    const loadMockPlans = async (): Promise<BillingPlansResponse> => {
+      return { plans: MOCK_BILLING_PLANS };
+    };
+    renderSettings(
+      createMockResourceApi(
+        {},
+        { entitlement: mockFreeAtLimitEntitlement },
+      ),
+      undefined,
+      { fetchPlans: loadMockPlans },
+    );
+
+    const basicMonthly = getUpgradePriceLabel({
+      actionLabel: "Upgrade to Basic",
+      plans: MOCK_BILLING_PLANS,
+      tier: "basic",
+      interval: "monthly",
+    });
+    const premiumMonthly = getUpgradePriceLabel({
+      actionLabel: "Upgrade to Premium",
+      plans: MOCK_BILLING_PLANS,
+      tier: "premium",
+      interval: "monthly",
+    });
+
+    expect(
+      await screen.findByRole("button", { name: basicMonthly }),
+    ).toHaveTextContent(basicMonthly);
+    expect(
+      screen.getByRole("button", { name: premiumMonthly }),
+    ).toHaveTextContent(premiumMonthly);
+    expect(screen.getByLabelText("Premium")).toHaveTextContent(
+      getUpgradePriceLabel({
+        actionLabel: "Premium",
+        plans: MOCK_BILLING_PLANS,
+        tier: "premium",
+        interval: "monthly",
+      }),
+    );
+  });
+
+  it("updates Settings upgrade prices when yearly billing is selected", async () => {
+    const user = userEvent.setup();
+    const loadMockPlans = async (): Promise<BillingPlansResponse> => {
+      return { plans: MOCK_BILLING_PLANS };
+    };
+    renderSettings(
+      createMockResourceApi(
+        {},
+        { entitlement: mockFreeAtLimitEntitlement },
+      ),
+      undefined,
+      { fetchPlans: loadMockPlans },
+    );
+
+    await screen.findByRole("button", {
+      name: getUpgradePriceLabel({
+        actionLabel: "Upgrade to Premium",
+        plans: MOCK_BILLING_PLANS,
+        tier: "premium",
+        interval: "monthly",
+      }),
+    });
+    await user.click(screen.getByRole("button", { name: "Bill yearly" }));
+
+    expect(
+      await screen.findByRole("button", {
+        name: getUpgradePriceLabel({
+          actionLabel: "Upgrade to Basic",
+          plans: MOCK_BILLING_PLANS,
+          tier: "basic",
+          interval: "yearly",
+        }),
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", {
+        name: getUpgradePriceLabel({
+          actionLabel: "Upgrade to Premium",
+          plans: MOCK_BILLING_PLANS,
+          tier: "premium",
+          interval: "yearly",
+        }),
+      }),
+    ).toBeInTheDocument();
+  });
+
+  it("keeps Settings upgrade buttons working without a price when plans are unavailable", async () => {
+    const user = userEvent.setup();
+    const createCheckoutSession = vi.fn().mockResolvedValue({
+      url: "https://checkout.stripe.com/c/pay/cs_premium",
+    });
+    const assignBillingUrl = vi.fn();
+    renderSettings(
+      createMockResourceApi(
+        { createCheckoutSession },
+        { entitlement: mockFreeAtLimitEntitlement },
+      ),
+      undefined,
+      {
+        assignBillingUrl,
+        fetchPlans: async () => {
+          throw new ApiError({
+            status: 503,
+            code: PLANS_UNAVAILABLE_CODE,
+            message: PLANS_UNAVAILABLE_MESSAGE,
+          });
+        },
+      },
+    );
+
+    const premiumButton = await screen.findByRole("button", {
+      name: "Upgrade to Premium",
+    });
+    expect(premiumButton).toHaveTextContent("Upgrade to Premium");
+    expect(premiumButton).toBeEnabled();
+    expect(screen.getByLabelText("Premium")).toHaveTextContent("Premium");
+
+    await user.click(premiumButton);
+    await waitFor(() => {
+      expect(createCheckoutSession).toHaveBeenCalledWith("premium", "monthly");
+    });
+    expect(assignBillingUrl).toHaveBeenCalledWith(
+      "https://checkout.stripe.com/c/pay/cs_premium",
+    );
   });
 
   it("shows a Basic Stripe plan with Manage subscription", async () => {

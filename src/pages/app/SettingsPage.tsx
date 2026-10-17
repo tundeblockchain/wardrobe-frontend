@@ -23,6 +23,8 @@ import {
   Typography,
 } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
+import { DEFAULT_BILLING_INTERVAL } from "../../api/billing";
+import type { FetchBillingPlansFn } from "../../api/billingPlans";
 import { isApiError } from "../../api/httpClient";
 import type { ResourceApi } from "../../api/resourceApi";
 import { useResourceApi } from "../../api/useResourceApi";
@@ -30,6 +32,7 @@ import { getAuthErrorMessage } from "../../auth/authErrors";
 import { getSignedInWithLabel } from "../../auth/authProviderLabel";
 import { setLoginNotice } from "../../auth/loginNotice";
 import { useAuth } from "../../auth/useAuth";
+import { UpgradePriceLabel } from "../../components/billing/UpgradePriceLabel";
 import { DashboardPage } from "../../components/dashboard/DashboardPage";
 import { dashboardCopy } from "../../content/dashboardCopy";
 import { invalidateResourceQueries } from "../../hooks/resourceQueryInvalidation";
@@ -41,6 +44,7 @@ import { PlanSettingsSection } from "./PlanSettingsSection";
 export type SettingsPageProps = {
   resourceApi?: ResourceApi;
   assignBillingUrl?: (url: string) => void;
+  fetchPlans?: FetchBillingPlansFn;
 };
 
 const copy = dashboardCopy.settings;
@@ -203,6 +207,7 @@ const SettingsSection = ({
 export const SettingsPage = ({
   resourceApi: resourceApiProp,
   assignBillingUrl,
+  fetchPlans,
 }: SettingsPageProps) => {
   const defaultResourceApi = useResourceApi();
   const resourceApi = resourceApiProp ?? defaultResourceApi;
@@ -432,6 +437,7 @@ export const SettingsPage = ({
         <PlanSettingsSection
           resourceApi={resourceApi}
           assignBillingUrl={assignBillingUrl}
+          fetchPlans={fetchPlans}
         />
 
         <SettingsSection
@@ -457,7 +463,14 @@ export const SettingsPage = ({
               size="small"
               color="primary"
               variant="outlined"
-              label={copy.virtualTryOnPremiumLabel}
+              label={
+                <UpgradePriceLabel
+                  actionLabel={copy.virtualTryOnPremiumLabel}
+                  checkoutTier="premium"
+                  billingInterval={DEFAULT_BILLING_INTERVAL}
+                  fetchPlans={fetchPlans}
+                />
+              }
               aria-label={copy.virtualTryOnPremiumLabel}
             />
           </Stack>

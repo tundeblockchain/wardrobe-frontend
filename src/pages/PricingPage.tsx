@@ -40,6 +40,7 @@ import {
   type PricingTier,
 } from "../content/pricingPlanActions";
 import { dashboardCopy } from "../content/dashboardCopy";
+import { useBillingPlans } from "../hooks/useBillingPlans";
 import {
   useCheckoutAction,
   type CheckoutGetMeFn,
@@ -121,7 +122,7 @@ export const PricingPage = ({
     handlePortal,
   } = useCheckoutAction({ startCheckout, startPortal, getMe, assignLocation });
 
-  const plansQuery = useResourceQuery("billing-plans", fetchPlans);
+  const plansQuery = useBillingPlans({ fetchPlans });
   const entitlementLoader = (): Promise<PricingEntitlement | null> => {
     if (!user) {
       return Promise.resolve(null);

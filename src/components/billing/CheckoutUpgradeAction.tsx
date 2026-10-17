@@ -9,8 +9,11 @@ import {
   type BillingInterval,
   type CheckoutTier,
 } from "../../api/billing";
+import type { FetchBillingPlansFn } from "../../api/billingPlans";
 import type { PaidTier } from "../../api/resourceTypes";
 import { dashboardCopy } from "../../content/dashboardCopy";
+import { getUpgradePriceLabel } from "../../content/upgradePriceLabel";
+import { useBillingPlans } from "../../hooks/useBillingPlans";
 import {
   useCheckoutAction,
   type CheckoutGetMeFn,
@@ -27,6 +30,7 @@ export type CheckoutUpgradeActionProps = {
   startCheckout?: StartCheckoutFn;
   getMe?: CheckoutGetMeFn;
   assignLocation?: (url: string) => void;
+  fetchPlans?: FetchBillingPlansFn;
 };
 
 const copy = dashboardCopy.billing;
@@ -39,6 +43,7 @@ export const CheckoutUpgradeAction = ({
   startCheckout,
   getMe,
   assignLocation,
+  fetchPlans,
 }: CheckoutUpgradeActionProps) => {
   const {
     isStarting,
@@ -47,6 +52,7 @@ export const CheckoutUpgradeAction = ({
     existingPaidTier,
     handleCheckout,
   } = useCheckoutAction({ startCheckout, getMe, assignLocation });
+  const plansQuery = useBillingPlans({ fetchPlans });
   const [billingInterval, setBillingInterval] = useState<BillingInterval>(
     DEFAULT_BILLING_INTERVAL,
   );
@@ -118,6 +124,20 @@ export const CheckoutUpgradeAction = ({
     handleClick();
   };
 
+  const plans = plansQuery.status === "ready" ? plansQuery.data.plans : undefined;
+  const pricedActionLabel = getUpgradePriceLabel({
+    actionLabel,
+    plans,
+    tier: checkoutTier,
+    interval: billingInterval,
+  });
+  const pricedActionAriaLabel = getUpgradePriceLabel({
+    actionLabel: actionAriaLabel,
+    plans,
+    tier: checkoutTier,
+    interval: billingInterval,
+  });
+
   return (
     <Stack spacing={2}>
       {alreadySubscribedMessage ? (
@@ -142,10 +162,10 @@ export const CheckoutUpgradeAction = ({
         onClick={handleClick}
         onKeyDown={handleKeyDown}
         tabIndex={0}
-        aria-label={actionAriaLabel}
+        aria-label={pricedActionAriaLabel}
         disabled={isStarting}
       >
-        {isStarting ? copy.startingLabel : actionLabel}
+        {isStarting ? copy.startingLabel : pricedActionLabel}
       </Button>
     </Stack>
   );
