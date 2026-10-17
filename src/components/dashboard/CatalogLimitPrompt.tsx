@@ -1,4 +1,3 @@
-import { Stack } from "@mui/material";
 import type {
   CatalogKind,
   Entitlement,
@@ -11,6 +10,7 @@ import { getCatalogLimitDescription } from "../../content/catalogLimitCopy";
 import { dashboardCopy } from "../../content/dashboardCopy";
 import { StatusCard } from "../StatusCard";
 import { CheckoutUpgradeAction } from "../billing/CheckoutUpgradeAction";
+import { DashboardNarrowContent } from "./DashboardNarrowContent";
 
 export type CatalogLimitPromptProps = {
   kind: CatalogKind;
@@ -36,7 +36,7 @@ export const CatalogLimitPrompt = ({
   const copy = dashboardCopy.catalogLimit[kind];
 
   return (
-    <Stack spacing={2}>
+    <DashboardNarrowContent>
       <StatusCard
         title={copy.title}
         description={getCatalogLimitDescription(kind, { limits, usage })}
@@ -51,6 +51,6 @@ export const CatalogLimitPrompt = ({
         assignLocation={assignLocation}
         fetchPlans={fetchPlans}
       />
-    </Stack>
+    </DashboardNarrowContent>
   );
 };

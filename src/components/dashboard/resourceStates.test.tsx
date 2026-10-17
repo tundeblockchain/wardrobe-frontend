@@ -1,6 +1,11 @@
+import { Button } from "@mui/material";
 import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
+import {
+  expectActionButtonNotFullWidth,
+  expectInsideNarrowContent,
+} from "../../test/dashboardNarrowContentTest";
 import { renderWithProviders } from "../../test/renderWithProviders";
 import { ResourceEmptyState } from "./ResourceEmptyState";
 import { ResourceErrorState } from "./ResourceErrorState";
@@ -23,12 +28,17 @@ describe("dashboard resource states", () => {
       <ResourceEmptyState
         title="No wardrobes yet"
         description="Wardrobes you add in the app will appear here."
-      />,
+      >
+        <Button variant="contained">Add wardrobe</Button>
+      </ResourceEmptyState>,
     );
 
-    expect(
+    expectInsideNarrowContent(
       screen.getByRole("heading", { name: "No wardrobes yet" }),
-    ).toBeInTheDocument();
+    );
+    expectActionButtonNotFullWidth(
+      screen.getByRole("button", { name: "Add wardrobe" }),
+    );
   });
 
   it("retries from the error state", async () => {
@@ -65,6 +75,14 @@ describe("dashboard resource states", () => {
         name: "Virtual Try On is a Premium feature",
       }),
     ).toBeInTheDocument();
+    expectInsideNarrowContent(
+      screen.getByRole("heading", {
+        name: "Virtual Try On is a Premium feature",
+      }),
+    );
+    expectActionButtonNotFullWidth(
+      screen.getByRole("link", { name: "View plan for Virtual Try On" }),
+    );
     expect(
       screen.getByRole("link", { name: "View plan for Virtual Try On" }),
     ).toHaveAttribute("href", "/app/settings");
@@ -76,11 +94,14 @@ describe("dashboard resource states", () => {
     expect(
       screen.getByRole("heading", { name: "Wardrobe limit reached" }),
     ).toBeInTheDocument();
-    expect(
+    expectInsideNarrowContent(
+      screen.getByRole("heading", { name: "Wardrobe limit reached" }),
+    );
+    expectActionButtonNotFullWidth(
       screen.getByRole("button", {
         name: "Upgrade to Basic to add more wardrobes",
       }),
-    ).toBeInTheDocument();
+    );
   });
 
   it("renders catalog limit copy from non-default /me limits", () => {
@@ -124,11 +145,21 @@ describe("dashboard resource states", () => {
     unmount();
 
     renderWithProviders(<ForbiddenUpgradePrompt kind="premium" />);
-    expect(
+    expectInsideNarrowContent(
       screen.getByRole("heading", {
         name: "Virtual Try On is a Premium feature",
       }),
-    ).toBeInTheDocument();
+    );
+    expectActionButtonNotFullWidth(
+      screen.getByRole("button", {
+        name: "Upgrade to Premium for Virtual Try On",
+      }),
+    );
+    expectActionButtonNotFullWidth(
+      screen.getByRole("link", {
+        name: "Compare Free, Basic, and Premium plans",
+      }),
+    );
     expect(
       screen.getByRole("link", {
         name: "Compare Free, Basic, and Premium plans",

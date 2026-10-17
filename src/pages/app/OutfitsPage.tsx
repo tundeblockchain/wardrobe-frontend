@@ -113,13 +113,12 @@ export const OutfitsPage = ({
 
     if (outfitsQuery.data.outfits.length === 0) {
       return (
-        <Stack spacing={2}>
-          <ResourceEmptyState
-            title={copy.emptyTitle}
-            description={copy.emptyDescription}
-          />
+        <ResourceEmptyState
+          title={copy.emptyTitle}
+          description={copy.emptyDescription}
+        >
           {addAction}
-        </Stack>
+        </ResourceEmptyState>
       );
     }
 

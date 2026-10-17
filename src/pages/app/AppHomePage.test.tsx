@@ -11,6 +11,10 @@ import {
 } from "../../api/mockResourceApi";
 import type { Wardrobe } from "../../api/resourceTypes";
 import { getAppWardrobePath } from "../../routes/paths";
+import {
+  expectActionButtonNotFullWidth,
+  expectInsideNarrowContent,
+} from "../../test/dashboardNarrowContentTest";
 import { renderWithProviders } from "../../test/renderWithProviders";
 import { AppHomePage } from "./AppHomePage";
 
@@ -330,9 +334,12 @@ describe("AppHomePage", () => {
   it("renders an empty state when there are no wardrobes", async () => {
     renderPage(createEmptyResourceApi());
 
-    expect(
+    expectInsideNarrowContent(
       await screen.findByRole("heading", { name: "No wardrobes yet" }),
-    ).toBeInTheDocument();
+    );
+    expectActionButtonNotFullWidth(
+      screen.getByRole("link", { name: "Add a wardrobe" }),
+    );
   });
 
   it("renders an error state and retries", async () => {

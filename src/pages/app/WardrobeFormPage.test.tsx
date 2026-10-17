@@ -11,6 +11,10 @@ import {
 } from "../../api/mockResourceApi";
 import type { ResourceApi } from "../../api/resourceApi";
 import {
+  expectActionButtonNotFullWidth,
+  expectInsideNarrowContent,
+} from "../../test/dashboardNarrowContentTest";
+import {
   expectFormInsideSharedCard,
   expectSharedFormCardAbsent,
 } from "../../test/formCardTest";
@@ -111,14 +115,14 @@ describe("WardrobeFormPage", () => {
   it("shows the upgrade prompt before a Free user hits the wardrobe limit", async () => {
     renderCreate(createFreeAtLimitResourceApi());
 
-    expect(
+    expectInsideNarrowContent(
       await screen.findByRole("heading", { name: "Wardrobe limit reached" }),
-    ).toBeInTheDocument();
-    expect(
+    );
+    expectActionButtonNotFullWidth(
       screen.getByRole("button", {
         name: "Upgrade to Basic to add more wardrobes",
       }),
-    ).toBeInTheDocument();
+    );
     expect(
       screen.queryByRole("button", { name: "Save wardrobe" }),
     ).not.toBeInTheDocument();

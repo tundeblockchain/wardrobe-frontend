@@ -29,6 +29,7 @@ import { dashboardCopy } from "../../content/dashboardCopy";
 import { invalidateResourceQueries } from "../../hooks/resourceQueryCache";
 import { useAbortableResourceQuery } from "../../hooks/useAbortableResourceQuery";
 import { useResourceQuery } from "../../hooks/useResourceQuery";
+import { DashboardNarrowContent } from "./DashboardNarrowContent";
 import { ForbiddenUpgradePrompt } from "./ForbiddenUpgradePrompt";
 import { ResourceCardGrid } from "./ResourceCardGrid";
 import { ResourceEmptyState } from "./ResourceEmptyState";
@@ -47,15 +48,22 @@ export const SuggestedOutfitsEmptyPanel = () => {
   const copy = dashboardCopy.recommendations;
 
   return (
-    <Stack spacing={2} component="section" aria-label={copy.listLabel}>
-      <Typography variant="h2" component="h2">
-        {copy.title}
-      </Typography>
-      <ResourceEmptyState
-        title={copy.emptyTitle}
-        description={copy.emptyDescription}
-      />
-    </Stack>
+    <DashboardNarrowContent>
+      <Stack
+        spacing={2}
+        component="section"
+        aria-label={copy.listLabel}
+        sx={{ width: "100%", minWidth: 0 }}
+      >
+        <Typography variant="h2" component="h2">
+          {copy.title}
+        </Typography>
+        <ResourceEmptyState
+          title={copy.emptyTitle}
+          description={copy.emptyDescription}
+        />
+      </Stack>
+    </DashboardNarrowContent>
   );
 };
 
