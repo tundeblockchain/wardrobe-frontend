@@ -20,6 +20,7 @@ import {
   type StartCheckoutFn,
 } from "../../hooks/useCheckoutAction";
 import { appPaths } from "../../routes/paths";
+import { AlreadySubscribedBanner } from "./AlreadySubscribedBanner";
 import { BillingIntervalToggle } from "./BillingIntervalToggle";
 
 export type CheckoutUpgradeActionProps = {
@@ -66,11 +67,7 @@ export const CheckoutUpgradeAction = ({
   if (isStoreManagedPaidTier(resolvedPaidTier)) {
     return (
       <Stack spacing={2}>
-        {alreadySubscribedMessage ? (
-          <Alert severity="info" role="status" aria-live="polite">
-            {alreadySubscribedMessage}
-          </Alert>
-        ) : null}
+        <AlreadySubscribedBanner message={alreadySubscribedMessage} />
         <Typography variant="body2" color="text.secondary">
           {copy.storeManage}
         </Typography>
@@ -84,11 +81,7 @@ export const CheckoutUpgradeAction = ({
   ) {
     return (
       <Stack spacing={2}>
-        {alreadySubscribedMessage ? (
-          <Alert severity="info" role="status" aria-live="polite">
-            {alreadySubscribedMessage}
-          </Alert>
-        ) : null}
+        <AlreadySubscribedBanner message={alreadySubscribedMessage} />
         <Button
           component={RouterLink}
           to={appPaths.appSettingsPlan}
@@ -140,11 +133,7 @@ export const CheckoutUpgradeAction = ({
 
   return (
     <Stack spacing={2}>
-      {alreadySubscribedMessage ? (
-        <Alert severity="info" role="status" aria-live="polite">
-          {alreadySubscribedMessage}
-        </Alert>
-      ) : null}
+      <AlreadySubscribedBanner message={alreadySubscribedMessage} />
       {error ? (
         <Alert severity="error" role="alert" aria-live="assertive">
           {error}

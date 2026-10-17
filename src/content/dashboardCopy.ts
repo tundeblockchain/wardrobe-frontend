@@ -53,12 +53,6 @@ export const dashboardCopy = {
     planManagingLabel: "Opening subscription…",
     planManageErrorFallback:
       "Couldn't open subscription management. Try again.",
-    planUpgradeBasicLabel: "Upgrade to Basic",
-    planUpgradeBasicAriaLabel: "Upgrade to Basic",
-    planUpgradePremiumLabel: "Upgrade to Premium",
-    planUpgradePremiumAriaLabel: "Upgrade to Premium",
-    planUpgradingLabel: "Redirecting to checkout…",
-    planCheckoutErrorFallback: "Couldn't start checkout. Try again.",
     virtualTryOnTitle: "Virtual Try On",
     virtualTryOnLabel: "Virtual Try On",
     virtualTryOnAriaLabel: "Open Virtual Try On",

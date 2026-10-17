@@ -3,11 +3,7 @@ import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Route, Routes, useLocation } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import {
-  BILLING_CANCEL_FAILED_CODE,
-  BILLING_PRICE_NOT_FOUND_CODE,
-  YEARLY_BILLING_UNAVAILABLE_MESSAGE,
-} from "../../api/billing";
+import { BILLING_CANCEL_FAILED_CODE } from "../../api/billing";
 import {
   MOCK_BILLING_PLANS,
   PLANS_UNAVAILABLE_CODE,
@@ -15,6 +11,7 @@ import {
   type BillingPlansResponse,
 } from "../../api/billingPlans";
 import { ApiError } from "../../api/httpClient";
+import { dashboardCopy } from "../../content/dashboardCopy";
 import { getUpgradePriceLabel } from "../../content/upgradePriceLabel";
 import {
   createAiTryOnOffResourceApi,
@@ -113,7 +110,12 @@ const renderSettings = (
         />
         <Route
           path={appPaths.appVirtualTryOn}
-          element={<VirtualTryOnPage resourceApi={resourceApi} />}
+          element={
+            <VirtualTryOnPage
+              resourceApi={resourceApi}
+              fetchPlans={options.fetchPlans}
+            />
+          }
         />
         <Route path={appPaths.contact} element={<ContactPage />} />
         <Route path={appPaths.login} element={<LoginRoute />} />
@@ -125,6 +127,51 @@ const renderSettings = (
       auth: { user },
     },
   );
+};
+
+const getPlanSection = () => {
+  const planSection = document.getElementById("plan");
+  expect(planSection).toBeInTheDocument();
+  return planSection as HTMLElement;
+};
+
+const expectNodeBefore = (first: Node, second: Node) => {
+  expect(
+    first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING,
+  ).not.toBe(0);
+};
+
+const expectSettingsPlanCardLayout = async (planName: string) => {
+  const planSection = getPlanSection();
+  const heading = within(planSection).getByRole("heading", { name: /^Plan$/ });
+  const currentPlan = await within(planSection).findByText("Current plan");
+  const comparePlans = within(planSection).getByRole("link", {
+    name: "Compare Free, Basic, and Premium plans",
+  });
+
+  expect(within(planSection).getByText(planName)).toBeInTheDocument();
+  expectNodeBefore(heading, currentPlan);
+  expectNodeBefore(currentPlan, comparePlans);
+  expect(
+    within(planSection).queryByRole("group", { name: "Billing interval" }),
+  ).not.toBeInTheDocument();
+  expect(
+    within(planSection).queryByRole("button", { name: /Upgrade to Basic/i }),
+  ).not.toBeInTheDocument();
+  expect(
+    within(planSection).queryByRole("button", { name: /Upgrade to Premium/i }),
+  ).not.toBeInTheDocument();
+  expect(
+    within(planSection).queryByRole("button", { name: "Bill monthly" }),
+  ).not.toBeInTheDocument();
+  expect(
+    within(planSection).queryByRole("button", { name: "Bill yearly" }),
+  ).not.toBeInTheDocument();
+  expect(
+    screen.queryByRole("button", { name: /Upgrade to /i }),
+  ).not.toBeInTheDocument();
+
+  return planSection;
 };
 
 const typePhraseAndConfirm = async (
@@ -165,12 +212,12 @@ describe("SettingsPage", () => {
     ).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Plan" })).toBeInTheDocument();
     expect(document.getElementById("plan")).toBeInTheDocument();
+    await expectSettingsPlanCardLayout("Premium");
     expect(
       screen.getByRole("link", {
         name: "Compare Free, Basic, and Premium plans",
       }),
     ).toHaveAttribute("href", appPaths.appPricing);
-    expect(screen.getAllByText("Premium").length).toBeGreaterThan(0);
     expect(
       screen.getByRole("button", { name: "Manage subscription" }),
     ).toBeInTheDocument();
@@ -241,7 +288,7 @@ describe("SettingsPage", () => {
     ).toHaveAttribute("aria-pressed", "true");
   });
 
-  it("shows a Free plan with Basic and Premium upgrade buttons", async () => {
+  it("shows Current plan first on a Free Settings card with Compare plans only", async () => {
     renderSettings(
       createMockResourceApi(
         {},
@@ -250,25 +297,13 @@ describe("SettingsPage", () => {
     );
 
     expect(await screen.findByText("Free")).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: "Upgrade to Basic" }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: "Upgrade to Premium" }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("group", { name: "Billing interval" }),
-    ).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Bill monthly" })).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
+    await expectSettingsPlanCardLayout("Free");
     expect(
       screen.queryByRole("button", { name: "Manage subscription" }),
     ).not.toBeInTheDocument();
   });
 
-  it("shows live catalog prices on Free plan upgrade buttons and the Premium lock", async () => {
+  it("keeps live catalog prices on the Settings Premium lock, not the Plan card", async () => {
     const loadMockPlans = async (): Promise<BillingPlansResponse> => {
       return { plans: MOCK_BILLING_PLANS };
     };
@@ -281,25 +316,7 @@ describe("SettingsPage", () => {
       { fetchPlans: loadMockPlans },
     );
 
-    const basicMonthly = getUpgradePriceLabel({
-      actionLabel: "Upgrade to Basic",
-      plans: MOCK_BILLING_PLANS,
-      tier: "basic",
-      interval: "monthly",
-    });
-    const premiumMonthly = getUpgradePriceLabel({
-      actionLabel: "Upgrade to Premium",
-      plans: MOCK_BILLING_PLANS,
-      tier: "premium",
-      interval: "monthly",
-    });
-
-    expect(
-      await screen.findByRole("button", { name: basicMonthly }),
-    ).toHaveTextContent(basicMonthly);
-    expect(
-      screen.getByRole("button", { name: premiumMonthly }),
-    ).toHaveTextContent(premiumMonthly);
+    await expectSettingsPlanCardLayout("Free");
     expect(screen.getByLabelText("Premium")).toHaveTextContent(
       getUpgradePriceLabel({
         actionLabel: "Premium",
@@ -308,68 +325,36 @@ describe("SettingsPage", () => {
         interval: "monthly",
       }),
     );
+    expect(
+      screen.queryByText(
+        getUpgradePriceLabel({
+          actionLabel: "Upgrade to Basic",
+          plans: MOCK_BILLING_PLANS,
+          tier: "basic",
+          interval: "monthly",
+        }),
+      ),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(
+        getUpgradePriceLabel({
+          actionLabel: "Upgrade to Premium",
+          plans: MOCK_BILLING_PLANS,
+          tier: "premium",
+          interval: "monthly",
+        }),
+      ),
+    ).not.toBeInTheDocument();
   });
 
-  it("updates Settings upgrade prices when yearly billing is selected", async () => {
-    const user = userEvent.setup();
-    const loadMockPlans = async (): Promise<BillingPlansResponse> => {
-      return { plans: MOCK_BILLING_PLANS };
-    };
+  it("keeps the Settings Premium lock without a price when plans are unavailable", async () => {
     renderSettings(
       createMockResourceApi(
         {},
         { entitlement: mockFreeAtLimitEntitlement },
       ),
       undefined,
-      { fetchPlans: loadMockPlans },
-    );
-
-    await screen.findByRole("button", {
-      name: getUpgradePriceLabel({
-        actionLabel: "Upgrade to Premium",
-        plans: MOCK_BILLING_PLANS,
-        tier: "premium",
-        interval: "monthly",
-      }),
-    });
-    await user.click(screen.getByRole("button", { name: "Bill yearly" }));
-
-    expect(
-      await screen.findByRole("button", {
-        name: getUpgradePriceLabel({
-          actionLabel: "Upgrade to Basic",
-          plans: MOCK_BILLING_PLANS,
-          tier: "basic",
-          interval: "yearly",
-        }),
-      }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", {
-        name: getUpgradePriceLabel({
-          actionLabel: "Upgrade to Premium",
-          plans: MOCK_BILLING_PLANS,
-          tier: "premium",
-          interval: "yearly",
-        }),
-      }),
-    ).toBeInTheDocument();
-  });
-
-  it("keeps Settings upgrade buttons working without a price when plans are unavailable", async () => {
-    const user = userEvent.setup();
-    const createCheckoutSession = vi.fn().mockResolvedValue({
-      url: "https://checkout.stripe.com/c/pay/cs_premium",
-    });
-    const assignBillingUrl = vi.fn();
-    renderSettings(
-      createMockResourceApi(
-        { createCheckoutSession },
-        { entitlement: mockFreeAtLimitEntitlement },
-      ),
-      undefined,
       {
-        assignBillingUrl,
         fetchPlans: async () => {
           throw new ApiError({
             status: 503,
@@ -380,20 +365,8 @@ describe("SettingsPage", () => {
       },
     );
 
-    const premiumButton = await screen.findByRole("button", {
-      name: "Upgrade to Premium",
-    });
-    expect(premiumButton).toHaveTextContent("Upgrade to Premium");
-    expect(premiumButton).toBeEnabled();
+    await expectSettingsPlanCardLayout("Free");
     expect(screen.getByLabelText("Premium")).toHaveTextContent("Premium");
-
-    await user.click(premiumButton);
-    await waitFor(() => {
-      expect(createCheckoutSession).toHaveBeenCalledWith("premium", "monthly");
-    });
-    expect(assignBillingUrl).toHaveBeenCalledWith(
-      "https://checkout.stripe.com/c/pay/cs_premium",
-    );
   });
 
   it("shows a Basic Stripe plan with Manage subscription", async () => {
@@ -417,13 +390,11 @@ describe("SettingsPage", () => {
     );
 
     expect(await screen.findByText("Basic")).toBeInTheDocument();
+    await expectSettingsPlanCardLayout("Basic");
     expect(screen.getByText("1 November 2026")).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Manage subscription" }),
     ).toBeInTheDocument();
-    expect(
-      screen.queryByRole("group", { name: "Billing interval" }),
-    ).not.toBeInTheDocument();
     expect(
       screen.queryByText(/App Store|Google Play/i),
     ).not.toBeInTheDocument();
@@ -450,6 +421,7 @@ describe("SettingsPage", () => {
     );
 
     expect(await screen.findByText("Premium")).toBeInTheDocument();
+    await expectSettingsPlanCardLayout("Premium");
     expect(screen.getByText("15 December 2026")).toBeInTheDocument();
     expect(
       screen.getByText("Manage this plan in the App Store."),
@@ -457,11 +429,6 @@ describe("SettingsPage", () => {
     expect(
       screen.queryByRole("button", { name: "Manage subscription" }),
     ).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole("group", { name: "Billing interval" }),
-    ).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Bill monthly" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Bill yearly" })).not.toBeInTheDocument();
     expect(screen.queryByText(/Stripe/i)).not.toBeInTheDocument();
   });
 
@@ -483,14 +450,12 @@ describe("SettingsPage", () => {
     );
 
     expect(await screen.findByText("Premium")).toBeInTheDocument();
+    await expectSettingsPlanCardLayout("Premium");
     expect(
       screen.getByText("Manage this plan in the App Store or Google Play."),
     ).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "Manage subscription" }),
-    ).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole("group", { name: "Billing interval" }),
     ).not.toBeInTheDocument();
   });
 
@@ -559,163 +524,6 @@ describe("SettingsPage", () => {
     expect(getMe.mock.calls.length).toBeGreaterThan(1);
   });
 
-  it("calls checkout with the selected tier from Free upgrade buttons", async () => {
-    const user = userEvent.setup();
-    const createCheckoutSession = vi.fn().mockResolvedValue({
-      url: "https://checkout.stripe.com/c/pay/cs_basic",
-    });
-    const assignBillingUrl = vi.fn();
-    renderSettings(
-      createMockResourceApi(
-        { createCheckoutSession },
-        { entitlement: mockFreeAtLimitEntitlement },
-      ),
-      undefined,
-      { assignBillingUrl },
-    );
-
-    await user.click(
-      await screen.findByRole("button", { name: "Upgrade to Basic" }),
-    );
-
-    expect(screen.getByRole("button", { name: "Bill monthly" })).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
-
-    await waitFor(() => {
-      expect(createCheckoutSession).toHaveBeenCalledWith("basic", "monthly");
-    });
-    expect(assignBillingUrl).toHaveBeenCalledWith(
-      "https://checkout.stripe.com/c/pay/cs_basic",
-    );
-
-    createCheckoutSession.mockResolvedValue({
-      url: "https://checkout.stripe.com/c/pay/cs_premium",
-    });
-    await user.click(
-      screen.getByRole("button", { name: "Upgrade to Premium" }),
-    );
-
-    await waitFor(() => {
-      expect(createCheckoutSession).toHaveBeenCalledWith("premium", "monthly");
-    });
-    expect(assignBillingUrl).toHaveBeenCalledWith(
-      "https://checkout.stripe.com/c/pay/cs_premium",
-    );
-  });
-
-  it("sends yearly checkout for both tiers from the Plan section", async () => {
-    const user = userEvent.setup();
-    const createCheckoutSession = vi.fn().mockResolvedValue({
-      url: "https://checkout.stripe.com/c/pay/cs_yearly_basic",
-    });
-    const assignBillingUrl = vi.fn();
-    renderSettings(
-      createMockResourceApi(
-        { createCheckoutSession },
-        { entitlement: mockFreeAtLimitEntitlement },
-      ),
-      undefined,
-      { assignBillingUrl },
-    );
-
-    await user.click(await screen.findByRole("button", { name: "Bill yearly" }));
-    await user.click(
-      screen.getByRole("button", { name: "Upgrade to Basic" }),
-    );
-
-    await waitFor(() => {
-      expect(createCheckoutSession).toHaveBeenCalledWith("basic", "yearly");
-    });
-    expect(assignBillingUrl).toHaveBeenCalledWith(
-      "https://checkout.stripe.com/c/pay/cs_yearly_basic",
-    );
-
-    createCheckoutSession.mockResolvedValue({
-      url: "https://checkout.stripe.com/c/pay/cs_yearly_premium",
-    });
-    await user.click(
-      screen.getByRole("button", { name: "Upgrade to Premium" }),
-    );
-
-    await waitFor(() => {
-      expect(createCheckoutSession).toHaveBeenCalledWith("premium", "yearly");
-    });
-    expect(assignBillingUrl).toHaveBeenCalledWith(
-      "https://checkout.stripe.com/c/pay/cs_yearly_premium",
-    );
-  });
-
-  it("shows a friendly message when yearly checkout returns 503 BILLING_PRICE_NOT_FOUND", async () => {
-    const user = userEvent.setup();
-    const createCheckoutSession = vi.fn().mockRejectedValue(
-      new ApiError({
-        status: 503,
-        code: BILLING_PRICE_NOT_FOUND_CODE,
-        message: "No Stripe price configured for yearly billing.",
-      }),
-    );
-    const assignBillingUrl = vi.fn();
-    renderSettings(
-      createMockResourceApi(
-        { createCheckoutSession },
-        { entitlement: mockFreeAtLimitEntitlement },
-      ),
-      undefined,
-      { assignBillingUrl },
-    );
-
-    await user.click(await screen.findByRole("button", { name: "Bill yearly" }));
-    await user.click(
-      screen.getByRole("button", { name: "Upgrade to Premium" }),
-    );
-
-    expect(
-      await screen.findByRole("alert"),
-    ).toHaveTextContent(YEARLY_BILLING_UNAVAILABLE_MESSAGE);
-    expect(assignBillingUrl).not.toHaveBeenCalled();
-    expect(
-      screen.getByRole("button", { name: "Upgrade to Premium" }),
-    ).toBeEnabled();
-  });
-
-  it("refreshes /me and shows the current plan on 409 ALREADY_SUBSCRIBED", async () => {
-    const user = userEvent.setup();
-    const subscribedPlan = entitlement({
-      tier: "BASIC",
-      status: "ACTIVE",
-      store: "STRIPE",
-      paidTier: { tier: "basic", source: "stripe" },
-    });
-    let currentPlan: Entitlement = mockFreeAtLimitEntitlement;
-    const getMe = vi.fn(async () => currentPlan);
-    const createCheckoutSession = vi.fn().mockImplementation(async () => {
-      currentPlan = subscribedPlan;
-      throw new ApiError({
-        status: 409,
-        code: "ALREADY_SUBSCRIBED",
-        message: "This account already has a paid plan.",
-        source: "stripe",
-      });
-    });
-    renderSettings(
-      createMockResourceApi({ getMe, createCheckoutSession }),
-    );
-
-    await user.click(
-      await screen.findByRole("button", { name: "Upgrade to Basic" }),
-    );
-
-    expect(
-      await screen.findByRole("button", { name: "Manage subscription" }),
-    ).toBeInTheDocument();
-    expect(screen.getByText("Basic")).toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", { name: "Upgrade to Basic" }),
-    ).not.toBeInTheDocument();
-  });
-
   it("shows a portal error without redirecting on a failed manage request", async () => {
     const user = userEvent.setup();
     const createPortalSession = vi.fn().mockRejectedValue(
@@ -745,15 +553,41 @@ describe("SettingsPage", () => {
 
   it("links Virtual Try On to the existing page and keeps Premium gating", async () => {
     const user = userEvent.setup();
-    renderSettings(createAiTryOnOffResourceApi());
+    const loadMockPlans = async (): Promise<BillingPlansResponse> => {
+      return { plans: MOCK_BILLING_PLANS };
+    };
+    renderSettings(createAiTryOnOffResourceApi(), undefined, {
+      fetchPlans: loadMockPlans,
+    });
 
+    await expectSettingsPlanCardLayout("Free");
     const tryOnLink = await screen.findByRole("link", {
       name: "Open Virtual Try On",
     });
     expect(tryOnLink).toHaveAttribute("href", appPaths.appVirtualTryOn);
-    expect(screen.getByLabelText("Premium")).toBeInTheDocument();
+    expect(screen.getByLabelText("Premium")).toHaveTextContent(
+      getUpgradePriceLabel({
+        actionLabel: "Premium",
+        plans: MOCK_BILLING_PLANS,
+        tier: "premium",
+        interval: "monthly",
+      }),
+    );
 
     await user.click(tryOnLink);
+
+    const pricedUpgradeLabel = getUpgradePriceLabel({
+      actionLabel: dashboardCopy.upgrade.premium.actionLabel,
+      plans: MOCK_BILLING_PLANS,
+      tier: "premium",
+      interval: "monthly",
+    });
+    const pricedUpgradeAriaLabel = getUpgradePriceLabel({
+      actionLabel: dashboardCopy.upgrade.premium.actionAriaLabel,
+      plans: MOCK_BILLING_PLANS,
+      tier: "premium",
+      interval: "monthly",
+    });
 
     expect(
       await screen.findByRole("heading", {
@@ -761,9 +595,10 @@ describe("SettingsPage", () => {
       }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", {
-        name: "Upgrade to Premium for Virtual Try On",
-      }),
+      screen.getByRole("button", { name: pricedUpgradeAriaLabel }),
+    ).toHaveTextContent(pricedUpgradeLabel);
+    expect(
+      screen.getByRole("group", { name: "Billing interval" }),
     ).toBeInTheDocument();
     expect(screen.getByTestId("route-location")).toHaveTextContent(
       appPaths.appVirtualTryOn,

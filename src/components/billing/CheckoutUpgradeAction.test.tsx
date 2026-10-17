@@ -1,4 +1,4 @@
-import { screen, waitFor } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { ApiError } from "../../api/httpClient";
@@ -14,6 +14,10 @@ import {
   BILLING_PRICE_NOT_FOUND_CODE,
   YEARLY_BILLING_UNAVAILABLE_MESSAGE,
 } from "../../api/billing";
+import {
+  alreadySubscribedCopy,
+  getStripeAlreadySubscribedMessage,
+} from "../../content/alreadySubscribed";
 import { appPaths } from "../../routes/paths";
 import {
   expectActionButtonNotFullWidth,
@@ -343,7 +347,7 @@ describe("CheckoutUpgradeAction", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("names Google Play and web/Stripe on ALREADY_SUBSCRIBED", async () => {
+  it("names Google Play and links Stripe subscribers to Settings on ALREADY_SUBSCRIBED", async () => {
     const user = userEvent.setup();
     const startCheckout = vi.fn().mockRejectedValue(
       new ApiError({
@@ -395,9 +399,15 @@ describe("CheckoutUpgradeAction", () => {
     );
 
     await user.click(screen.getByRole("button", { name: "Upgrade to Basic" }));
+    const stripeBanner = await screen.findByRole("status", {
+      name: getStripeAlreadySubscribedMessage(),
+    });
+    expect(stripeBanner).toHaveTextContent(getStripeAlreadySubscribedMessage());
     expect(
-      await screen.findByText("You already have a plan from web/Stripe."),
-    ).toBeInTheDocument();
+      within(stripeBanner).getByRole("link", {
+        name: alreadySubscribedCopy.stripeLink,
+      }),
+    ).toHaveAttribute("href", appPaths.appSettings);
   });
 
   it("shows a checkout error without redirecting", async () => {

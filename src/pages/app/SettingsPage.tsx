@@ -437,7 +437,6 @@ export const SettingsPage = ({
         <PlanSettingsSection
           resourceApi={resourceApi}
           assignBillingUrl={assignBillingUrl}
-          fetchPlans={fetchPlans}
         />
 
         <SettingsSection

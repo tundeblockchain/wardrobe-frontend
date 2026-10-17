@@ -233,7 +233,7 @@ describe("already subscribed and paid-tier helpers", () => {
       "You already have a plan from Google Play.",
     );
     expect(getAlreadySubscribedMessage("stripe")).toBe(
-      "You already have a plan from web/Stripe.",
+      "You already have a plan. Go to Manage subscription in Settings to change it.",
     );
     expect(normalizePaidTierSource("APP_STORE")).toBe("ios");
     expect(normalizePaidTierSource("play_store")).toBe("android");
