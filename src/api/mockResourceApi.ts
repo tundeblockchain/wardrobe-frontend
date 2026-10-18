@@ -1,5 +1,6 @@
 import type { BillingSession, CheckoutTier } from "./billing";
 import { catalogLimitError, isAtCatalogLimit } from "./catalogLimits";
+import { canUseOutfitSuggestions } from "./entitlementGating";
 import { isAllowedUploadContentType } from "./catalogValidation";
 import { ApiError } from "./httpClient";
 import type {
@@ -403,12 +404,14 @@ export const createMockResourceApi = (
     }
   };
 
-  const assertPremiumAi = () => {
-    if (!entitlement.features.aiTryOn && !entitlement.features.otherAi) {
-      throw entitlementAiRequired(
-        "Premium is required for suggested outfits.",
-      );
+  const assertOutfitSuggestions = () => {
+    if (canUseOutfitSuggestions(entitlement)) {
+      return;
     }
+
+    throw entitlementAiRequired(
+      "A paid plan is required for suggested outfits.",
+    );
   };
 
   const applyReadyRender = <T extends ClothingItem | Outfit>(
@@ -672,7 +675,7 @@ export const createMockResourceApi = (
     wardrobeId: string,
   ): Promise<OutfitRecommendationList> => {
     await getWardrobe(wardrobeId);
-    assertPremiumAi();
+    assertOutfitSuggestions();
     const wardrobeItemIds = new Set(
       items
         .filter((item) => item.wardrobeId === wardrobeId)
@@ -1125,6 +1128,30 @@ export const createEntitlementAiRequiredResourceApi = (): ResourceApi => {
   );
 };
 
+export const mockBasicEntitlement: Entitlement = {
+  userId: "user-1",
+  tier: "BASIC",
+  status: "ACTIVE",
+  features: {
+    unlimitedCatalog: true,
+    aiTryOn: false,
+    otherAi: false,
+  },
+  limits: null,
+  usage: {
+    wardrobes: 2,
+    items: 2,
+    outfits: 1,
+  },
+  store: "STRIPE",
+  paidTier: {
+    tier: "basic",
+    source: "stripe",
+    expiresAt: "2027-10-01T09:12:00.000Z",
+  },
+  updatedAt: "2026-10-01T09:12:00.000Z",
+};
+
 export const mockAiTryOnOffEntitlement: Entitlement = {
   ...mockFreeAtLimitEntitlement,
   features: {
@@ -1138,6 +1165,22 @@ export const mockAiTryOnOffEntitlement: Entitlement = {
     items: 2,
     outfits: 1,
   },
+};
+
+export const createBasicResourceApi = (
+  overrides: MockResourceApiOverrides = {},
+): ResourceApi => {
+  return createMockResourceApi(overrides, {
+    entitlement: mockBasicEntitlement,
+  });
+};
+
+export const createFreeResourceApi = (
+  overrides: MockResourceApiOverrides = {},
+): ResourceApi => {
+  return createMockResourceApi(overrides, {
+    entitlement: mockFreeAtLimitEntitlement,
+  });
 };
 
 export const createAiTryOnOffResourceApi = (

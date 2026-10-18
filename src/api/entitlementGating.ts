@@ -20,6 +20,14 @@ export const canUseOtherAi = (entitlement: Entitlement): boolean => {
   return entitlement.features.otherAi;
 };
 
+export const canUseOutfitSuggestions = (entitlement: Entitlement): boolean => {
+  if (entitlement.features.unlimitedCatalog) {
+    return true;
+  }
+
+  return entitlement.tier === "BASIC" || entitlement.tier === "PREMIUM";
+};
+
 export const isEntitlementAiRequiredError = (
   error: unknown,
 ): error is ApiError => {
@@ -55,7 +63,7 @@ export const getRecommendationsPaywallKind = (
     return undefined;
   }
 
-  return "premium";
+  return "basic";
 };
 
 export const getCatalogKindForLimitCode = (

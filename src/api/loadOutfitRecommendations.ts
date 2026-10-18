@@ -1,7 +1,4 @@
-import {
-  canUseAiTryOn,
-  canUseOtherAi,
-} from "./entitlementGating";
+import { canUseOutfitSuggestions } from "./entitlementGating";
 import { parseOutfitRecommendations } from "./outfitRecommendations";
 import type { ResourceApi } from "./resourceApi";
 import type {
@@ -28,7 +25,7 @@ export const loadOutfitRecommendations = async (
     resourceApi.getWardrobeDetail(wardrobeId),
   ]);
 
-  if (!canUseAiTryOn(entitlement) && !canUseOtherAi(entitlement)) {
+  if (!canUseOutfitSuggestions(entitlement)) {
     return {
       entitlement,
       wardrobe: detail.wardrobe,

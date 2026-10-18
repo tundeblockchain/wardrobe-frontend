@@ -198,6 +198,10 @@ export const dashboardCopy = {
     saveErrorDescription:
       "Try again in a moment. This suggestion was not saved.",
     unnamedItem: "Item",
+    upgradeTitle: "Suggested outfits need a paid plan",
+    upgradeDescription:
+      "Upgrade to Basic or Premium to see looks from clothing items you already own.",
+    upgradeActionAriaLabel: "Upgrade to Basic for suggested outfits",
   },
   itemForm: {
     createTitle: "Add clothing item",

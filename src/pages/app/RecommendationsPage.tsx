@@ -3,8 +3,7 @@ import { useMemo } from "react";
 import { Box, Button, Paper, Stack, Typography } from "@mui/material";
 import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
 import {
-  canUseAiTryOn,
-  canUseOtherAi,
+  canUseOutfitSuggestions,
   getRecommendationsPaywallKind,
 } from "../../api/entitlementGating";
 import { loadOutfitRecommendations } from "../../api/loadOutfitRecommendations";
@@ -18,7 +17,7 @@ import {
 import { isNotFoundError, type ResourceApi } from "../../api/resourceApi";
 import { useResourceApi } from "../../api/useResourceApi";
 import { DashboardPage } from "../../components/dashboard/DashboardPage";
-import { ForbiddenUpgradePrompt } from "../../components/dashboard/ForbiddenUpgradePrompt";
+import { SuggestedOutfitsPaywall } from "../../components/dashboard/SuggestedOutfitsPaywall";
 import { ResourceEmptyState } from "../../components/dashboard/ResourceEmptyState";
 import { ResourceErrorState } from "../../components/dashboard/ResourceErrorState";
 import { ResourceLoadingState } from "../../components/dashboard/ResourceLoadingState";
@@ -125,7 +124,7 @@ export const RecommendationsPage = ({
           description={copy.description}
           actions={backLink}
         >
-          <ForbiddenUpgradePrompt kind={upgradeKind} />
+          <SuggestedOutfitsPaywall />
         </DashboardPage>
       );
     }
@@ -163,7 +162,7 @@ export const RecommendationsPage = ({
     );
   }
 
-  if (!canUseAiTryOn(query.data.entitlement) && !canUseOtherAi(query.data.entitlement)) {
+  if (!canUseOutfitSuggestions(query.data.entitlement)) {
     return (
       <DashboardPage
         headingId="suggested-outfits-heading"
@@ -171,10 +170,7 @@ export const RecommendationsPage = ({
         description={copy.description}
         actions={backLink}
       >
-        <ForbiddenUpgradePrompt
-          kind="premium"
-          entitlement={query.data.entitlement}
-        />
+        <SuggestedOutfitsPaywall entitlement={query.data.entitlement} />
       </DashboardPage>
     );
   }

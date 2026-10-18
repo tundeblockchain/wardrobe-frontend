@@ -13,6 +13,7 @@ import { getUpgradePriceLabel } from "../../content/upgradePriceLabel";
 import { renderWithProviders } from "../../test/renderWithProviders";
 import { CatalogLimitPrompt } from "../dashboard/CatalogLimitPrompt";
 import { ForbiddenUpgradePrompt } from "../dashboard/ForbiddenUpgradePrompt";
+import { SuggestedOutfitsPaywall } from "../dashboard/SuggestedOutfitsPaywall";
 import { UpgradePriceLabel } from "./UpgradePriceLabel";
 
 const loadMockPlans = async (): Promise<BillingPlansResponse> => {
@@ -200,29 +201,31 @@ describe("upgrade price on dashboard gates", () => {
     );
   });
 
-  it("renders the live Premium price on the Outfit suggestions gate", async () => {
+  it("renders the live Basic price on the Outfit suggestions gate", async () => {
     renderWithProviders(
-      <ForbiddenUpgradePrompt kind="premium" fetchPlans={loadMockPlans} />,
+      <SuggestedOutfitsPaywall fetchPlans={loadMockPlans} />,
       { auth: { user: { id: "user-1" } } },
     );
 
     expect(
       await screen.findByRole("heading", {
-        name: "Virtual Try On is a Premium feature",
+        name: "Suggested outfits need a paid plan",
       }),
     ).toBeInTheDocument();
     expect(
       screen.getByText(
-        /Upgrade to browse Virtual Profiles and preview looks with Virtual Try On/,
+        "Upgrade to Basic or Premium to see looks from clothing items you already own.",
       ),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("button", {
-        name: premiumMonthlyLabel(
-          dashboardCopy.upgrade.premium.actionAriaLabel,
+        name: basicMonthlyLabel(
+          dashboardCopy.recommendations.upgradeActionAriaLabel,
         ),
       }),
-    ).toBeInTheDocument();
+    ).toHaveTextContent(
+      basicMonthlyLabel(dashboardCopy.upgrade.basic.actionLabel),
+    );
   });
 
   it("renders the live Basic price on catalog limit prompts", async () => {

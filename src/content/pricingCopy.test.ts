@@ -25,24 +25,24 @@ describe("pricing copy", () => {
       { label: "1 wardrobe", included: true },
       { label: "5 items", included: true },
       { label: "5 outfits", included: true },
+      { label: pricingFeatureLabels.outfitSuggestions, included: false },
       { label: pricingFeatureLabels.virtualTryOn, included: false },
       { label: pricingFeatureLabels.virtualProfile, included: false },
-      { label: pricingFeatureLabels.outfitSuggestions, included: false },
     ]);
   });
 
-  it("lists Basic unlimited wardrobes, items, and outfits", () => {
+  it("lists Basic unlimited wardrobes, items, outfits, and Outfit suggestions", () => {
     expect(pricingCopy.basicName).toBe("Basic");
     expect(pricingCopy.basicSummary).toBe(
-      "Unlimited wardrobes, items, and outfits",
+      "Unlimited wardrobes, items, and outfits plus Outfit suggestions",
     );
     expect(getBasicPlanFeatureLines()).toEqual([
       { label: pricingCopy.unlimitedWardrobes, included: true },
       { label: pricingCopy.unlimitedItems, included: true },
       { label: pricingCopy.unlimitedOutfits, included: true },
+      { label: pricingFeatureLabels.outfitSuggestions, included: true },
       { label: pricingFeatureLabels.virtualTryOn, included: false },
       { label: pricingFeatureLabels.virtualProfile, included: false },
-      { label: pricingFeatureLabels.outfitSuggestions, included: false },
     ]);
   });
 
@@ -55,9 +55,9 @@ describe("pricing copy", () => {
       { label: pricingCopy.unlimitedWardrobes, included: true },
       { label: pricingCopy.unlimitedItems, included: true },
       { label: pricingCopy.unlimitedOutfits, included: true },
+      { label: pricingFeatureLabels.outfitSuggestions, included: true },
       { label: pricingFeatureLabels.virtualTryOn, included: true },
       { label: pricingFeatureLabels.virtualProfile, included: true },
-      { label: pricingFeatureLabels.outfitSuggestions, included: true },
     ]);
   });
 

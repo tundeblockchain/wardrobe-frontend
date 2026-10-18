@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   canUseAiTryOn,
   canUseOtherAi,
+  canUseOutfitSuggestions,
   getCatalogKindForLimitCode,
   getForbiddenUpgradeKind,
   getRecommendationsPaywallKind,
@@ -67,6 +68,39 @@ describe("entitlement gating", () => {
       ),
     ).toBe(false);
   });
+
+  it("unlocks suggested outfits for Basic and Premium, not Free", () => {
+    expect(
+      canUseOutfitSuggestions({
+        ...entitlement({
+          unlimitedCatalog: false,
+          aiTryOn: false,
+          otherAi: false,
+        }),
+        tier: "FREE",
+      }),
+    ).toBe(false);
+    expect(
+      canUseOutfitSuggestions({
+        ...entitlement({
+          unlimitedCatalog: true,
+          aiTryOn: false,
+          otherAi: false,
+        }),
+        tier: "BASIC",
+      }),
+    ).toBe(true);
+    expect(
+      canUseOutfitSuggestions({
+        ...entitlement({
+          unlimitedCatalog: true,
+          aiTryOn: true,
+          otherAi: true,
+        }),
+        tier: "PREMIUM",
+      }),
+    ).toBe(true);
+  });
 });
 
 describe("403 entitlement code mapping", () => {
@@ -119,17 +153,17 @@ describe("403 entitlement code mapping", () => {
     ).toBe(false);
   });
 
-  it("maps any 403 from recommendations to a Premium paywall", () => {
+  it("maps any 403 from recommendations to a Basic paywall", () => {
     expect(
       getRecommendationsPaywallKind(
         new ApiError({ status: 403, code: "ENTITLEMENT_AI_REQUIRED" }),
       ),
-    ).toBe("premium");
+    ).toBe("basic");
     expect(
       getRecommendationsPaywallKind(
         new ApiError({ status: 403, code: "FORBIDDEN" }),
       ),
-    ).toBe("premium");
+    ).toBe("basic");
     expect(isForbiddenStatusError(new ApiError({ status: 403 }))).toBe(true);
     expect(
       getRecommendationsPaywallKind(
