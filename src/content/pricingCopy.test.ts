@@ -53,16 +53,16 @@ describe("pricing copy", () => {
     );
   });
 
-  it("lists Premium catalog and styling features with Outfit suggestions included, not unlimited", () => {
+  it("lists Premium unlimited wardrobes, items, outfits, and styling features", () => {
     expect(pricingCopy.premiumName).toBe("Premium");
     expect(pricingCopy.premiumSummary).toBe(
-      "Unlimited wardrobes, items, and outfits plus Virtual Try On, Virtual Profile, and Outfit suggestions",
+      "Unlimited wardrobes, items, outfits, and outfit suggestions plus Virtual Try On and Virtual Profile",
     );
     expect(getPremiumPlanFeatureLines()).toEqual([
       { label: pricingCopy.unlimitedWardrobes, included: true },
       { label: pricingCopy.unlimitedItems, included: true },
       { label: pricingCopy.unlimitedOutfits, included: true },
-      { label: pricingFeatureLabels.outfitSuggestions, included: true },
+      { label: pricingCopy.unlimitedOutfitSuggestions, included: true },
       { label: pricingFeatureLabels.virtualTryOn, included: true },
       { label: pricingFeatureLabels.virtualProfile, included: true },
     ]);
@@ -74,9 +74,7 @@ describe("pricing copy", () => {
       pricingCopy.premiumSummary,
       ...getPremiumPlanFeatureLines().map((feature) => feature.label),
     ].join("\n");
-    expect(premiumCopy).toContain("Outfit suggestions");
-    expect(premiumCopy).not.toMatch(/unlimited outfit suggestions/i);
-    expect(premiumCopy).not.toMatch(/unlimited suggested outfits/i);
+    expect(premiumCopy).toContain("Unlimited outfit suggestions");
     expect(premiumCopy).not.toMatch(SUGGESTION_CAP_COPY_PATTERN);
   });
 
@@ -88,6 +86,12 @@ describe("pricing copy", () => {
     ].join("\n");
 
     expect(basicCopy).toContain("Unlimited outfit suggestions");
+    expect(
+      [
+        pricingCopy.premiumSummary,
+        ...getPremiumPlanFeatureLines().map((feature) => feature.label),
+      ].join("\n"),
+    ).toContain("Unlimited outfit suggestions");
     expect(copy).toContain("Unlimited wardrobes");
     expect(copy).toContain("Unlimited items");
     expect(copy).toContain("Unlimited outfits");

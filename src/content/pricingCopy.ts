@@ -46,7 +46,7 @@ export const pricingCopy = {
   basicSummary:
     "Unlimited wardrobes, items, outfits, and outfit suggestions",
   premiumSummary:
-    "Unlimited wardrobes, items, and outfits plus Virtual Try On, Virtual Profile, and Outfit suggestions",
+    "Unlimited wardrobes, items, outfits, and outfit suggestions plus Virtual Try On and Virtual Profile",
   unlimitedWardrobes: "Unlimited wardrobes",
   unlimitedItems: "Unlimited items",
   unlimitedOutfits: "Unlimited outfits",
@@ -88,10 +88,9 @@ export const getPlanSummary = (paidTier: PaidTier): string => {
 
 const getOutfitSuggestionsFeature = (
   included: boolean,
-  unlimited = false,
 ): PricingPlanFeature => {
   return {
-    label: unlimited
+    label: included
       ? pricingCopy.unlimitedOutfitSuggestions
       : pricingFeatureLabels.outfitSuggestions,
     included,
@@ -133,7 +132,7 @@ export const getFreePlanFeatureLines = (): PricingPlanFeature[] => {
 export const getBasicPlanFeatureLines = (): PricingPlanFeature[] => {
   return [
     ...getUnlimitedCatalogFeatureLines(),
-    getOutfitSuggestionsFeature(true, true),
+    getOutfitSuggestionsFeature(true),
     ...getPremiumOnlyFeatures(false),
   ];
 };

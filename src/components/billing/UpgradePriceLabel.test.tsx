@@ -214,7 +214,7 @@ describe("upgrade price on dashboard gates", () => {
     ).toBeInTheDocument();
     expect(
       screen.getByText(
-        "Upgrade to Basic for unlimited suggested outfits from clothing items you already own.",
+        "Upgrade to Basic or Premium for unlimited suggested outfits from clothing items you already own.",
       ),
     ).toBeInTheDocument();
     expect(
