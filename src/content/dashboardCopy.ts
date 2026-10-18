@@ -201,7 +201,7 @@ export const dashboardCopy = {
     unnamedItem: "Item",
     upgradeTitle: "Suggested outfits need a paid plan",
     upgradeDescription:
-      "Upgrade to Basic or Premium for unlimited suggested outfits from clothing items you already own.",
+      "Upgrade to Basic for unlimited suggested outfits from clothing items you already own.",
     upgradeActionAriaLabel: "Upgrade to Basic for suggested outfits",
   },
   itemForm: {

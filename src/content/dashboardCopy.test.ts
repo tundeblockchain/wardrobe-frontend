@@ -5,7 +5,7 @@ const SUGGESTION_CAP_COPY_PATTERN =
   /up to\s+\d+|\d+\s+per\s+(day|week|month)|suggestion cap|\d+\s+(outfit suggestions|suggested outfits)/i;
 
 describe("dashboard plan copy", () => {
-  it("says unlimited on the suggested outfits gate and never uses cap language", () => {
+  it("says unlimited for Basic only on the suggested outfits gate", () => {
     const copy = [
       dashboardCopy.recommendations.upgradeTitle,
       dashboardCopy.recommendations.upgradeDescription,
@@ -13,9 +13,11 @@ describe("dashboard plan copy", () => {
       dashboardCopy.settings.planIncludesLabel,
     ].join("\n");
 
-    expect(dashboardCopy.recommendations.upgradeDescription).toContain(
-      "unlimited suggested outfits",
+    expect(dashboardCopy.recommendations.upgradeDescription).toBe(
+      "Upgrade to Basic for unlimited suggested outfits from clothing items you already own.",
     );
+    expect(copy).toContain("unlimited suggested outfits");
+    expect(copy).not.toMatch(/Premium.*unlimited|unlimited.*Premium/i);
     expect(copy).not.toMatch(/\bAI\b/);
     expect(copy).not.toMatch(SUGGESTION_CAP_COPY_PATTERN);
   });

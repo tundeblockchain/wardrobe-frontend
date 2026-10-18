@@ -175,7 +175,7 @@ describe("RecommendationsPage", () => {
     );
     expect(
       screen.getByText(
-        "Upgrade to Basic or Premium for unlimited suggested outfits from clothing items you already own.",
+        "Upgrade to Basic for unlimited suggested outfits from clothing items you already own.",
       ),
     ).toBeInTheDocument();
     expectActionButtonNotFullWidth(

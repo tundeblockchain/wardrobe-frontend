@@ -206,7 +206,7 @@ describe("PricingPage", () => {
     ).toBeInTheDocument();
     expect(
       within(getPlanCard("Premium")).getByText(
-        "Unlimited wardrobes, items, outfits, and outfit suggestions plus Virtual Try On and Virtual Profile",
+        "Unlimited wardrobes, items, and outfits plus Virtual Try On, Virtual Profile, and Outfit suggestions",
       ),
     ).toBeInTheDocument();
     expect(
@@ -231,9 +231,12 @@ describe("PricingPage", () => {
     ).toBeInTheDocument();
     expect(
       within(getPlanCard("Premium")).getByLabelText(
-        "Unlimited outfit suggestions included",
+        "Outfit suggestions included",
       ),
     ).toBeInTheDocument();
+    expect(getPlanCard("Premium").textContent).not.toMatch(
+      /unlimited outfit suggestions/i,
+    );
     expect(getPlanCard("Free").textContent).not.toMatch(/\bAI\b/);
     expect(getPlanCard("Basic").textContent).not.toMatch(/\bAI\b/);
     expect(getPlanCard("Premium").textContent).not.toMatch(/\bAI\b/);
@@ -523,9 +526,12 @@ describe("PricingPage", () => {
     ).toBeInTheDocument();
     expect(
       within(getPlanCard("Premium")).getByLabelText(
-        "Unlimited outfit suggestions included",
+        "Outfit suggestions included",
       ),
     ).toBeInTheDocument();
+    expect(getPlanCard("Premium").textContent).not.toMatch(
+      /unlimited outfit suggestions/i,
+    );
     expect(getPlanCard("Basic").textContent).not.toMatch(
       /up to\s+\d+|\d+\s+per\s+(day|week|month)/i,
     );

@@ -159,6 +159,14 @@ const expectSettingsPlanCardLayout = async (
   expect(planSection.textContent).not.toMatch(
     /up to\s+\d+|\d+\s+per\s+(day|week|month)|suggestion cap/i,
   );
+  if (planName === "Basic") {
+    expect(planIncludes).toMatch(/outfit suggestions/i);
+    expect(planIncludes).toMatch(/unlimited/i);
+  }
+  if (planName === "Premium") {
+    expect(planIncludes).toContain("Outfit suggestions");
+    expect(planIncludes).not.toMatch(/unlimited outfit suggestions/i);
+  }
   expectNodeBefore(heading, currentPlan);
   expectNodeBefore(currentPlan, planIncludesLabel);
   expectNodeBefore(planIncludesLabel, comparePlans);
