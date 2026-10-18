@@ -20,6 +20,7 @@ import type { AuthUser } from "../../auth/authContext";
 import { useAuth } from "../../auth/useAuth";
 import { getPublicAppEnv } from "../../config/env";
 import { appPaths } from "../../routes/paths";
+import { BrandLogo } from "../brand/BrandLogo";
 import {
   SIDEBAR_WIDTH,
   SIDEBAR_WIDTH_COLLAPSED,
@@ -171,17 +172,7 @@ export const TopBar = ({
               minWidth: 0,
             }}
           >
-            <Box
-              component="img"
-              src="/logo.png"
-              alt=""
-              sx={{
-                height: { xs: 32, sm: 40 },
-                width: "auto",
-                display: "block",
-                borderRadius: 1,
-              }}
-            />
+            <BrandLogo height={{ xs: 32, sm: 40 }} />
             <Typography
               variant="h6"
               component="span"

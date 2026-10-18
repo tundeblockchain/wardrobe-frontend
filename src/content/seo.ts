@@ -3,11 +3,12 @@ import { getShareResourceTypeLabel } from "../api/sharePreview";
 import type { PublicAppEnv } from "../config/env";
 import { appPaths, parseShareTokenFromPath } from "../routes/paths";
 import { wardrobePalette } from "../theme/wardrobePalette";
+import { OG_IMAGE_PATH } from "./brandAssets";
 import { featureItems } from "./featureItems";
 import { LEGAL_LAST_UPDATED_ISO } from "./legal/legalDocument";
 import { getSharePreviewStatusCopy } from "./sharePreviewCopy";
 
-export const OG_IMAGE_PATH = "/og-image.jpg";
+export { OG_IMAGE_PATH };
 export const JSON_LD_SCRIPT_ID = "wardrobe-json-ld";
 
 export const DEFAULT_LANDING_TITLE =

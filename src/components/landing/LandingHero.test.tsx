@@ -1,13 +1,11 @@
 import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
+import { BANNER_ALT, BANNER_PATH } from "../../content/brandAssets";
 import { LandingHero } from "./LandingHero";
 import { renderWithProviders } from "../../test/renderWithProviders";
 
-const heroAlt =
-  "Pocket Closet Virtual Try On showing a rust floral maxi dress on the user's profile photo";
-
 describe("LandingHero", () => {
-  it("renders the value proposition, Virtual Try On hero, and store CTAs", () => {
+  it("renders the value proposition, brand banner, and store CTAs", () => {
     renderWithProviders(
       <LandingHero
         appName="Pocket Closet"
@@ -23,7 +21,10 @@ describe("LandingHero", () => {
         name: "Your closet, beautifully organized",
       }),
     ).toBeInTheDocument();
-    expect(screen.getByRole("img", { name: heroAlt })).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: BANNER_ALT })).toHaveAttribute(
+      "src",
+      BANNER_PATH,
+    );
     expect(
       screen.getByRole("link", { name: "See the screenshot showcase" }),
     ).toHaveAttribute("href", "/#screenshots");
@@ -44,10 +45,10 @@ describe("LandingHero", () => {
     expect(
       screen.getByRole("link", { name: "Ivory maxi screenshot sample" }),
     ).toHaveAttribute("href", "/#screenshots");
-    expect(screen.getAllByRole("img", { name: heroAlt })).toHaveLength(1);
+    expect(screen.getAllByRole("img", { name: BANNER_ALT })).toHaveLength(1);
   });
 
-  it("places sample thumbs under See the app and keeps the large hero phone", () => {
+  it("places sample thumbs under See the app and keeps the wide hero banner", () => {
     renderWithProviders(
       <LandingHero
         appName="Pocket Closet"
@@ -60,13 +61,13 @@ describe("LandingHero", () => {
       name: "See the screenshot showcase",
     });
     const thumbs = screen.getByRole("list", { name: "App screenshot samples" });
-    const heroPhone = screen.getByRole("img", { name: heroAlt });
+    const heroBanner = screen.getByRole("img", { name: BANNER_ALT });
 
     expect(
       seeTheApp.compareDocumentPosition(thumbs) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
     expect(
-      thumbs.compareDocumentPosition(heroPhone) & Node.DOCUMENT_POSITION_FOLLOWING,
+      thumbs.compareDocumentPosition(heroBanner) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
   });
 });
