@@ -3,6 +3,10 @@ import indexHtml from "../../index.html?raw";
 import webManifestSource from "../../public/site.webmanifest?raw";
 import {
   APPLE_TOUCH_ICON_PATH,
+  BANNER_ASPECT_RATIO,
+  BANNER_HEIGHT,
+  BANNER_PATH,
+  BANNER_WIDTH,
   FAVICON_192_PATH,
   FAVICON_32_PATH,
   FAVICON_512_PATH,
@@ -21,6 +25,13 @@ describe("brand assets", () => {
     expect(indexHtml).toContain(`content="${OG_IMAGE_PATH}"`);
     expect(indexHtml).not.toContain('href="/icon.png"');
     expect(indexHtml).not.toContain("favicon.svg");
+  });
+
+  it("keeps the landing banner at its intrinsic 16:9 size", () => {
+    expect(BANNER_PATH).toBe("/banner.jpg");
+    expect(BANNER_WIDTH).toBe(1600);
+    expect(BANNER_HEIGHT).toBe(900);
+    expect(BANNER_ASPECT_RATIO).toBe("1600 / 900");
   });
 
   it("lists wordless 192 and 512 icons in the web manifest", () => {
