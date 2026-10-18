@@ -4,10 +4,11 @@ import { Route, Routes } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 import { ApiError } from "../../api/httpClient";
 import {
-  createAiTryOnOffResourceApi,
+  createBasicResourceApi,
   createEmptyResourceApi,
   createEntitlementAiRequiredResourceApi,
   createErrorResourceApi,
+  createFreeResourceApi,
   createMockResourceApi,
   mockRecommendations,
 } from "../../api/mockResourceApi";
@@ -159,29 +160,34 @@ describe("RecommendationsPage", () => {
     ).toBeInTheDocument();
     expect(
       screen.queryByRole("heading", {
-        name: "Virtual Try On is a Premium feature",
+        name: "Suggested outfits need a paid plan",
       }),
     ).not.toBeInTheDocument();
   });
 
-  it("maps 403 ENTITLEMENT_AI_REQUIRED to the existing Premium upgrade prompt", async () => {
+  it("maps 403 ENTITLEMENT_AI_REQUIRED to the Basic upgrade prompt", async () => {
     renderList("wd_weekend01", createEntitlementAiRequiredResourceApi());
 
     expectInsideNarrowContent(
       await screen.findByRole("heading", {
-        name: "Virtual Try On is a Premium feature",
+        name: "Suggested outfits need a paid plan",
       }),
     );
     expect(
       screen.getByText(
-        /Upgrade to browse Virtual Profiles and preview looks with Virtual Try On/,
+        "Upgrade to Basic or Premium to see looks from clothing items you already own.",
       ),
     ).toBeInTheDocument();
     expectActionButtonNotFullWidth(
       screen.getByRole("button", {
-        name: "Upgrade to Premium for Virtual Try On",
+        name: "Upgrade to Basic for suggested outfits",
       }),
     );
+    expect(
+      screen.getByRole("link", {
+        name: "Compare Free, Basic, and Premium plans",
+      }),
+    ).toHaveAttribute("href", "/app/pricing");
     expect(
       screen.queryByRole("heading", {
         name: "Couldn't load suggested outfits",
@@ -189,17 +195,38 @@ describe("RecommendationsPage", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("shows the same Premium gate when /me features are off", async () => {
-    renderList("wd_weekend01", createAiTryOnOffResourceApi());
+  it("keeps suggested outfits locked for Free", async () => {
+    renderList("wd_weekend01", createFreeResourceApi());
 
     expect(
       await screen.findByRole("heading", {
-        name: "Virtual Try On is a Premium feature",
+        name: "Suggested outfits need a paid plan",
       }),
     ).toBeInTheDocument();
     expect(
       screen.queryByRole("heading", { name: "Navy + cream look" }),
     ).not.toBeInTheDocument();
+  });
+
+  it("shows suggested outfits for Basic", async () => {
+    renderList("wd_weekend01", createBasicResourceApi());
+
+    expect(
+      await screen.findByRole("heading", { name: "Navy + cream look" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", {
+        name: "Suggested outfits need a paid plan",
+      }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("shows suggested outfits for Premium", async () => {
+    renderList("wd_weekend01", createMockResourceApi());
+
+    expect(
+      await screen.findByRole("heading", { name: "Navy + cream look" }),
+    ).toBeInTheDocument();
   });
 
   it("maps a 403 from GET /recommendations to the existing upgrade prompt", async () => {
@@ -210,7 +237,7 @@ describe("RecommendationsPage", () => {
           throw new ApiError({
             status: 403,
             code: ENTITLEMENT_AI_REQUIRED_CODE,
-            message: "Premium is required for suggested outfits.",
+            message: "A paid plan is required for suggested outfits.",
           });
         },
       }),
@@ -218,7 +245,7 @@ describe("RecommendationsPage", () => {
 
     expect(
       await screen.findByRole("heading", {
-        name: "Virtual Try On is a Premium feature",
+        name: "Suggested outfits need a paid plan",
       }),
     ).toBeInTheDocument();
   });

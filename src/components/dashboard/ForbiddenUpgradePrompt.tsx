@@ -25,6 +25,10 @@ export type ForbiddenUpgradePromptProps = {
   premiumTitle?: string;
   premiumDescription?: string;
   premiumActionAriaLabel?: string;
+  basicTitle?: string;
+  basicDescription?: string;
+  basicActionAriaLabel?: string;
+  showComparePlans?: boolean;
   startCheckout?: StartCheckoutFn;
   getMe?: CheckoutGetMeFn;
   assignLocation?: (url: string) => void;
@@ -40,6 +44,10 @@ export const ForbiddenUpgradePrompt = ({
   premiumTitle = dashboardCopy.upgrade.premium.title,
   premiumDescription = dashboardCopy.upgrade.premium.description,
   premiumActionAriaLabel = dashboardCopy.upgrade.premium.actionAriaLabel,
+  basicTitle = dashboardCopy.upgrade.basic.title,
+  basicDescription = dashboardCopy.upgrade.basic.description,
+  basicActionAriaLabel = dashboardCopy.upgrade.basic.actionAriaLabel,
+  showComparePlans = false,
   startCheckout,
   getMe,
   assignLocation,
@@ -63,20 +71,29 @@ export const ForbiddenUpgradePrompt = ({
 
     return (
       <DashboardNarrowContent>
-        <StatusCard
-          title={dashboardCopy.upgrade.basic.title}
-          description={dashboardCopy.upgrade.basic.description}
-        />
+        <StatusCard title={basicTitle} description={basicDescription} />
         <CheckoutUpgradeAction
           checkoutTier="basic"
           paidTier={entitlement?.paidTier}
           actionLabel={dashboardCopy.upgrade.basic.actionLabel}
-          actionAriaLabel={dashboardCopy.upgrade.basic.actionAriaLabel}
+          actionAriaLabel={basicActionAriaLabel}
           startCheckout={startCheckout}
           getMe={getMe}
           assignLocation={assignLocation}
           fetchPlans={fetchPlans}
         />
+        {showComparePlans ? (
+          <Button
+            component={RouterLink}
+            to={appPaths.appPricing}
+            variant="outlined"
+            color="primary"
+            tabIndex={0}
+            aria-label={dashboardCopy.billing.comparePlansAriaLabel}
+          >
+            {dashboardCopy.billing.comparePlansLabel}
+          </Button>
+        ) : null}
       </DashboardNarrowContent>
     );
   }

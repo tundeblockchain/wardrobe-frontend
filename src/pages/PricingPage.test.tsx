@@ -177,7 +177,7 @@ describe("PricingPage", () => {
     ).toBeInTheDocument();
     expect(
       within(getPlanCard("Basic")).getByText(
-        "Unlimited wardrobes, items, and outfits",
+        "Unlimited wardrobes, items, and outfits plus Outfit suggestions",
       ),
     ).toBeInTheDocument();
     expect(
@@ -191,7 +191,17 @@ describe("PricingPage", () => {
     ).toBeInTheDocument();
     expect(
       within(getPlanCard("Basic")).getByLabelText(
+        "Outfit suggestions included",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      within(getPlanCard("Basic")).getByLabelText(
         "Virtual Try On not included",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      within(getPlanCard("Basic")).getByLabelText(
+        "Virtual Profile not included",
       ),
     ).toBeInTheDocument();
     expect(

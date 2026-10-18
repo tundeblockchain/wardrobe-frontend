@@ -4,8 +4,10 @@ import { describe, expect, it, vi } from "vitest";
 import { catalogLimitError } from "../../api/catalogLimits";
 import { ApiError } from "../../api/httpClient";
 import {
+  createBasicResourceApi,
   createEmptyResourceApi,
   createErrorResourceApi,
+  createFreeResourceApi,
   createMockResourceApi,
   mockRecommendations,
 } from "../../api/mockResourceApi";
@@ -164,14 +166,14 @@ describe("OutfitsPage", () => {
     ).toBeInTheDocument();
   });
 
-  it("maps 403 ENTITLEMENT_AI_REQUIRED to the Premium paywall", async () => {
+  it("maps 403 ENTITLEMENT_AI_REQUIRED to the Basic paywall", async () => {
     renderPage(
       createMockResourceApi({
         listRecommendations: async () => {
           throw new ApiError({
             status: 403,
             code: ENTITLEMENT_AI_REQUIRED_CODE,
-            message: "Premium is required for suggested outfits.",
+            message: "A paid plan is required for suggested outfits.",
           });
         },
       }),
@@ -179,17 +181,17 @@ describe("OutfitsPage", () => {
 
     expectInsideNarrowContent(
       await screen.findByRole("heading", {
-        name: "Virtual Try On is a Premium feature",
+        name: "Suggested outfits need a paid plan",
       }),
     );
     expectActionButtonNotFullWidth(
       screen.getByRole("button", {
-        name: "Upgrade to Premium for Virtual Try On",
+        name: "Upgrade to Basic for suggested outfits",
       }),
     );
   });
 
-  it("maps any other 403 from recommendations to the Premium paywall", async () => {
+  it("maps any other 403 from recommendations to the Basic paywall", async () => {
     renderPage(
       createMockResourceApi({
         listRecommendations: async () => {
@@ -204,9 +206,35 @@ describe("OutfitsPage", () => {
 
     expect(
       await screen.findByRole("heading", {
-        name: "Virtual Try On is a Premium feature",
+        name: "Suggested outfits need a paid plan",
       }),
     ).toBeInTheDocument();
+  });
+
+  it("keeps suggested outfits locked for Free", async () => {
+    renderPage(createFreeResourceApi());
+
+    expect(
+      await screen.findByRole("heading", {
+        name: "Suggested outfits need a paid plan",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: "Navy + cream look" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("shows suggested outfits for Basic", async () => {
+    renderPage(createBasicResourceApi());
+
+    expect(
+      await screen.findByRole("heading", { name: "Navy + cream look" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", {
+        name: "Suggested outfits need a paid plan",
+      }),
+    ).not.toBeInTheDocument();
   });
 
   it("saves a suggestion through POST outfits", async () => {

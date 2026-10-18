@@ -8,8 +8,7 @@ import {
   Typography,
 } from "@mui/material";
 import {
-  canUseAiTryOn,
-  canUseOtherAi,
+  canUseOutfitSuggestions,
   getCatalogKindForLimitCode,
   getForbiddenUpgradeKind,
   getRecommendationsPaywallKind,
@@ -31,6 +30,7 @@ import { useAbortableResourceQuery } from "../../hooks/useAbortableResourceQuery
 import { useResourceQuery } from "../../hooks/useResourceQuery";
 import { DashboardNarrowContent } from "./DashboardNarrowContent";
 import { ForbiddenUpgradePrompt } from "./ForbiddenUpgradePrompt";
+import { SuggestedOutfitsPaywall } from "./SuggestedOutfitsPaywall";
 import { ResourceCardGrid } from "./ResourceCardGrid";
 import { ResourceEmptyState } from "./ResourceEmptyState";
 import { ResourceLoadingState } from "./ResourceLoadingState";
@@ -301,9 +301,7 @@ const SuggestedOutfitsPanelBody = ({
   if (query.status === "error") {
     const paywallKind = getRecommendationsPaywallKind(query.error);
     if (paywallKind) {
-      return (
-        <ForbiddenUpgradePrompt kind={paywallKind} entitlement={entitlement} />
-      );
+      return <SuggestedOutfitsPaywall entitlement={entitlement} />;
     }
 
     return (
@@ -314,15 +312,9 @@ const SuggestedOutfitsPanelBody = ({
     );
   }
 
-  if (
-    !canUseAiTryOn(query.data.entitlement) &&
-    !canUseOtherAi(query.data.entitlement)
-  ) {
+  if (!canUseOutfitSuggestions(query.data.entitlement)) {
     return (
-      <ForbiddenUpgradePrompt
-        kind="premium"
-        entitlement={query.data.entitlement}
-      />
+      <SuggestedOutfitsPaywall entitlement={query.data.entitlement} />
     );
   }
 

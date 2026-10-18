@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { ApiError } from "./httpClient";
 import {
+  createBasicResourceApi,
   createEmptyResourceApi,
   createEntitlementAiRequiredResourceApi,
   createErrorResourceApi,
   createFreeAtLimitResourceApi,
+  createFreeResourceApi,
   createMockResourceApi,
   mockEntitlement,
   mockItems,
@@ -243,6 +245,26 @@ describe("createMockResourceApi", () => {
     ).rejects.toMatchObject({
       status: 403,
       message: "Free plan allows 20 outfits. Upgrade to add more.",
+    });
+  });
+
+  it("allows suggested outfits on Basic and Premium and locks Free", async () => {
+    await expect(
+      createMockResourceApi().listRecommendations("wd_weekend01"),
+    ).resolves.toEqual({
+      recommendations: mockRecommendations,
+    });
+    await expect(
+      createBasicResourceApi().listRecommendations("wd_weekend01"),
+    ).resolves.toEqual({
+      recommendations: mockRecommendations,
+    });
+    await expect(
+      createFreeResourceApi().listRecommendations("wd_weekend01"),
+    ).rejects.toMatchObject({
+      status: 403,
+      code: "ENTITLEMENT_AI_REQUIRED",
+      message: "A paid plan is required for suggested outfits.",
     });
   });
 });
