@@ -127,7 +127,7 @@ describe("wardrobe cover fallback", () => {
     });
   });
 
-  it("requests missing covers in parallel with the smallest items limit", async () => {
+  it("requests missing covers in parallel with the cover item limit", async () => {
     const resolvers: Array<(value: { items: ClothingItem[] }) => void> = [];
     const listWardrobeItems = vi.fn(() => {
       return new Promise<{ items: ClothingItem[] }>((resolve) => {
@@ -162,7 +162,37 @@ describe("wardrobe cover fallback", () => {
     });
   });
 
-  it("uses a placeholder when the items request fails or the first item has no photo", async () => {
+  it("uses a later item photo when the oldest item has none", async () => {
+    const listWardrobeItems = vi.fn(async () => ({
+      items: [
+        item({
+          itemId: "item_blank",
+          createdAt: "2026-09-01T18:40:00.000Z",
+        }),
+        item({
+          itemId: "item_photo",
+          createdAt: "2026-09-02T18:40:00.000Z",
+          processedImageUrl: "https://cdn.example.com/later-processed.jpg",
+          originalImageUrl: "https://cdn.example.com/later-original.jpg",
+        }),
+      ],
+    }));
+
+    const fallbackUrls = await resolveMissingWardrobeCoverUrls(
+      [wardrobe({ wardrobeId: "wd_skip" })],
+      listWardrobeItems,
+    );
+
+    expect(listWardrobeItems).toHaveBeenCalledWith("wd_skip", {
+      limit: WARDROBE_COVER_ITEM_LIMIT,
+    });
+    expect(WARDROBE_COVER_ITEM_LIMIT).toBeGreaterThan(1);
+    expect(fallbackUrls).toEqual({
+      wd_skip: "https://cdn.example.com/later-processed.jpg",
+    });
+  });
+
+  it("uses a placeholder when the items request fails or every item is imageless", async () => {
     const listWardrobeItems = vi.fn(async (wardrobeId: string) => {
       if (wardrobeId === "wd_fail") {
         throw new ApiError({
@@ -172,7 +202,20 @@ describe("wardrobe cover fallback", () => {
         });
       }
 
-      return { items: [item({ wardrobeId })] };
+      return {
+        items: [
+          item({
+            wardrobeId,
+            itemId: "item_blank_1",
+            createdAt: "2026-09-01T18:40:00.000Z",
+          }),
+          item({
+            wardrobeId,
+            itemId: "item_blank_2",
+            createdAt: "2026-09-02T18:40:00.000Z",
+          }),
+        ],
+      };
     });
 
     const fallbackUrls = await resolveMissingWardrobeCoverUrls(

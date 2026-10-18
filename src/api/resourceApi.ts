@@ -59,8 +59,23 @@ export type ListWardrobeItemsOptions = {
   limit?: number;
 };
 
-/** Smallest page size the items list route accepts as a query param. */
-export const WARDROBE_COVER_ITEM_LIMIT = 1;
+/** Page size for wardrobe cover fallback so imageless early items can be skipped. */
+export const WARDROBE_COVER_ITEM_LIMIT = 30;
+
+export const toClothingItemList = (value: unknown): ClothingItemList => {
+  if (Array.isArray(value)) {
+    return { items: value as ClothingItem[] };
+  }
+
+  if (value && typeof value === "object") {
+    const raw = value as { items?: unknown };
+    if (Array.isArray(raw.items)) {
+      return { items: raw.items as ClothingItem[] };
+    }
+  }
+
+  return { items: [] };
+};
 
 export const getWardrobeItemsListApiPath = (
   wardrobeId: string,
@@ -263,13 +278,14 @@ export const createLiveResourceApi = (api: AuthenticatedApi): ResourceApi => {
     return api.request<Wardrobe>(getWardrobeApiPath(wardrobeId));
   };
 
-  const listWardrobeItems = (
+  const listWardrobeItems = async (
     wardrobeId: string,
     options?: ListWardrobeItemsOptions,
   ): Promise<ClothingItemList> => {
-    return api.request<ClothingItemList>(
+    const payload = await api.request<unknown>(
       getWardrobeItemsListApiPath(wardrobeId, options),
     );
+    return toClothingItemList(payload);
   };
 
   const getItem = (itemId: string): Promise<ClothingItem> => {

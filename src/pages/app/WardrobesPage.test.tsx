@@ -1,11 +1,13 @@
 import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   createEmptyResourceApi,
   createErrorResourceApi,
   createMockResourceApi,
 } from "../../api/mockResourceApi";
+import { WARDROBE_COVER_ITEM_LIMIT } from "../../api/resourceApi";
+import type { Wardrobe } from "../../api/resourceTypes";
 import { getAppWardrobePath } from "../../routes/paths";
 import {
   expectActionButtonNotFullWidth,
@@ -54,6 +56,44 @@ describe("WardrobesPage", () => {
     expect(
       screen.queryByRole("button", { name: /delete/i }),
     ).not.toBeInTheDocument();
+  });
+
+  it("uses the first item photo when a wardrobe card has no cover", async () => {
+    const listWardrobeItems = vi.fn(async () => ({
+      items: [
+        {
+          itemId: "item_photo",
+          wardrobeId: "wd_items",
+          name: "Navy tee",
+          category: "TOP" as const,
+          processingStatus: "READY" as const,
+          originalImageUrl: "https://cdn.example.com/item.jpg",
+          createdAt: "2026-09-03T18:40:00.000Z",
+          updatedAt: "2026-09-03T18:40:00.000Z",
+        },
+      ],
+    }));
+    const coverlessWardrobe: Wardrobe = {
+      wardrobeId: "wd_items",
+      name: "From item",
+      createdAt: "2026-09-03T18:35:00.000Z",
+      updatedAt: "2026-09-03T18:35:00.000Z",
+    };
+
+    renderPage(
+      createMockResourceApi(
+        { listWardrobeItems },
+        { wardrobes: [coverlessWardrobe] },
+      ),
+    );
+
+    expect(await screen.findByRole("img", { name: "From item" })).toHaveAttribute(
+      "src",
+      "https://cdn.example.com/item.jpg",
+    );
+    expect(listWardrobeItems).toHaveBeenCalledWith("wd_items", {
+      limit: WARDROBE_COVER_ITEM_LIMIT,
+    });
   });
 
   it("renders an empty state when there are no wardrobes", async () => {
