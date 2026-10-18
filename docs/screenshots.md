@@ -17,7 +17,7 @@ Raw multi-megabyte PNGs are **not** committed. Only the resized AVIF / WebP / JP
 
 The gallery, hero phone, and CTA thumbs read paths from `src/content/screenshotSlots.ts`. The large hero phone uses the rust floral Virtual Try On slot; the smaller thumbs reuse the remaining five.
 
-`<picture>` + `srcset` / `sizes` serve AVIF, then WebP, then JPEG. Hero-size files stay well under 250 KB; thumbs use the 390-wide derivative. Social / Open Graph shares use `public/og-image.jpg` (a 1200×630 crop of the brand banner). The landing hero shows the web-sized banner at `public/banner.jpg`.
+`<picture>` + `srcset` / `sizes` serve AVIF, then WebP, then JPEG. Hero-size files stay well under 250 KB; thumbs use the 390-wide derivative. Social / Open Graph shares use `public/og-image.jpg` (a 1200×630 crop of the brand banner). The landing hero shows the web-sized banner at `public/banner.webp`.
 
 ## Regenerating derivatives
 

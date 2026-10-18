@@ -5,11 +5,11 @@ import {
   BANNER_ASPECT_RATIO,
   BANNER_PATH,
 } from "../../content/brandAssets";
-import { wardrobePalette } from "../../theme/wardrobePalette";
 import { renderWithProviders } from "../../test/renderWithProviders";
 import {
   LANDING_HERO_BANNER_FRAME_TEST_ID,
   LANDING_HERO_BANNER_TEST_ID,
+  LANDING_HERO_LAYOUT_TEST_ID,
   LandingHero,
 } from "./LandingHero";
 
@@ -57,7 +57,7 @@ describe("LandingHero", () => {
     expect(screen.getAllByRole("img", { name: BANNER_ALT })).toHaveLength(1);
   });
 
-  it("shows the full-width banner uncropped above the copy", () => {
+  it("keeps copy and CTAs beside the uncropped banner", () => {
     renderWithProviders(
       <LandingHero
         appName="Pocket Closet"
@@ -66,6 +66,7 @@ describe("LandingHero", () => {
       />,
     );
 
+    const layout = screen.getByTestId(LANDING_HERO_LAYOUT_TEST_ID);
     const heroBanner = screen.getByTestId(LANDING_HERO_BANNER_TEST_ID);
     const bannerFrame = screen.getByTestId(LANDING_HERO_BANNER_FRAME_TEST_ID);
     const heading = screen.getByRole("heading", {
@@ -77,6 +78,7 @@ describe("LandingHero", () => {
     });
     const thumbs = screen.getByRole("list", { name: "App screenshot samples" });
 
+    expect(layout).toHaveStyle({ maxWidth: "100%" });
     expect(heroBanner).toHaveAttribute("src", BANNER_PATH);
     expect(heroBanner).toHaveAttribute("alt", BANNER_ALT);
     expect(heroBanner).toHaveAttribute("data-object-fit", "contain");
@@ -84,20 +86,33 @@ describe("LandingHero", () => {
     expect(heroBanner).toHaveStyle({
       width: "100%",
       height: "auto",
+      objectFit: "contain",
     });
     expect(bannerFrame).toHaveStyle({
       width: "100%",
       overflow: "visible",
-      backgroundColor: wardrobePalette.backgroundPaper,
     });
-    expect(
-      heroBanner.compareDocumentPosition(heading) & Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
     expect(
       heading.compareDocumentPosition(seeTheApp) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
     expect(
       seeTheApp.compareDocumentPosition(thumbs) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
+    expect(
+      thumbs.compareDocumentPosition(heroBanner) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
+  it("does not introduce restricted product copy", () => {
+    const { container } = renderWithProviders(
+      <LandingHero
+        appName="Pocket Closet"
+        appStoreUrl={undefined}
+        playStoreUrl={undefined}
+      />,
+    );
+
+    expect(container.textContent).not.toMatch(/\bAI\b/);
+    expect(container.textContent).not.toContain("AI Profile");
   });
 });
