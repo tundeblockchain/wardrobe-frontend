@@ -27,6 +27,7 @@ import {
   getPlanExpiresLabel,
   isStripePaidTier,
 } from "../../content/planDisplay";
+import { getPlanSummary } from "../../content/pricingCopy";
 import { useResourceQuery } from "../../hooks/useResourceQuery";
 import { appPaths, SETTINGS_PLAN_HASH } from "../../routes/paths";
 
@@ -129,6 +130,12 @@ export const PlanSettingsSection = ({
               <ListItemText
                 primary={copy.planTierLabel}
                 secondary={getPaidPlanLabel(paidTier)}
+              />
+            </ListItem>
+            <ListItem disableGutters>
+              <ListItemText
+                primary={copy.planIncludesLabel}
+                secondary={getPlanSummary(paidTier)}
               />
             </ListItem>
             {expiresLabel ? (

@@ -41,6 +41,7 @@ export const dashboardCopy = {
     themeLightAriaLabel: "Use the light theme",
     themeDarkAriaLabel: "Use the dark theme",
     planTitle: "Plan",
+    planIncludesLabel: "Plan includes",
     planLoadingLabel: "Loading plan",
     planErrorTitle: "Couldn't load this plan",
     planErrorDescription:
@@ -200,7 +201,7 @@ export const dashboardCopy = {
     unnamedItem: "Item",
     upgradeTitle: "Suggested outfits need a paid plan",
     upgradeDescription:
-      "Upgrade to Basic or Premium to see looks from clothing items you already own.",
+      "Upgrade to Basic or Premium for unlimited suggested outfits from clothing items you already own.",
     upgradeActionAriaLabel: "Upgrade to Basic for suggested outfits",
   },
   itemForm: {

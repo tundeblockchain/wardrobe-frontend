@@ -39,6 +39,10 @@ describe("SuggestedOutfitsPaywall", () => {
       dashboardCopy.recommendations.upgradeDescription,
       dashboardCopy.recommendations.upgradeActionAriaLabel,
     ].join("\n");
+    expect(copy).toContain("unlimited suggested outfits");
     expect(copy).not.toMatch(/\bAI\b/);
+    expect(copy).not.toMatch(
+      /up to\s+\d+|\d+\s+per\s+(day|week|month)|suggestion cap/i,
+    );
   });
 });

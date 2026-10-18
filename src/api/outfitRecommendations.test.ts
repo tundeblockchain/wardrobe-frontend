@@ -5,7 +5,6 @@ import {
   getRecommendationReason,
   getRecommendationTitle,
   MAX_ITEMS_PER_SLOT,
-  MAX_RECOMMENDATIONS,
   parseOutfitRecommendations,
   readSuggestedOutfitState,
   resolveOutfitSaveName,
@@ -164,18 +163,18 @@ describe("outfitRecommendations", () => {
     expect(readSuggestedOutfitState({ [SUGGESTED_OUTFIT_STATE_KEY]: {} })).toBeUndefined();
   });
 
-  it("keeps at most 8 recommendations and 6 items per slot", () => {
+  it("keeps at most 6 items per slot and does not cap the number of suggestions", () => {
     const extraTops = Array.from({ length: MAX_ITEMS_PER_SLOT + 2 }, (_, index) => ({
       itemId: `item_top_${index}`,
       slot: "TOP" as const,
     }));
-    const rows = Array.from({ length: MAX_RECOMMENDATIONS + 3 }, (_, index) => ({
+    const rows = Array.from({ length: 11 }, (_, index) => ({
       name: `Look ${index}`,
       items: extraTops,
     }));
 
     const parsed = parseOutfitRecommendations({ recommendations: rows });
-    expect(parsed).toHaveLength(MAX_RECOMMENDATIONS);
+    expect(parsed).toHaveLength(11);
     expect(parsed[0]?.items).toHaveLength(MAX_ITEMS_PER_SLOT);
   });
 });
