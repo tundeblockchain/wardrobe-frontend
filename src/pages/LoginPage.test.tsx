@@ -60,6 +60,7 @@ vi.mock("../firebase/config", () => ({
 }));
 
 import { setLoginNotice } from "../auth/loginNotice";
+import { LOGO_PATH } from "../content/brandAssets";
 import { renderWithProviders } from "../test/renderWithProviders";
 import { LoginPage } from "./LoginPage";
 
@@ -122,6 +123,9 @@ describe("LoginPage", () => {
   it("renders Google, Apple, email sign-in, create account, and forgot password", () => {
     renderLoginRoute();
 
+    expect(
+      screen.getByRole("img", { name: "Pocket Closet logo" }),
+    ).toHaveAttribute("src", LOGO_PATH);
     expect(
       screen.getByRole("heading", { level: 1, name: "Sign in" }),
     ).toBeInTheDocument();

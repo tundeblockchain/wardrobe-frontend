@@ -2,6 +2,7 @@ import { useState, type KeyboardEvent } from "react";
 import MenuIcon from "@mui/icons-material/Menu";
 import { AppBar, Box, Drawer, IconButton, Stack, Toolbar, Typography } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
+import { BrandLogo } from "../components/brand/BrandLogo";
 import { getPublicAppEnv } from "../config/env";
 import { AuthNavActions } from "./AuthNavActions";
 import { AppNavLinks } from "./AppNavLinks";
@@ -58,17 +59,7 @@ export const AppHeader = () => {
               minWidth: 0,
             }}
           >
-            <Box
-              component="img"
-              src="/logo.png"
-              alt=""
-              sx={{
-                height: { xs: 40, sm: 48 },
-                width: "auto",
-                display: "block",
-                borderRadius: 1,
-              }}
-            />
+            <BrandLogo height={{ xs: 40, sm: 48 }} />
             <Typography variant="h6" component="span" sx={{ fontWeight: 600 }}>
               {appName}
             </Typography>

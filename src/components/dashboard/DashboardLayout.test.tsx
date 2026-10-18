@@ -2,6 +2,7 @@ import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Route, Routes, useLocation } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { LOGO_PATH } from "../../content/brandAssets";
 import { AppHomePage } from "../../pages/app/AppHomePage";
 import { OutfitsPage } from "../../pages/app/OutfitsPage";
 import { SettingsPage } from "../../pages/app/SettingsPage";
@@ -299,5 +300,10 @@ describe("DashboardLayout", () => {
         name: "Terms of Service",
       }),
     ).not.toBeInTheDocument();
+    expect(
+      within(screen.getByRole("banner"))
+        .getByRole("link", { name: "Pocket Closet home" })
+        .querySelector("img"),
+    ).toHaveAttribute("src", LOGO_PATH);
   });
 });

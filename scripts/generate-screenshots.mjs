@@ -4,6 +4,7 @@
  *
  * This is a local/dev helper. CI does not run it and does not need the raw
  * multi-MB PNGs — commit only the derivatives under public/screenshots/.
+ * Brand OG / banner images are maintained separately and are not overwritten.
  *
  * Usage:
  *   npm run screenshots
@@ -20,7 +21,6 @@ import sharp from "sharp";
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const defaultSourceDir = path.join(repoRoot, "screenshots-source");
 const outputDir = path.join(repoRoot, "public", "screenshots");
-const ogOutputPath = path.join(repoRoot, "public", "og-image.jpg");
 
 const WIDTHS = [390, 780, 1170];
 const TARGET_ASPECT = 9 / 19.5;
@@ -159,33 +159,6 @@ const writeResizedFormats = async (sourcePath, slotId) => {
   return pipelineResults;
 };
 
-const writeOgImage = async (heroSourcePath) => {
-  const metadata = await sharp(heroSourcePath).rotate().metadata();
-  const width = metadata.width ?? 1170;
-  const height = metadata.height ?? 2532;
-  const lookTop = Math.round(height * 0.38);
-  const lookHeight = Math.max(1, height - lookTop);
-
-  await sharp(heroSourcePath)
-    .rotate()
-    .extract({
-      left: 0,
-      top: lookTop,
-      width,
-      height: lookHeight,
-    })
-    .resize(1200, 630, { fit: "cover", position: "centre" })
-    .jpeg({
-      quality: 78,
-      mozjpeg: true,
-      progressive: true,
-    })
-    .toFile(ogOutputPath);
-
-  const fileStat = await stat(ogOutputPath);
-  return { file: ogOutputPath, bytes: fileStat.size };
-};
-
 const main = async () => {
   const { sourceDir } = parseArgs();
 
@@ -233,17 +206,8 @@ const main = async () => {
     outputs.push(...(await writeResizedFormats(filePath, slotId)));
   }
 
-  const heroSource = matched.get("try-on-rust-floral");
-  if (!heroSource) {
-    console.error("Hero source try-on-rust-floral is required for og-image.jpg.");
-    process.exitCode = 1;
-    return;
-  }
-
-  const ogImage = await writeOgImage(heroSource);
   const sourceTotal = sourceStats.reduce((sum, item) => sum + item.bytes, 0);
-  const outputTotal =
-    outputs.reduce((sum, item) => sum + item.bytes, 0) + ogImage.bytes;
+  const outputTotal = outputs.reduce((sum, item) => sum + item.bytes, 0);
   const heroJpgs = outputs.filter(
     (item) => item.slotId === "try-on-rust-floral" && item.ext === "jpg",
   );
@@ -256,10 +220,6 @@ const main = async () => {
       file: path.relative(repoRoot, item.file),
       bytes: item.bytes,
     })),
-    ogImage: {
-      file: path.relative(repoRoot, ogImage.file),
-      bytes: ogImage.bytes,
-    },
   };
 
   await writeFile(
@@ -268,9 +228,8 @@ const main = async () => {
   );
 
   console.log("Screenshot derivatives written to public/screenshots/");
-  console.log(`OG image: ${path.relative(repoRoot, ogImage.file)} (${formatBytes(ogImage.bytes)})`);
   console.log(`Source total: ${formatBytes(sourceTotal)}`);
-  console.log(`Derivative total (incl. OG): ${formatBytes(outputTotal)}`);
+  console.log(`Derivative total: ${formatBytes(outputTotal)}`);
   for (const item of heroJpgs) {
     console.log(`  hero jpg ${item.width}w: ${formatBytes(item.bytes)}`);
   }

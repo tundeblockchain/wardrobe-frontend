@@ -12,6 +12,7 @@ import { Navigate, useLocation, useSearchParams } from "react-router-dom";
 import { EmailAuthForm } from "../auth/EmailAuthForm";
 import { ForgotPasswordForm } from "../auth/ForgotPasswordForm";
 import { SocialAuthButtons } from "../auth/SocialAuthButtons";
+import { BrandLogo } from "../components/brand/BrandLogo";
 import { useFirebaseAuthListener } from "../auth/firebaseSession";
 import { consumeLoginNotice } from "../auth/loginNotice";
 import { useAuth } from "../auth/useAuth";
@@ -132,6 +133,7 @@ export const LoginPage = () => {
         >
           <Stack spacing={3}>
             <Stack spacing={1.5}>
+              <BrandLogo alt={`${appName} logo`} height={128} />
               <Typography
                 variant="overline"
                 component="p"

@@ -1,0 +1,21 @@
+{
+  "name": "Pocket Closet",
+  "short_name": "Pocket Closet",
+  "description": "Pocket Closet is a wardrobe companion for iOS and Android. Photograph pieces, catalog your closet, compose outfits, and preview looks with try-on.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F8F3F5",
+  "theme_color": "#6B1D3A",
+  "icons": [
+    {
+      "src": "/favicon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

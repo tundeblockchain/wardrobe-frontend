@@ -1,10 +1,7 @@
 import { Box, Button, Container, Stack, Typography } from "@mui/material";
 import type { TrackingIds } from "../../config/tracking";
-import {
-  heroScreenshotSizes,
-  screenshotSlots,
-} from "../../content/screenshotSlots";
-import { IPhoneFrame } from "../device/IPhoneFrame";
+import { BANNER_ALT, BANNER_PATH } from "../../content/brandAssets";
+import { screenshotSlots } from "../../content/screenshotSlots";
 import { SectionSurface } from "../surfaces/SectionSurface";
 import { ScreenshotThumbs } from "./ScreenshotThumbs";
 import { StoreCtaButtons } from "./StoreCtaButtons";
@@ -22,10 +19,7 @@ export const LandingHero = ({
   playStoreUrl,
   trackingIds,
 }: LandingHeroProps) => {
-  const [heroScreenshot, ...sampleScreenshots] = screenshotSlots;
-  if (!heroScreenshot) {
-    return null;
-  }
+  const [, ...sampleScreenshots] = screenshotSlots;
 
   return (
     <SectionSurface
@@ -100,20 +94,22 @@ export const LandingHero = ({
           </Stack>
           <Box
             sx={{
-              flex: "0 1 320px",
+              flex: { xs: "1 1 auto", md: "1.4 1 0" },
               width: "100%",
               minWidth: 0,
               position: "relative",
             }}
           >
-            <IPhoneFrame
-              size="hero"
-              src={heroScreenshot.src}
-              sources={heroScreenshot.sources}
-              alt={heroScreenshot.alt}
-              maxWidth={300}
-              sizes={heroScreenshotSizes}
-              eager
+            <Box
+              component="img"
+              src={BANNER_PATH}
+              alt={BANNER_ALT}
+              sx={{
+                width: "100%",
+                height: "auto",
+                display: "block",
+                borderRadius: 2,
+              }}
             />
           </Box>
         </Stack>

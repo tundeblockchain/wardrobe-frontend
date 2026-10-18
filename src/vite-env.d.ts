@@ -28,6 +28,11 @@ declare module "*.html?raw" {
   export default html;
 }
 
+declare module "*.webmanifest?raw" {
+  const source: string;
+  export default source;
+}
+
 declare module "*.tsx?raw" {
   const source: string;
   export default source;

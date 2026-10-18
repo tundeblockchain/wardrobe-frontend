@@ -1,6 +1,7 @@
 import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
+import { LOGO_PATH } from "../content/brandAssets";
 import { AppHeader } from "./AppHeader";
 import { renderWithProviders } from "../test/renderWithProviders";
 import { appPaths, getLoginSignupPath } from "../routes/paths";
@@ -44,7 +45,7 @@ describe("AppHeader", () => {
     ).not.toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: "Pocket Closet home" }).querySelector("img"),
-    ).toHaveAttribute("src", "/logo.png");
+    ).toHaveAttribute("src", LOGO_PATH);
   });
 
   it("shows Log in and Sign up in the header when signed out", () => {

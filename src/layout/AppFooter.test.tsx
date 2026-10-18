@@ -1,5 +1,6 @@
 import { screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
+import { LOGO_PATH } from "../content/brandAssets";
 import { AppFooter } from "./AppFooter";
 import { renderWithProviders } from "../test/renderWithProviders";
 import { appPaths } from "../routes/paths";
@@ -26,5 +27,13 @@ describe("AppFooter", () => {
     ).toHaveAttribute("href", appPaths.contact);
     expect(footer).toHaveAttribute("data-surface", "mist");
     expect(footer).toHaveTextContent(/© \d{4} Pocket Closet/);
+    expect(
+      within(footer).getByRole("link", { name: "Pocket Closet home" }),
+    ).toHaveAttribute("href", appPaths.home);
+    expect(
+      within(footer)
+        .getByRole("link", { name: "Pocket Closet home" })
+        .querySelector("img"),
+    ).toHaveAttribute("src", LOGO_PATH);
   });
 });
