@@ -3,7 +3,9 @@ import type { TrackingIds } from "../../config/tracking";
 import {
   BANNER_ALT,
   BANNER_ASPECT_RATIO,
+  BANNER_HEIGHT,
   BANNER_PATH,
+  BANNER_WIDTH,
 } from "../../content/brandAssets";
 import { screenshotSlots } from "../../content/screenshotSlots";
 import { SectionSurface } from "../surfaces/SectionSurface";
@@ -12,6 +14,7 @@ import { StoreCtaButtons } from "./StoreCtaButtons";
 
 export const LANDING_HERO_BANNER_TEST_ID = "landing-hero-banner";
 export const LANDING_HERO_BANNER_FRAME_TEST_ID = "landing-hero-banner-frame";
+export const LANDING_HERO_LAYOUT_TEST_ID = "landing-hero-layout";
 
 export type LandingHeroProps = {
   appName: string;
@@ -35,7 +38,7 @@ export const LandingHero = ({
       aria-labelledby="landing-hero-heading"
       sx={{
         overflowX: "hidden",
-        overflowY: "hidden",
+        overflowY: "visible",
         bgcolor: "background.default",
         pt: { xs: 2.5, md: 3 },
         pb: { xs: 5, md: 6 },
@@ -55,41 +58,17 @@ export const LandingHero = ({
         }}
       />
       <Container maxWidth="lg">
-        <Stack spacing={{ xs: 3, md: 4 }} sx={{ minWidth: 0, maxWidth: "100%" }}>
-          <Box
-            data-testid={LANDING_HERO_BANNER_FRAME_TEST_ID}
-            sx={{
-              width: "100%",
-              maxWidth: "100%",
-              minWidth: 0,
-              boxSizing: "border-box",
-              borderRadius: 2,
-              overflow: "visible",
-              bgcolor: "background.paper",
-              p: { xs: 1, md: 1.5 },
-            }}
-          >
-            <Box
-              component="img"
-              data-testid={LANDING_HERO_BANNER_TEST_ID}
-              data-aspect-ratio={BANNER_ASPECT_RATIO}
-              data-object-fit="contain"
-              src={BANNER_PATH}
-              alt={BANNER_ALT}
-              sx={{
-                display: "block",
-                width: "100%",
-                height: "auto",
-                maxWidth: "100%",
-                aspectRatio: BANNER_ASPECT_RATIO,
-                objectFit: "contain",
-                objectPosition: "center",
-                borderRadius: 0,
-                verticalAlign: "middle",
-              }}
-            />
-          </Box>
-          <Stack spacing={2.5} sx={{ position: "relative", minWidth: 0 }}>
+        <Stack
+          data-testid={LANDING_HERO_LAYOUT_TEST_ID}
+          direction={{ xs: "column", md: "row" }}
+          spacing={{ xs: 4, md: 6 }}
+          sx={{
+            alignItems: { xs: "stretch", md: "flex-start" },
+            minWidth: 0,
+            maxWidth: "100%",
+          }}
+        >
+          <Stack spacing={2.5} sx={{ flex: 1, position: "relative", pt: 0, minWidth: 0 }}>
             <Typography
               variant="overline"
               component="p"
@@ -129,6 +108,40 @@ export const LandingHero = ({
             </Box>
             <ScreenshotThumbs slots={sampleScreenshots} />
           </Stack>
+          <Box
+            data-testid={LANDING_HERO_BANNER_FRAME_TEST_ID}
+            sx={{
+              flex: { xs: "1 1 auto", md: "1.4 1 0" },
+              width: "100%",
+              minWidth: 0,
+              maxWidth: "100%",
+              position: "relative",
+              overflow: "visible",
+              boxSizing: "border-box",
+            }}
+          >
+            <Box
+              component="img"
+              data-testid={LANDING_HERO_BANNER_TEST_ID}
+              data-aspect-ratio={BANNER_ASPECT_RATIO}
+              data-object-fit="contain"
+              src={BANNER_PATH}
+              alt={BANNER_ALT}
+              width={BANNER_WIDTH}
+              height={BANNER_HEIGHT}
+              sx={{
+                display: "block",
+                width: "100%",
+                height: "auto",
+                maxWidth: "100%",
+                aspectRatio: BANNER_ASPECT_RATIO,
+                objectFit: "contain",
+                objectPosition: "center",
+                borderRadius: 0,
+                verticalAlign: "middle",
+              }}
+            />
+          </Box>
         </Stack>
       </Container>
     </SectionSurface>
