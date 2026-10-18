@@ -1,10 +1,17 @@
 import { Box, Button, Container, Stack, Typography } from "@mui/material";
 import type { TrackingIds } from "../../config/tracking";
-import { BANNER_ALT, BANNER_PATH } from "../../content/brandAssets";
+import {
+  BANNER_ALT,
+  BANNER_ASPECT_RATIO,
+  BANNER_PATH,
+} from "../../content/brandAssets";
 import { screenshotSlots } from "../../content/screenshotSlots";
 import { SectionSurface } from "../surfaces/SectionSurface";
 import { ScreenshotThumbs } from "./ScreenshotThumbs";
 import { StoreCtaButtons } from "./StoreCtaButtons";
+
+export const LANDING_HERO_BANNER_TEST_ID = "landing-hero-banner";
+export const LANDING_HERO_BANNER_FRAME_TEST_ID = "landing-hero-banner-frame";
 
 export type LandingHeroProps = {
   appName: string;
@@ -27,7 +34,8 @@ export const LandingHero = ({
       variant="hero"
       aria-labelledby="landing-hero-heading"
       sx={{
-        overflow: "hidden",
+        overflowX: "hidden",
+        overflowY: "hidden",
         bgcolor: "background.default",
         pt: { xs: 2.5, md: 3 },
         pb: { xs: 5, md: 6 },
@@ -47,12 +55,41 @@ export const LandingHero = ({
         }}
       />
       <Container maxWidth="lg">
-        <Stack
-          direction={{ xs: "column", md: "row" }}
-          spacing={{ xs: 4, md: 6 }}
-          sx={{ alignItems: { xs: "stretch", md: "flex-start" } }}
-        >
-          <Stack spacing={2.5} sx={{ flex: 1, position: "relative", pt: 0 }}>
+        <Stack spacing={{ xs: 3, md: 4 }} sx={{ minWidth: 0, maxWidth: "100%" }}>
+          <Box
+            data-testid={LANDING_HERO_BANNER_FRAME_TEST_ID}
+            sx={{
+              width: "100%",
+              maxWidth: "100%",
+              minWidth: 0,
+              boxSizing: "border-box",
+              borderRadius: 2,
+              overflow: "visible",
+              bgcolor: "background.paper",
+              p: { xs: 1, md: 1.5 },
+            }}
+          >
+            <Box
+              component="img"
+              data-testid={LANDING_HERO_BANNER_TEST_ID}
+              data-aspect-ratio={BANNER_ASPECT_RATIO}
+              data-object-fit="contain"
+              src={BANNER_PATH}
+              alt={BANNER_ALT}
+              sx={{
+                display: "block",
+                width: "100%",
+                height: "auto",
+                maxWidth: "100%",
+                aspectRatio: BANNER_ASPECT_RATIO,
+                objectFit: "contain",
+                objectPosition: "center",
+                borderRadius: 0,
+                verticalAlign: "middle",
+              }}
+            />
+          </Box>
+          <Stack spacing={2.5} sx={{ position: "relative", minWidth: 0 }}>
             <Typography
               variant="overline"
               component="p"
@@ -92,26 +129,6 @@ export const LandingHero = ({
             </Box>
             <ScreenshotThumbs slots={sampleScreenshots} />
           </Stack>
-          <Box
-            sx={{
-              flex: { xs: "1 1 auto", md: "1.4 1 0" },
-              width: "100%",
-              minWidth: 0,
-              position: "relative",
-            }}
-          >
-            <Box
-              component="img"
-              src={BANNER_PATH}
-              alt={BANNER_ALT}
-              sx={{
-                width: "100%",
-                height: "auto",
-                display: "block",
-                borderRadius: 2,
-              }}
-            />
-          </Box>
         </Stack>
       </Container>
     </SectionSurface>

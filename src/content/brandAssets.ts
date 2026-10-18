@@ -9,5 +9,9 @@ export const FAVICON_512_PATH = "/favicon-512.png";
 export const APPLE_TOUCH_ICON_PATH = "/apple-touch-icon.png";
 export const WEB_MANIFEST_PATH = "/site.webmanifest";
 
+export const BANNER_WIDTH = 1600;
+export const BANNER_HEIGHT = 900;
+export const BANNER_ASPECT_RATIO = `${BANNER_WIDTH} / ${BANNER_HEIGHT}`;
+
 export const BANNER_ALT =
   "My Pocket Closet promo showing wardrobe, outfit, and look screens on three phones";
