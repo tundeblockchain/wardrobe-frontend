@@ -1,19 +1,21 @@
 import { Box, Button, Container, Stack, Typography } from "@mui/material";
+import { alpha } from "@mui/material/styles";
 import type { TrackingIds } from "../../config/tracking";
 import {
-  BANNER_ALT,
-  BANNER_ASPECT_RATIO,
-  BANNER_HEIGHT,
-  BANNER_PATH,
-  BANNER_WIDTH,
+  HERO_IMAGE_ALT,
+  HERO_IMAGE_ASPECT_RATIO,
+  HERO_IMAGE_HEIGHT,
+  HERO_IMAGE_PATH,
+  HERO_IMAGE_WIDTH,
 } from "../../content/brandAssets";
 import { screenshotSlots } from "../../content/screenshotSlots";
+import { wardrobePalette } from "../../theme/wardrobePalette";
 import { SectionSurface } from "../surfaces/SectionSurface";
 import { ScreenshotThumbs } from "./ScreenshotThumbs";
 import { StoreCtaButtons } from "./StoreCtaButtons";
 
-export const LANDING_HERO_BANNER_TEST_ID = "landing-hero-banner";
-export const LANDING_HERO_BANNER_FRAME_TEST_ID = "landing-hero-banner-frame";
+export const LANDING_HERO_IMAGE_TEST_ID = "landing-hero-image";
+export const LANDING_HERO_IMAGE_SLOT_TEST_ID = "landing-hero-image-slot";
 export const LANDING_HERO_LAYOUT_TEST_ID = "landing-hero-layout";
 
 export type LandingHeroProps = {
@@ -63,7 +65,7 @@ export const LandingHero = ({
           direction={{ xs: "column", md: "row" }}
           spacing={{ xs: 4, md: 6 }}
           sx={{
-            alignItems: { xs: "stretch", md: "flex-start" },
+            alignItems: { xs: "stretch", md: "center" },
             minWidth: 0,
             maxWidth: "100%",
           }}
@@ -109,36 +111,48 @@ export const LandingHero = ({
             <ScreenshotThumbs slots={sampleScreenshots} />
           </Stack>
           <Box
-            data-testid={LANDING_HERO_BANNER_FRAME_TEST_ID}
+            data-testid={LANDING_HERO_IMAGE_SLOT_TEST_ID}
             sx={{
-              flex: { xs: "1 1 auto", md: "1.4 1 0" },
+              flex: { xs: "0 1 auto", md: "1.15 1 0" },
               width: "100%",
               minWidth: 0,
-              maxWidth: "100%",
+              maxWidth: { xs: "100%", md: 680 },
               position: "relative",
               overflow: "visible",
               boxSizing: "border-box",
+              display: "flex",
+              justifyContent: { xs: "center", md: "flex-end" },
+              alignItems: "center",
+              backgroundColor: "transparent",
+              boxShadow: "none",
+              border: 0,
+              borderRadius: 0,
+              p: 0,
             }}
           >
             <Box
               component="img"
-              data-testid={LANDING_HERO_BANNER_TEST_ID}
-              data-aspect-ratio={BANNER_ASPECT_RATIO}
+              data-testid={LANDING_HERO_IMAGE_TEST_ID}
+              data-aspect-ratio={HERO_IMAGE_ASPECT_RATIO}
               data-object-fit="contain"
-              src={BANNER_PATH}
-              alt={BANNER_ALT}
-              width={BANNER_WIDTH}
-              height={BANNER_HEIGHT}
+              src={HERO_IMAGE_PATH}
+              alt={HERO_IMAGE_ALT}
+              width={HERO_IMAGE_WIDTH}
+              height={HERO_IMAGE_HEIGHT}
               sx={{
                 display: "block",
-                width: "100%",
+                width: "auto",
                 height: "auto",
                 maxWidth: "100%",
-                aspectRatio: BANNER_ASPECT_RATIO,
+                maxHeight: { xs: 320, md: 460 },
+                aspectRatio: HERO_IMAGE_ASPECT_RATIO,
                 objectFit: "contain",
                 objectPosition: "center",
                 borderRadius: 0,
+                backgroundColor: "transparent",
+                boxShadow: "none",
                 verticalAlign: "middle",
+                filter: `drop-shadow(0 18px 28px ${alpha(wardrobePalette.textPrimary, 0.14)})`,
               }}
             />
           </Box>
