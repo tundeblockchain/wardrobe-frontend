@@ -177,7 +177,7 @@ describe("PricingPage", () => {
     ).toBeInTheDocument();
     expect(
       within(getPlanCard("Basic")).getByText(
-        "Unlimited wardrobes, items, and outfits plus Outfit suggestions",
+        "Unlimited wardrobes, items, outfits, and outfit suggestions",
       ),
     ).toBeInTheDocument();
     expect(
@@ -191,7 +191,7 @@ describe("PricingPage", () => {
     ).toBeInTheDocument();
     expect(
       within(getPlanCard("Basic")).getByLabelText(
-        "Outfit suggestions included",
+        "Unlimited outfit suggestions included",
       ),
     ).toBeInTheDocument();
     expect(
@@ -206,7 +206,7 @@ describe("PricingPage", () => {
     ).toBeInTheDocument();
     expect(
       within(getPlanCard("Premium")).getByText(
-        "Unlimited wardrobes, items, and outfits plus Virtual Try On, Virtual Profile, and Outfit suggestions",
+        "Unlimited wardrobes, items, outfits, and outfit suggestions plus Virtual Try On and Virtual Profile",
       ),
     ).toBeInTheDocument();
     expect(
@@ -231,12 +231,21 @@ describe("PricingPage", () => {
     ).toBeInTheDocument();
     expect(
       within(getPlanCard("Premium")).getByLabelText(
-        "Outfit suggestions included",
+        "Unlimited outfit suggestions included",
       ),
     ).toBeInTheDocument();
     expect(getPlanCard("Free").textContent).not.toMatch(/\bAI\b/);
     expect(getPlanCard("Basic").textContent).not.toMatch(/\bAI\b/);
     expect(getPlanCard("Premium").textContent).not.toMatch(/\bAI\b/);
+    expect(getPlanCard("Free").textContent).not.toMatch(
+      /up to\s+\d+|\d+\s+per\s+(day|week|month)/i,
+    );
+    expect(getPlanCard("Basic").textContent).not.toMatch(
+      /up to\s+\d+|\d+\s+per\s+(day|week|month)/i,
+    );
+    expect(getPlanCard("Premium").textContent).not.toMatch(
+      /up to\s+\d+|\d+\s+per\s+(day|week|month)/i,
+    );
   });
 
   it("toggles monthly and yearly catalog prices", async () => {
@@ -507,6 +516,19 @@ describe("PricingPage", () => {
     expect(
       await screen.findByRole("heading", { level: 2, name: "Free" }),
     ).toBeInTheDocument();
+    expect(
+      within(getPlanCard("Basic")).getByLabelText(
+        "Unlimited outfit suggestions included",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      within(getPlanCard("Premium")).getByLabelText(
+        "Unlimited outfit suggestions included",
+      ),
+    ).toBeInTheDocument();
+    expect(getPlanCard("Basic").textContent).not.toMatch(
+      /up to\s+\d+|\d+\s+per\s+(day|week|month)/i,
+    );
   });
 
   it("opens the Stripe portal from Choose plan for a Premium user on Basic", async () => {

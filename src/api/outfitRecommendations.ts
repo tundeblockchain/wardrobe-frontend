@@ -12,7 +12,6 @@ import {
 
 export const SUGGESTED_OUTFIT_STATE_KEY = "suggestedOutfit";
 export const DEFAULT_SUGGESTED_OUTFIT_NAME = "Suggested look";
-export const MAX_RECOMMENDATIONS = 8;
 export const MAX_ITEMS_PER_SLOT = 6;
 
 export type SuggestedOutfitItemView = {
@@ -148,8 +147,7 @@ export const parseOutfitRecommendations = (
   if (Array.isArray(value)) {
     return value
       .map(parseOutfitRecommendation)
-      .filter((entry): entry is OutfitRecommendation => Boolean(entry))
-      .slice(0, MAX_RECOMMENDATIONS);
+      .filter((entry): entry is OutfitRecommendation => Boolean(entry));
   }
 
   if (value && typeof value === "object") {

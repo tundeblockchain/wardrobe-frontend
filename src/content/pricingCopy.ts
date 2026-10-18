@@ -1,4 +1,4 @@
-import { FREE_CATALOG_LIMITS } from "../api/resourceTypes";
+import { FREE_CATALOG_LIMITS, type PaidTier } from "../api/resourceTypes";
 
 export type PricingPlanFeature = {
   label: string;
@@ -44,12 +44,13 @@ export const pricingCopy = {
   premiumName: "Premium",
   freePriceLabel: "Free",
   basicSummary:
-    "Unlimited wardrobes, items, and outfits plus Outfit suggestions",
+    "Unlimited wardrobes, items, outfits, and outfit suggestions",
   premiumSummary:
-    "Unlimited wardrobes, items, and outfits plus Virtual Try On, Virtual Profile, and Outfit suggestions",
+    "Unlimited wardrobes, items, outfits, and outfit suggestions plus Virtual Try On and Virtual Profile",
   unlimitedWardrobes: "Unlimited wardrobes",
   unlimitedItems: "Unlimited items",
   unlimitedOutfits: "Unlimited outfits",
+  unlimitedOutfitSuggestions: "Unlimited outfit suggestions",
   currentPlanLabel: "Current plan",
   currentPlanAriaLabel: "Current plan",
   upgradeBasicLabel: "Upgrade to Basic",
@@ -74,10 +75,26 @@ export const pricingCopy = {
   yearlyPriceSuffix: "per year",
 } as const;
 
+export const getPlanSummary = (paidTier: PaidTier): string => {
+  if (!paidTier) {
+    return getFreePlanSummary();
+  }
+  if (paidTier.tier === "basic") {
+    return pricingCopy.basicSummary;
+  }
+
+  return pricingCopy.premiumSummary;
+};
+
 const getOutfitSuggestionsFeature = (
   included: boolean,
 ): PricingPlanFeature => {
-  return { label: pricingFeatureLabels.outfitSuggestions, included };
+  return {
+    label: included
+      ? pricingCopy.unlimitedOutfitSuggestions
+      : pricingFeatureLabels.outfitSuggestions,
+    included,
+  };
 };
 
 const getPremiumOnlyFeatures = (included: boolean): PricingPlanFeature[] => {
@@ -136,6 +153,7 @@ export const getAllPricingPlanCopy = (): string[] => {
     pricingCopy.unlimitedWardrobes,
     pricingCopy.unlimitedItems,
     pricingCopy.unlimitedOutfits,
+    pricingCopy.unlimitedOutfitSuggestions,
     ...getFreePlanFeatureLines().map((feature) => feature.label),
     ...getBasicPlanFeatureLines().map((feature) => feature.label),
     ...getPremiumPlanFeatureLines().map((feature) => feature.label),

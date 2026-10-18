@@ -12,6 +12,7 @@ import {
 } from "../../api/billingPlans";
 import { ApiError } from "../../api/httpClient";
 import { dashboardCopy } from "../../content/dashboardCopy";
+import { getFreePlanSummary, pricingCopy } from "../../content/pricingCopy";
 import { getUpgradePriceLabel } from "../../content/upgradePriceLabel";
 import {
   createAiTryOnOffResourceApi,
@@ -141,17 +142,26 @@ const expectNodeBefore = (first: Node, second: Node) => {
   ).not.toBe(0);
 };
 
-const expectSettingsPlanCardLayout = async (planName: string) => {
+const expectSettingsPlanCardLayout = async (
+  planName: string,
+  planIncludes: string,
+) => {
   const planSection = getPlanSection();
   const heading = within(planSection).getByRole("heading", { name: /^Plan$/ });
   const currentPlan = await within(planSection).findByText("Current plan");
+  const planIncludesLabel = within(planSection).getByText("Plan includes");
   const comparePlans = within(planSection).getByRole("link", {
     name: "Compare Free, Basic, and Premium plans",
   });
 
   expect(within(planSection).getByText(planName)).toBeInTheDocument();
+  expect(within(planSection).getByText(planIncludes)).toBeInTheDocument();
+  expect(planSection.textContent).not.toMatch(
+    /up to\s+\d+|\d+\s+per\s+(day|week|month)|suggestion cap/i,
+  );
   expectNodeBefore(heading, currentPlan);
-  expectNodeBefore(currentPlan, comparePlans);
+  expectNodeBefore(currentPlan, planIncludesLabel);
+  expectNodeBefore(planIncludesLabel, comparePlans);
   expect(
     within(planSection).queryByRole("group", { name: "Billing interval" }),
   ).not.toBeInTheDocument();
@@ -212,7 +222,7 @@ describe("SettingsPage", () => {
     ).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Plan" })).toBeInTheDocument();
     expect(document.getElementById("plan")).toBeInTheDocument();
-    await expectSettingsPlanCardLayout("Premium");
+    await expectSettingsPlanCardLayout("Premium", pricingCopy.premiumSummary);
     expect(
       screen.getByRole("link", {
         name: "Compare Free, Basic, and Premium plans",
@@ -297,7 +307,7 @@ describe("SettingsPage", () => {
     );
 
     expect(await screen.findByText("Free")).toBeInTheDocument();
-    await expectSettingsPlanCardLayout("Free");
+    await expectSettingsPlanCardLayout("Free", getFreePlanSummary());
     expect(
       screen.queryByRole("button", { name: "Manage subscription" }),
     ).not.toBeInTheDocument();
@@ -316,7 +326,7 @@ describe("SettingsPage", () => {
       { fetchPlans: loadMockPlans },
     );
 
-    await expectSettingsPlanCardLayout("Free");
+    await expectSettingsPlanCardLayout("Free", getFreePlanSummary());
     expect(screen.getByLabelText("Premium")).toHaveTextContent(
       getUpgradePriceLabel({
         actionLabel: "Premium",
@@ -365,7 +375,7 @@ describe("SettingsPage", () => {
       },
     );
 
-    await expectSettingsPlanCardLayout("Free");
+    await expectSettingsPlanCardLayout("Free", getFreePlanSummary());
     expect(screen.getByLabelText("Premium")).toHaveTextContent("Premium");
   });
 
@@ -390,7 +400,7 @@ describe("SettingsPage", () => {
     );
 
     expect(await screen.findByText("Basic")).toBeInTheDocument();
-    await expectSettingsPlanCardLayout("Basic");
+    await expectSettingsPlanCardLayout("Basic", pricingCopy.basicSummary);
     expect(screen.getByText("1 November 2026")).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Manage subscription" }),
@@ -421,7 +431,7 @@ describe("SettingsPage", () => {
     );
 
     expect(await screen.findByText("Premium")).toBeInTheDocument();
-    await expectSettingsPlanCardLayout("Premium");
+    await expectSettingsPlanCardLayout("Premium", pricingCopy.premiumSummary);
     expect(screen.getByText("15 December 2026")).toBeInTheDocument();
     expect(
       screen.getByText("Manage this plan in the App Store."),
@@ -450,7 +460,7 @@ describe("SettingsPage", () => {
     );
 
     expect(await screen.findByText("Premium")).toBeInTheDocument();
-    await expectSettingsPlanCardLayout("Premium");
+    await expectSettingsPlanCardLayout("Premium", pricingCopy.premiumSummary);
     expect(
       screen.getByText("Manage this plan in the App Store or Google Play."),
     ).toBeInTheDocument();
@@ -560,7 +570,7 @@ describe("SettingsPage", () => {
       fetchPlans: loadMockPlans,
     });
 
-    await expectSettingsPlanCardLayout("Free");
+    await expectSettingsPlanCardLayout("Free", getFreePlanSummary());
     const tryOnLink = await screen.findByRole("link", {
       name: "Open Virtual Try On",
     });
