@@ -9,6 +9,7 @@ import {
   WEEKEND_WARDROBE_IMAGE_URL,
   WORKWEAR_WARDROBE_COVER_IMAGE_URL,
 } from "../../api/mockResourceApi";
+import { WARDROBE_COVER_ITEM_LIMIT } from "../../api/resourceApi";
 import type { Wardrobe } from "../../api/resourceTypes";
 import { getAppWardrobePath } from "../../routes/paths";
 import {
@@ -194,7 +195,104 @@ describe("AppHomePage", () => {
       "https://cdn.example.com/item.jpg",
     );
     expect(listWardrobeItems).toHaveBeenCalledTimes(1);
-    expect(listWardrobeItems).toHaveBeenCalledWith("wd_items", { limit: 1 });
+    expect(listWardrobeItems).toHaveBeenCalledWith("wd_items", {
+      limit: WARDROBE_COVER_ITEM_LIMIT,
+    });
+  });
+
+  it("skips an imageless first item and uses the next item photo", async () => {
+    const listWardrobeItems = vi.fn(async () => ({
+      items: [
+        {
+          itemId: "item_blank",
+          wardrobeId: "wd_skip",
+          name: "Unprocessed coat",
+          category: "OUTERWEAR" as const,
+          processingStatus: "PROCESSING" as const,
+          createdAt: "2026-09-01T18:40:00.000Z",
+          updatedAt: "2026-09-01T18:40:00.000Z",
+        },
+        {
+          itemId: "item_photo",
+          wardrobeId: "wd_skip",
+          name: "Navy tee",
+          category: "TOP" as const,
+          processingStatus: "READY" as const,
+          processedImageUrl: "https://cdn.example.com/navy-processed.jpg",
+          originalImageUrl: "https://cdn.example.com/navy-original.jpg",
+          createdAt: "2026-09-02T18:40:00.000Z",
+          updatedAt: "2026-09-02T18:40:00.000Z",
+        },
+      ],
+    }));
+
+    renderPage(
+      createMockResourceApi(
+        { listWardrobeItems },
+        {
+          wardrobes: [
+            wardrobe({
+              wardrobeId: "wd_skip",
+              name: "Skip blank",
+            }),
+          ],
+        },
+      ),
+    );
+
+    expect(await screen.findByRole("img", { name: "Skip blank" })).toHaveAttribute(
+      "src",
+      "https://cdn.example.com/navy-processed.jpg",
+    );
+    expect(screen.queryByText("No photo for this wardrobe")).not.toBeInTheDocument();
+    expect(listWardrobeItems).toHaveBeenCalledWith("wd_skip", {
+      limit: WARDROBE_COVER_ITEM_LIMIT,
+    });
+  });
+
+  it("shows the placeholder when every wardrobe item is imageless", async () => {
+    const listWardrobeItems = vi.fn(async () => ({
+      items: [
+        {
+          itemId: "item_blank_1",
+          wardrobeId: "wd_blank",
+          name: "Coat",
+          category: "OUTERWEAR" as const,
+          processingStatus: "PROCESSING" as const,
+          createdAt: "2026-09-01T18:40:00.000Z",
+          updatedAt: "2026-09-01T18:40:00.000Z",
+        },
+        {
+          itemId: "item_blank_2",
+          wardrobeId: "wd_blank",
+          name: "Scarf",
+          category: "ACCESSORY" as const,
+          processingStatus: "FAILED" as const,
+          createdAt: "2026-09-02T18:40:00.000Z",
+          updatedAt: "2026-09-02T18:40:00.000Z",
+        },
+      ],
+    }));
+
+    renderPage(
+      createMockResourceApi(
+        { listWardrobeItems },
+        {
+          wardrobes: [
+            wardrobe({
+              wardrobeId: "wd_blank",
+              name: "No photos",
+            }),
+          ],
+        },
+      ),
+    );
+
+    expect(
+      await screen.findByRole("heading", { level: 1, name: "Your closet" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("img", { name: "No photos" })).not.toBeInTheDocument();
+    expect(screen.getByText("No photo for this wardrobe")).toBeInTheDocument();
   });
 
   it("refreshes the list once for an expired coverImageUrl and then renders the image", async () => {

@@ -16,6 +16,7 @@ import {
   getWardrobeItemsApiPath,
   getWardrobeItemsListApiPath,
   WARDROBE_COVER_ITEM_LIMIT,
+  toClothingItemList,
   getWardrobeOutfitApiPath,
   getWardrobeOutfitRenderApiPath,
   getWardrobeOutfitsApiPath,
@@ -212,9 +213,12 @@ describe("createLiveResourceApi", () => {
     expect(request).toHaveBeenCalledWith("/wardrobes/wd_1/items");
   });
 
-  it("lists wardrobe items with the smallest supported limit", async () => {
+  it("lists wardrobe items with the cover fallback limit", async () => {
     const request = vi.fn(async (path: string) => {
-      if (path === getWardrobeItemsListApiPath("wd_1", { limit: 1 })) {
+      if (
+        path ===
+        getWardrobeItemsListApiPath("wd_1", { limit: WARDROBE_COVER_ITEM_LIMIT })
+      ) {
         return { items: [item] };
       }
       throw new Error(`unexpected path ${path}`);
@@ -224,7 +228,41 @@ describe("createLiveResourceApi", () => {
     await expect(
       api.listWardrobeItems("wd_1", { limit: WARDROBE_COVER_ITEM_LIMIT }),
     ).resolves.toEqual({ items: [item] });
-    expect(request).toHaveBeenCalledWith("/wardrobes/wd_1/items?limit=1");
+    expect(request).toHaveBeenCalledWith("/wardrobes/wd_1/items?limit=30");
+    expect(WARDROBE_COVER_ITEM_LIMIT).toBe(30);
+  });
+
+  it("unwraps a bare wardrobe items array", async () => {
+    const request = vi.fn(async (path: string) => {
+      if (path === getWardrobeItemsApiPath("wd_1")) {
+        return [item];
+      }
+      throw new Error(`unexpected path ${path}`);
+    });
+    const api = createLiveResourceApi(createApi(asRequest(request)));
+
+    await expect(api.listWardrobeItems("wd_1")).resolves.toEqual({
+      items: [item],
+    });
+    expect(request).toHaveBeenCalledWith("/wardrobes/wd_1/items");
+  });
+
+  it("uses a bare items array when loading wardrobe detail", async () => {
+    const request = vi.fn(async (path: string) => {
+      if (path === getWardrobeApiPath("wd_1")) {
+        return wardrobe;
+      }
+      if (path === getWardrobeItemsApiPath("wd_1")) {
+        return [item];
+      }
+      throw new Error(`unexpected path ${path}`);
+    });
+    const api = createLiveResourceApi(createApi(asRequest(request)));
+
+    await expect(api.getWardrobeDetail("wd_1")).resolves.toEqual({
+      wardrobe,
+      items: [item],
+    });
   });
 
   it("loads an item from GET /items/{itemId}", async () => {
@@ -581,6 +619,19 @@ describe("createLiveResourceApi", () => {
       code: "ITEM_NOT_FOUND",
     });
     expect(request).toHaveBeenCalledWith(`${itemCollectionPath}/item_other`);
+  });
+});
+
+describe("toClothingItemList", () => {
+  it("accepts an items envelope, a bare array, and unknown shapes", () => {
+    expect(toClothingItemList({ items: [item] })).toEqual({ items: [item] });
+    expect(toClothingItemList([item])).toEqual({ items: [item] });
+    expect(toClothingItemList([])).toEqual({ items: [] });
+    expect(toClothingItemList({ items: [] })).toEqual({ items: [] });
+    expect(toClothingItemList({ items: null })).toEqual({ items: [] });
+    expect(toClothingItemList({ wardrobes: [item] })).toEqual({ items: [] });
+    expect(toClothingItemList(null)).toEqual({ items: [] });
+    expect(toClothingItemList(undefined)).toEqual({ items: [] });
   });
 });
 
