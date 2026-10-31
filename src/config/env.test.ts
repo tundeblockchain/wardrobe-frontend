@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
+  DEFAULT_APP_STORE_URL,
   getFirebaseWebConfig,
   getPublicAppEnv,
   hasFirebaseWebConfig,
   MISSING_FIREBASE_WEB_CONFIG_MESSAGE,
+  resolveAppStoreUrl,
 } from "./env";
 import { isMockApi } from "./mockApi";
 
@@ -12,7 +14,7 @@ describe("getPublicAppEnv", () => {
     const env = getPublicAppEnv({});
 
     expect(env.appName).toBe("Pocket Closet");
-    expect(env.appStoreUrl).toBeUndefined();
+    expect(env.appStoreUrl).toBe(DEFAULT_APP_STORE_URL);
     expect(env.playStoreUrl).toBeUndefined();
     expect(env.publicSiteUrl).toBeUndefined();
     expect(env.apiBaseUrl).toBeUndefined();
@@ -48,7 +50,7 @@ describe("getPublicAppEnv", () => {
       VITE_USE_MOCK_API: "  ",
     });
 
-    expect(env.appStoreUrl).toBeUndefined();
+    expect(env.appStoreUrl).toBe(DEFAULT_APP_STORE_URL);
     expect(env.playStoreUrl).toBeUndefined();
     expect(env.publicSiteUrl).toBeUndefined();
     expect(env.apiBaseUrl).toBeUndefined();
@@ -117,6 +119,20 @@ describe("VITE_USE_MOCK_API", () => {
     expect(getPublicAppEnv({ VITE_USE_MOCK_API: "1" }).useMockApi).toBe(true);
     expect(isMockApi({ VITE_USE_MOCK_API: "TRUE" })).toBe(true);
     expect(isMockApi({})).toBe(false);
+  });
+});
+
+describe("resolveAppStoreUrl", () => {
+  it("falls back to the live App Store listing", () => {
+    expect(resolveAppStoreUrl(undefined)).toBe(DEFAULT_APP_STORE_URL);
+    expect(resolveAppStoreUrl("")).toBe(DEFAULT_APP_STORE_URL);
+    expect(resolveAppStoreUrl("   ")).toBe(DEFAULT_APP_STORE_URL);
+    expect(resolveAppStoreUrl(DEFAULT_APP_STORE_URL)).toBe(
+      DEFAULT_APP_STORE_URL,
+    );
+    expect(
+      resolveAppStoreUrl(" https://apps.apple.com/app/id000000000 "),
+    ).toBe("https://apps.apple.com/app/id000000000");
   });
 });
 

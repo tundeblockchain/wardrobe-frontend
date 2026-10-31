@@ -1,3 +1,5 @@
+import { resolveAppStoreUrl } from "./env";
+
 export type StoreKind = "appStore" | "playStore";
 
 export type StoreUrlEnv = {
@@ -8,7 +10,7 @@ export type StoreUrlEnv = {
 export type StoreCta = {
   kind: StoreKind;
   label: string;
-  comingSoonLabel: string;
+  comingSoonLabel?: string;
   href: string | undefined;
 };
 
@@ -20,8 +22,7 @@ export const getStoreCtas = ({
     {
       kind: "appStore",
       label: "Download on the App Store",
-      comingSoonLabel: "App Store — coming soon",
-      href: appStoreUrl,
+      href: resolveAppStoreUrl(appStoreUrl),
     },
     {
       kind: "playStore",
@@ -40,5 +41,5 @@ export const areStoreLinksPublished = ({
   appStoreUrl,
   playStoreUrl,
 }: StoreUrlEnv): boolean => {
-  return Boolean(appStoreUrl || playStoreUrl);
+  return Boolean(resolveAppStoreUrl(appStoreUrl) || playStoreUrl);
 };

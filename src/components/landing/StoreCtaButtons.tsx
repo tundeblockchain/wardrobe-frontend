@@ -53,8 +53,8 @@ export const StoreCtaButtons = ({
               size="large"
               disabled
               aria-disabled="true"
-              aria-label={storeCta.comingSoonLabel}
-              title={storeCta.comingSoonLabel}
+              aria-label={storeCta.comingSoonLabel ?? storeCta.label}
+              title={storeCta.comingSoonLabel ?? storeCta.label}
               startIcon={<Icon aria-hidden="true" />}
               sx={{ px: 2.5 }}
             >

@@ -1,5 +1,6 @@
 import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
+import { DEFAULT_APP_STORE_URL } from "../../config/env";
 import {
   HERO_IMAGE_ALT,
   HERO_IMAGE_ASPECT_RATIO,
@@ -37,7 +38,11 @@ describe("LandingHero", () => {
       screen.getByRole("link", { name: "See the screenshot showcase" }),
     ).toHaveAttribute("href", "/#screenshots");
     expect(
-      screen.getByRole("button", { name: "App Store — coming soon" }),
+      screen.getByRole("link", { name: "Download on the App Store" }),
+    ).toHaveAttribute("href", DEFAULT_APP_STORE_URL);
+    expect(screen.queryByText(/App Store — coming soon/i)).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Google Play — coming soon" }),
     ).toBeDisabled();
     expect(
       screen

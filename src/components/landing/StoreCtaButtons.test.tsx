@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { StoreCtaButtons } from "./StoreCtaButtons";
 import { renderWithProviders } from "../../test/renderWithProviders";
+import { DEFAULT_APP_STORE_URL } from "../../config/env";
 import { STORE_CTA_GA_EVENT, STORE_CTA_META_EVENT } from "../../config/tracking";
 
 const publishedStoreUrls = {
@@ -16,7 +17,7 @@ describe("StoreCtaButtons", () => {
     delete window.fbq;
   });
 
-  it("renders disabled coming-soon buttons when store URLs are empty", () => {
+  it("links the App Store button to the live listing and keeps Google Play coming soon", () => {
     renderWithProviders(
       <StoreCtaButtons
         appStoreUrl={undefined}
@@ -26,8 +27,12 @@ describe("StoreCtaButtons", () => {
     );
 
     expect(
-      screen.getByRole("button", { name: "App Store — coming soon" }),
-    ).toBeDisabled();
+      screen.getByRole("link", { name: "Download on the App Store" }),
+    ).toHaveAttribute("href", DEFAULT_APP_STORE_URL);
+    expect(
+      screen.queryByRole("button", { name: "App Store — coming soon" }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText(/App Store — coming soon/i)).not.toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Google Play — coming soon" }),
     ).toBeDisabled();

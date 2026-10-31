@@ -13,6 +13,6 @@ Pocket Closet is a software product with a public marketing website. This site d
 
 ## Notes
 
-- App Store and Play Store buttons stay disabled until public store URLs are configured for a deployment
+- App Store buttons link to the live Pocket Closet listing. Play Store buttons stay disabled until a public store URL is configured for a deployment
 - Optional Google Analytics and Meta Pixel load only when public environment identifiers are set
 - Structured data describes a SoftwareApplication. It does not include ratings, reviews, or other unverified claims

@@ -11,7 +11,7 @@ Never commit secrets, tokens, or private keys.
 | Name | Required | Purpose | Example placeholder |
 | --- | --- | --- | --- |
 | `VITE_APP_NAME` | No (defaults to `Pocket Closet`) | Display name in site chrome | `Pocket Closet` |
-| `VITE_APP_STORE_URL` | No | Public App Store URL for landing download CTAs. Empty values render a disabled button. | `https://apps.apple.com/app/id000000000` |
+| `VITE_APP_STORE_URL` | No (defaults to the live App Store listing) | Public App Store URL for landing download CTAs. Empty or unset values use `https://apps.apple.com/gb/app/my-pocket-closet/id6809181010`. A Netlify value overrides this default and must be updated to the live URL if the key is set. | `https://apps.apple.com/gb/app/my-pocket-closet/id6809181010` |
 | `VITE_PLAY_STORE_URL` | No | Public Play Store URL for landing download CTAs. Empty values render a disabled button. | `https://play.google.com/store/apps/details?id=com.example.wardrobe` |
 | `VITE_PUBLIC_SITE_URL` | No | Public origin for canonical, Open Graph, and Twitter URLs (no trailing slash). When unset, the current origin is used in the browser. | `https://example.com` |
 | `VITE_API_BASE_URL` | No | Public backend API origin (no trailing slash) for public routes (`GET /public/shares/{token}`, `POST /support/contact`, `GET /billing/plans`) and signed-in app calls (including `GET /me`). Empty values keep public pages rendering with a clear unavailable state. | `https://api.example.com` |
@@ -40,7 +40,7 @@ Enabled App Store and Google Play buttons (hero, download band, and share previe
 | Google Analytics 4 | `store_cta_click` | `gtag('event', ...)` | `store`: `appStore` or `playStore`; `placement`: `hero`, `download`, or `share` |
 | Meta Pixel | `StoreCtaClick` | `fbq('trackCustom', ...)` | `store`: `appStore` or `playStore`; `placement`: `hero`, `download`, or `share` |
 
-A vendor is called only when its env ID is a valid public identifier **and** that vendor’s function (`gtag` or `fbq`) is present. Empty, blank, or malformed IDs are a no-op. Disabled “coming soon” buttons do not send events.
+A vendor is called only when its env ID is a valid public identifier **and** that vendor’s function (`gtag` or `fbq`) is present. Empty, blank, or malformed IDs are a no-op. Disabled Google Play “coming soon” buttons do not send events. App Store buttons are live by default and do send events when a vendor ID is set.
 
 Legal pages always refer to **the operator** (no personal names). Set `VITE_LEGAL_CONTACT_EMAIL` in Netlify so store reviewers have a visible contact address.
 
