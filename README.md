@@ -2,7 +2,7 @@
 
 Public web app for the Pocket Closet product. React + TypeScript + Vite + Material UI, with lint, unit tests, GitHub Actions CI, and Netlify deploy config.
 
-The public landing page includes a hero, feature sections, a labeled screenshot showcase, and App Store / Play Store CTAs. Store URLs are env-driven and stay disabled until set.
+The public landing page includes a hero, feature sections, a labeled screenshot showcase, and App Store / Play Store CTAs. The App Store URL defaults to the live listing; Play Store CTAs stay disabled until `VITE_PLAY_STORE_URL` is set.
 
 Public share links use `/share/:token`. That page is read-only: it loads a title, optional image, and ITEM/OUTFIT type from `GET {VITE_API_BASE_URL}/public/shares/{token}` (no auth), then shows the same store CTAs. Missing, expired, or failed previews have clear empty states.
 
@@ -47,7 +47,7 @@ Use the same Firebase project as the mobile app so web and mobile share the same
 - Add the Netlify site domain and any custom domain to Authentication > Settings > Authorized domains
 - Set the `VITE_FIREBASE_*` env vars in Netlify
 
-Landing and share-preview CTAs read `VITE_APP_STORE_URL` and `VITE_PLAY_STORE_URL`. Leave them blank to render disabled “coming soon” buttons.
+Landing and share-preview CTAs read `VITE_APP_STORE_URL` and `VITE_PLAY_STORE_URL`. `VITE_APP_STORE_URL` defaults to `https://apps.apple.com/gb/app/my-pocket-closet/id6809181010` when unset or blank. A Netlify value overrides that default, so if the key is already set there it must be updated to the live URL. Leave `VITE_PLAY_STORE_URL` blank to keep the Google Play button disabled.
 
 Set `VITE_API_BASE_URL` to the public backend origin (for example `https://api.example.com`, no trailing slash) so `/share/:token` can fetch `GET /public/shares/{token}`, `/contact` can POST `/support/contact`, and `/pricing` can fetch `GET /billing/plans`. Leave it blank to show a clear unavailable state on those pages.
 

@@ -1,5 +1,6 @@
 import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
+import { DEFAULT_APP_STORE_URL } from "../config/env";
 import { HomePage } from "./HomePage";
 import { renderWithProviders } from "../test/renderWithProviders";
 
@@ -39,8 +40,17 @@ describe("HomePage", () => {
       screen.getByRole("tab", { name: "Add item screenshot" }),
     ).toBeInTheDocument();
 
+    const appStoreLinks = screen.getAllByRole("link", {
+      name: "Download on the App Store",
+    });
+    expect(appStoreLinks.length).toBeGreaterThan(0);
+    appStoreLinks.forEach((appStoreLink) => {
+      expect(appStoreLink).toHaveAttribute("href", DEFAULT_APP_STORE_URL);
+    });
+    expect(screen.queryByText(/App Store — coming soon/i)).not.toBeInTheDocument();
     expect(
-      screen.getAllByRole("button", { name: "App Store — coming soon" }).length,
+      screen.getAllByRole("button", { name: "Google Play — coming soon" })
+        .length,
     ).toBeGreaterThan(0);
   });
 });

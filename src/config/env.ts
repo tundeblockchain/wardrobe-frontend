@@ -7,9 +7,12 @@ export type FirebaseWebConfig = {
   appId: string;
 };
 
+export const DEFAULT_APP_STORE_URL =
+  "https://apps.apple.com/gb/app/my-pocket-closet/id6809181010";
+
 export type PublicAppEnv = {
   appName: string;
-  appStoreUrl: string | undefined;
+  appStoreUrl: string;
   playStoreUrl: string | undefined;
   publicSiteUrl: string | undefined;
   apiBaseUrl: string | undefined;
@@ -59,6 +62,17 @@ export const MISSING_FIREBASE_WEB_CONFIG_MESSAGE =
 
 const DEFAULT_APP_NAME = "Pocket Closet";
 
+export const resolveAppStoreUrl = (
+  appStoreUrl: string | undefined,
+): string => {
+  const trimmedValue = appStoreUrl?.trim();
+  if (!trimmedValue) {
+    return DEFAULT_APP_STORE_URL;
+  }
+
+  return trimmedValue;
+};
+
 const readOptionalEnv = (value: string | undefined): string | undefined => {
   if (!value) {
     return undefined;
@@ -100,7 +114,7 @@ export const getPublicAppEnv = (
 ): PublicAppEnv => {
   return {
     appName: readOptionalEnv(source.VITE_APP_NAME) ?? DEFAULT_APP_NAME,
-    appStoreUrl: readOptionalEnv(source.VITE_APP_STORE_URL),
+    appStoreUrl: resolveAppStoreUrl(source.VITE_APP_STORE_URL),
     playStoreUrl: readOptionalEnv(source.VITE_PLAY_STORE_URL),
     publicSiteUrl: readOptionalOrigin(source.VITE_PUBLIC_SITE_URL),
     apiBaseUrl: readOptionalOrigin(source.VITE_API_BASE_URL),

@@ -1,7 +1,7 @@
 import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import { getPublicAppEnv } from "../config/env";
+import { DEFAULT_APP_STORE_URL, getPublicAppEnv } from "../config/env";
 import { getSharePath } from "../routes/paths";
 import { renderWithProviders } from "../test/renderWithProviders";
 import { SharePreviewPage } from "./SharePreviewPage";
@@ -155,7 +155,11 @@ describe("SharePreviewPage", () => {
       screen.getByText(/preview service is temporarily unavailable/i),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: "App Store — coming soon" }),
+      screen.getByRole("link", { name: "Download on the App Store" }),
+    ).toHaveAttribute("href", DEFAULT_APP_STORE_URL);
+    expect(screen.queryByText(/App Store — coming soon/i)).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Google Play — coming soon" }),
     ).toBeDisabled();
   });
 });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getPublicAppEnv } from "../config/env";
+import { DEFAULT_APP_STORE_URL, getPublicAppEnv } from "../config/env";
 import { OG_IMAGE_PATH } from "./brandAssets";
 import {
   DEFAULT_LANDING_DESCRIPTION,
@@ -52,7 +52,7 @@ describe("getPageSeo", () => {
     expect(serialized).not.toContain("Offer");
   });
 
-  it("omits absolute URLs and store install links when those values are unset", () => {
+  it("omits site origin URLs when unset and still includes the default App Store install link", () => {
     const pageSeo = getPageSeo({
       pathname: "/",
       env: getPublicAppEnv({}),
@@ -61,9 +61,9 @@ describe("getPageSeo", () => {
 
     expect(pageSeo.canonicalUrl).toBeUndefined();
     expect(pageSeo.ogImageUrl).toBeUndefined();
-    expect(serialized).not.toContain("installUrl");
+    expect(serialized).toContain("installUrl");
+    expect(serialized).toContain(DEFAULT_APP_STORE_URL);
     expect(serialized).not.toContain("example.com");
-    expect(serialized).not.toContain("apps.apple.com");
     expect(serialized).toContain("SoftwareApplication");
   });
 

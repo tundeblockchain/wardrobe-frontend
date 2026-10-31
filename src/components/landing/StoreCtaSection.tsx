@@ -57,8 +57,8 @@ export const StoreCtaSection = ({
               textAlign: { xs: "left", sm: "center" },
             }}
           >
-            Download on the App Store or Google Play. Buttons stay disabled until
-            store URLs are set in the environment.
+            Download on the App Store. Google Play stays disabled until a store
+            URL is set in the environment.
           </Typography>
           <Box
             sx={{
