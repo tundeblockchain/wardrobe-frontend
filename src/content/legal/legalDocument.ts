@@ -1,8 +1,16 @@
+export type LegalSectionLink = {
+  href: string;
+  label: string;
+  ariaLabel: string;
+};
+
 export type LegalSection = {
   id: string;
   title: string;
   paragraphs: string[];
   bullets?: string[];
+  linkIntro?: string;
+  links?: LegalSectionLink[];
 };
 
 export type LegalDocumentContent = {
@@ -25,8 +33,8 @@ export type LegalContactCopy = {
   contactUrl: string | undefined;
 };
 
-export const LEGAL_LAST_UPDATED = "18 September 2026";
-export const LEGAL_LAST_UPDATED_ISO = "2026-09-18";
+export const LEGAL_LAST_UPDATED = "4 November 2026";
+export const LEGAL_LAST_UPDATED_ISO = "2026-11-04";
 
 export const getLegalContactCopy = ({
   appName,

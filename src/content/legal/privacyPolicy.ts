@@ -36,6 +36,7 @@ export const getPrivacyPolicyContent = (
           "Try-on images and related previews you choose to generate",
           "Support messages you send to the operator",
           "Technical information such as app version, device type, language, diagnostic or crash logs, and approximate region derived from IP address",
+          "Advertising identifiers and related attribution data when mobile advertising measurement is used, as described in Mobile advertising and attribution",
           "Website usage data when analytics or advertising pixels are enabled for a deployment of this marketing site (those tools are optional, configured through public environment identifiers, and are not required to use the core wardrobe features)",
         ],
       },
@@ -50,6 +51,7 @@ export const getPrivacyPolicyContent = (
           "Create and secure accounts, and prevent abuse or fraud",
           "Respond to support, privacy, and legal requests",
           "Understand aggregate product usage so the service can be improved",
+          "Measure advertising campaign performance, as described in Mobile advertising and attribution",
           "Comply with law and enforce these terms and this policy",
         ],
       },
@@ -70,9 +72,60 @@ export const getPrivacyPolicyContent = (
         ],
         bullets: [
           "Service providers and subprocessors that host infrastructure, deliver email, analyze crashes, or run try-on processing, under contracts that limit their use of the data",
+          "Advertising measurement partners TikTok (TikTok Business SDK) and Meta Platforms (Facebook SDK), which receive the limited attribution data described in Mobile advertising and attribution",
           "Store platforms (such as Apple App Store and Google Play) when you install, purchase, or review the app",
           "Authorities or other parties when the operator believes disclosure is required by law, to protect safety, or to defend legal rights",
           "A successor operator if the product is transferred, provided the receiving party continues to protect the information in a manner consistent with this policy",
+        ],
+      },
+      {
+        id: "mobile-advertising",
+        title: "Mobile advertising and attribution",
+        paragraphs: [
+          `The ${appName} iOS and Android apps may include the TikTok Business SDK and the Meta Platforms Facebook SDK so the operator can measure advertising campaign performance. Those SDKs are used side by side. The operator does not sell personal information.`,
+          "The third parties that may receive this data are TikTok (TikTok Business SDK) and Meta Platforms (Facebook SDK).",
+          "Data that may be shared with those partners includes:",
+        ],
+        bullets: [
+          "App install, registration, and subscription or start-trial events",
+          "Device and advertising identifiers. On iOS, the Identifier for Advertisers (IDFA) is shared only if you grant permission",
+          "App version and coarse device information such as device type and operating system",
+        ],
+        linkIntro:
+          "Those companies process the data they receive under their own privacy policies:",
+        links: [
+          {
+            href: "https://www.tiktok.com/legal/page/us/privacy-policy/en",
+            label: "TikTok Privacy Policy",
+            ariaLabel: "TikTok Privacy Policy",
+          },
+          {
+            href: "https://www.facebook.com/privacy/policy/",
+            label: "Meta Privacy Policy",
+            ariaLabel: "Meta Privacy Policy",
+          },
+        ],
+      },
+      {
+        id: "app-tracking-transparency",
+        title: "App Tracking Transparency",
+        paragraphs: [
+          "On iOS, the app uses Apple’s App Tracking Transparency framework. A single permission prompt is shown. No tracking events are sent to TikTok or Meta before you answer that prompt.",
+          "The Identifier for Advertisers (IDFA) is shared only if you allow tracking. You can change this later in iOS Settings > Privacy & Security > Tracking.",
+        ],
+      },
+      {
+        id: "skadnetwork",
+        title: "SKAdNetwork",
+        paragraphs: [
+          "Where tracking is not allowed, the apps use Apple’s SKAdNetwork for privacy-preserving attribution so campaign performance can still be measured without sharing the IDFA.",
+        ],
+      },
+      {
+        id: "android-advertising-id",
+        title: "Android advertising identifier",
+        paragraphs: [
+          "On Android, the apps may use the Google advertising ID. You can reset that identifier or opt out of ads personalization in Android settings, typically under Settings > Privacy > Ads or Settings > Google > Ads, depending on the device and Android version.",
         ],
       },
       {
@@ -106,6 +159,7 @@ export const getPrivacyPolicyContent = (
           "Depending on your region (including the EEA, UK, and some US states), you may have the right to request access, correction, deletion, portability, restriction, or objection, and to withdraw consent where processing is based on consent.",
           "You may also request deletion of an account and wardrobe content as described in the Terms of Service. To make a request, contact the operator using the details on this page. The operator may need to verify the request before acting on it.",
           "You may lodge a complaint with a supervisory authority. The operator encourages contacting the operator first so the request can be addressed directly.",
+          "On iOS and Android you can also control advertising identifiers as described in App Tracking Transparency and Android advertising identifier.",
         ],
       },
       {
@@ -120,7 +174,7 @@ export const getPrivacyPolicyContent = (
         title: "Cookies and similar technologies",
         paragraphs: [
           "The marketing website may use strictly necessary cookies to operate the site. Optional analytics or advertising pixels (for example Google Analytics or Meta Pixel) load only when the operator has set public environment identifiers for those tools. They are not required to use the core wardrobe features. Some tracking can also be controlled through browser, device, and store settings.",
-          "Mobile apps may use on-device identifiers and diagnostic software development kits to keep the product reliable. You can control some tracking through device and store settings.",
+          "Mobile apps may use on-device identifiers, diagnostic software development kits, and advertising software development kits, including the TikTok Business SDK and the Facebook SDK, as described in Mobile advertising and attribution. You can control some tracking through device and store settings.",
         ],
       },
       {

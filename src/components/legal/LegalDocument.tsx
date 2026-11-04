@@ -156,6 +156,27 @@ export const LegalDocument = ({
                       ))}
                     </List>
                   ) : null}
+                  {section.linkIntro ? (
+                    <Typography variant="body1" color="text.secondary">
+                      {section.linkIntro}
+                    </Typography>
+                  ) : null}
+                  {section.links
+                    ? section.links.map((link) => (
+                        <Link
+                          key={link.href}
+                          href={link.href}
+                          color="secondary"
+                          underline="hover"
+                          tabIndex={0}
+                          aria-label={link.ariaLabel}
+                          rel="noopener noreferrer"
+                          target="_blank"
+                        >
+                          {link.label}
+                        </Link>
+                      ))
+                    : null}
                 </Stack>
               </Box>
             ))}

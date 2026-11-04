@@ -67,4 +67,53 @@ describe("LegalDocument", () => {
       screen.getByRole("link", { name: "Operator contact page" }),
     ).toHaveAttribute("href", "https://example.com/contact");
   });
+
+  it("renders optional section links for third-party privacy policies", () => {
+    renderWithProviders(
+      <LegalDocument
+        appName="Pocket Closet"
+        content={{
+          title: "Privacy Policy",
+          lastUpdated: "4 November 2026",
+          intro: "Test intro.",
+          sections: [
+            {
+              id: "mobile-advertising",
+              title: "Mobile advertising and attribution",
+              paragraphs: ["Attribution partners receive limited campaign data."],
+              links: [
+                {
+                  href: "https://www.tiktok.com/legal/page/us/privacy-policy/en",
+                  label: "TikTok Privacy Policy",
+                  ariaLabel: "TikTok Privacy Policy",
+                },
+                {
+                  href: "https://www.facebook.com/privacy/policy/",
+                  label: "Meta Privacy Policy",
+                  ariaLabel: "Meta Privacy Policy",
+                },
+              ],
+            },
+          ],
+        }}
+        contactEmail={undefined}
+        contactUrl={undefined}
+        relatedLink={{
+          to: appPaths.privacy,
+          label: "Privacy Policy",
+          ariaLabel: "Privacy Policy",
+        }}
+      />,
+    );
+
+    expect(
+      screen.getByRole("link", { name: "TikTok Privacy Policy" }),
+    ).toHaveAttribute(
+      "href",
+      "https://www.tiktok.com/legal/page/us/privacy-policy/en",
+    );
+    expect(
+      screen.getByRole("link", { name: "Meta Privacy Policy" }),
+    ).toHaveAttribute("href", "https://www.facebook.com/privacy/policy/");
+  });
 });
