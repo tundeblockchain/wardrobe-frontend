@@ -39,6 +39,10 @@ describe("legal content", () => {
         "Information collected",
         "Photos, try-on, and automated processing",
         "How information is shared",
+        "Mobile advertising and attribution",
+        "App Tracking Transparency",
+        "SKAdNetwork",
+        "Android advertising identifier",
         "Children’s privacy",
         "Your choices and rights",
         "Cookies and similar technologies",
@@ -51,6 +55,33 @@ describe("legal content", () => {
     const cookiesCopy = cookies?.paragraphs.join(" ") ?? "";
     expect(cookiesCopy).toMatch(/load only when the operator has set public environment identifiers/);
     expect(cookiesCopy).not.toMatch(/not wired in this MVP/);
+
+    const mobileAdvertising = content.sections.find(
+      (section) => section.id === "mobile-advertising",
+    );
+    const mobileAdvertisingCopy = [
+      ...(mobileAdvertising?.paragraphs ?? []),
+      ...(mobileAdvertising?.bullets ?? []),
+    ].join(" ");
+    expect(mobileAdvertisingCopy).toMatch(/TikTok Business SDK/);
+    expect(mobileAdvertisingCopy).toMatch(/Meta Platforms/);
+    expect(mobileAdvertisingCopy).toMatch(/does not sell personal information/);
+    expect(mobileAdvertising?.links?.map((link) => link.label)).toEqual([
+      "TikTok Privacy Policy",
+      "Meta Privacy Policy",
+    ]);
+
+    const att = content.sections.find(
+      (section) => section.id === "app-tracking-transparency",
+    );
+    expect(att?.paragraphs.join(" ")).toMatch(/App Tracking Transparency/);
+    expect(att?.paragraphs.join(" ")).toMatch(
+      /No tracking events are sent to TikTok or Meta before you answer/,
+    );
+
+    const skan = content.sections.find((section) => section.id === "skadnetwork");
+    expect(skan?.paragraphs.join(" ")).toMatch(/SKAdNetwork/);
+    expect(skan?.title).toBe("SKAdNetwork");
   });
 
   it("describes operator contact without requiring a configured email", () => {
