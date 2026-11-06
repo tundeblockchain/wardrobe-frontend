@@ -15,19 +15,23 @@ import {
   Typography,
 } from "@mui/material";
 import { getClothingCategoryLabel } from "../../api/resourceDisplay";
-import { CLOTHING_CATEGORIES } from "../../api/resourceTypes";
+import { CLOTHING_CATEGORIES, NAME_MAX_LENGTH } from "../../api/resourceTypes";
 import { isApiError } from "../../api/httpClient";
-import type { ResourceApi } from "../../api/resourceApi";
-import { uploadWardrobeItemImage } from "../../api/uploadWardrobeItemImage";
+import { uploadWishImage } from "../../api/uploadWishImage";
 import { putFileToPresignedUrl } from "../../api/uploadToPresignedUrl";
 import { validateImageFile, type FieldErrors } from "../../api/catalogValidation";
 import {
   EMPTY_WISH_FORM_VALUES,
+  WISH_CURRENCIES,
+  WISH_LINK_MAX_LENGTH,
+  WISH_NOTES_MAX_LENGTH,
+  getWishImageUrl,
+  isUploadInvalidError,
   isWishlistLimitError,
   toCreateWishRequest,
+  toUpdateWishRequest,
   validateWishForm,
   valuesFromWish,
-  WISH_CURRENCIES,
   type WishFormField,
   type WishFormValues,
   type WishItem,
@@ -41,7 +45,6 @@ export type WishListFormDialogProps = {
   mode: "create" | "edit";
   wish?: WishItem;
   wishlistApi: WishlistApi;
-  resourceApi: Pick<ResourceApi, "createUpload">;
   putFile?: typeof putFileToPresignedUrl;
   onClose: () => void;
   onSaved: (wish: WishItem) => void;
@@ -52,7 +55,6 @@ export const WishListFormDialog = ({
   mode,
   wish,
   wishlistApi,
-  resourceApi,
   putFile = putFileToPresignedUrl,
   onClose,
   onSaved,
@@ -64,7 +66,7 @@ export const WishListFormDialog = ({
   const [errors, setErrors] = useState<FieldErrors<WishFormField>>({});
   const [selectedFile, setSelectedFile] = useState<File | undefined>();
   const [previewUrl, setPreviewUrl] = useState<string | undefined>(
-    wish?.imageUrl,
+    wish ? getWishImageUrl(wish) : undefined,
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -102,7 +104,7 @@ export const WishListFormDialog = ({
     setSelectedFile(file);
     setFormError(undefined);
     if (!file) {
-      setPreviewUrl(wish?.imageUrl);
+      setPreviewUrl(wish ? getWishImageUrl(wish) : undefined);
       return;
     }
 
@@ -128,27 +130,29 @@ export const WishListFormDialog = ({
       let imageKey: string | undefined;
       if (selectedFile) {
         setIsUploading(true);
-        imageKey = await uploadWardrobeItemImage({
-          resourceApi,
+        imageKey = await uploadWishImage({
+          wishlistApi,
           file: selectedFile,
           putFile,
         });
         setIsUploading(false);
       }
 
-      const body = toCreateWishRequest(values, imageKey);
       const saved =
         mode === "edit" && wish
-          ? await wishlistApi.updateWish(wish.wishId, body)
-          : await wishlistApi.createWish(body);
+          ? await wishlistApi.updateWish(
+              wish.wishId,
+              toUpdateWishRequest(values, imageKey),
+            )
+          : await wishlistApi.createWish(toCreateWishRequest(values, imageKey));
       onSaved(saved);
     } catch (error) {
       if (isWishlistLimitError(error)) {
-        setCapMessage(copy.capMessage);
+        setCapMessage(error.message || copy.capMessage);
         return;
       }
 
-      if (isApiError(error) && error.code === "UPLOAD_FAILED") {
+      if (isUploadInvalidError(error) || (isApiError(error) && error.code === "UPLOAD_FAILED")) {
         setFormError(
           `${copy.uploadErrorTitle}. ${copy.uploadErrorDescription}`,
         );
@@ -245,7 +249,10 @@ export const WishListFormDialog = ({
             required
             autoComplete="off"
             slotProps={{
-              htmlInput: { "aria-label": copy.nameLabel },
+              htmlInput: {
+                "aria-label": copy.nameLabel,
+                maxLength: NAME_MAX_LENGTH,
+              },
             }}
           />
           <TextField
@@ -283,15 +290,18 @@ export const WishListFormDialog = ({
           />
           <TextField
             id="wish-link"
-            name="linkUrl"
+            name="link"
             label={copy.linkLabel}
-            value={values.linkUrl}
-            onChange={handleFieldChange("linkUrl")}
-            error={Boolean(errors.linkUrl)}
-            helperText={errors.linkUrl}
+            value={values.link}
+            onChange={handleFieldChange("link")}
+            error={Boolean(errors.link)}
+            helperText={errors.link}
             autoComplete="url"
             slotProps={{
-              htmlInput: { "aria-label": copy.linkLabel },
+              htmlInput: {
+                "aria-label": copy.linkLabel,
+                maxLength: WISH_LINK_MAX_LENGTH,
+              },
             }}
           />
           <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
@@ -347,7 +357,10 @@ export const WishListFormDialog = ({
             minRows={3}
             autoComplete="off"
             slotProps={{
-              htmlInput: { "aria-label": copy.notesLabel },
+              htmlInput: {
+                "aria-label": copy.notesLabel,
+                maxLength: WISH_NOTES_MAX_LENGTH,
+              },
             }}
           />
         </Stack>

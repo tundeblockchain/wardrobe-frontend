@@ -7,10 +7,12 @@ import {
 import {
   httpsWish,
   httpLinkWish,
+  incompleteWish,
   installWishlistApiMocks,
   populatedWishes,
   unsafeLinkWish,
   weekendWardrobe,
+  WISHLIST_LIMIT_MESSAGE,
   workWardrobe,
   type WishlistMockOptions,
 } from "./wishlistApiMock";
@@ -266,5 +268,66 @@ test.describe("Wish list row", () => {
       page.getByRole("link", { name: "Open product link in a new tab" }),
     ).toHaveCount(0);
     await expect(page.locator(`a[href="${HTTP_HREF}"]`)).toHaveCount(0);
+  });
+
+  test("prompts for a missing category and photo before acquire", async ({
+    page,
+  }) => {
+    await openHome(page, {
+      wishes: [incompleteWish],
+      wardrobes: [weekendWardrobe],
+    });
+
+    await page.getByRole("button", { name: "Linen shirt" }).click();
+    await page
+      .getByRole("button", { name: "Mark this wish as owned" })
+      .click();
+
+    await expect(
+      page.getByRole("heading", { name: "Add a few details first" }),
+    ).toBeVisible();
+    await expect(
+      page.getByText(
+        "Mark as owned needs a category and a photo. Save those, then try again.",
+      ),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Choose a wardrobe" }),
+    ).toHaveCount(0);
+
+    await page
+      .getByRole("button", { name: "Add the missing category or photo" })
+      .click();
+    await expect(
+      page.getByRole("heading", { name: "Edit wish" }),
+    ).toBeVisible();
+  });
+
+  test("shows the WISHLIST_LIMIT message at 500 wishes", async ({ page }) => {
+    await openHome(page, {
+      wishes: [],
+      rejectCreateAtLimit: true,
+    });
+
+    await page.getByRole("button", { name: "Add to wish list" }).click();
+    await page.getByRole("textbox", { name: "Name" }).fill("One more");
+    await page.getByRole("button", { name: "Save wish" }).click();
+
+    await expect(page.getByText(WISHLIST_LIMIT_MESSAGE)).toBeVisible();
+    await expectNoPaywall(page);
+  });
+
+  test("loads additional wishes from nextCursor", async ({ page }) => {
+    await openHome(page, {
+      wishes: [httpsWish, incompleteWish],
+      pagedWishlist: true,
+    });
+
+    await expect(
+      page.getByRole("button", { name: "Black loafers" }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Linen shirt" }),
+    ).toBeVisible();
   });
 });

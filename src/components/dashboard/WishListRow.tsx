@@ -16,7 +16,10 @@ import { putFileToPresignedUrl } from "../../api/uploadToPresignedUrl";
 import { useResourceApi } from "../../api/useResourceApi";
 import { useWishlistApi } from "../../api/useWishlistApi";
 import {
+  getMissingAcquireDetails,
+  isWishReadyToAcquire,
   loadAllWishes,
+  type MissingAcquireDetails,
   type WishItem,
   type WishlistApi,
 } from "../../api/wishlistApi";
@@ -34,6 +37,7 @@ import {
 import { ResourceEmptyState } from "./ResourceEmptyState";
 import { ResourceErrorState } from "./ResourceErrorState";
 import { WishListAcquireDialog } from "./WishListAcquireDialog";
+import { WishListAcquireReadyDialog } from "./WishListAcquireReadyDialog";
 import { WishListAddCard } from "./WishListAddCard";
 import { WishListCard } from "./WishListCard";
 import { WishListDetailDialog } from "./WishListDetailDialog";
@@ -82,6 +86,12 @@ export const WishListRow = ({
     Entitlement | undefined
   >();
   const [showItemCap, setShowItemCap] = useState(false);
+  const [acquireReadyWish, setAcquireReadyWish] = useState<
+    WishItem | undefined
+  >();
+  const [acquireReadyMissing, setAcquireReadyMissing] = useState<
+    MissingAcquireDetails
+  >({ category: false, image: false });
 
   const handleOpenAdd = () => {
     setFormState({ open: true, mode: "create" });
@@ -194,6 +204,13 @@ export const WishListRow = ({
 
   const handleAcquireWish = async (wish: WishItem) => {
     setAcquireError(undefined);
+    if (!isWishReadyToAcquire(wish)) {
+      setSelectedWish(undefined);
+      setAcquireReadyMissing(getMissingAcquireDetails(wish));
+      setAcquireReadyWish(wish);
+      return;
+    }
+
     try {
       const { wardrobes } = await resourceApi.listWardrobes();
       if (wardrobes.length === 1 && wardrobes[0]) {
@@ -235,6 +252,20 @@ export const WishListRow = ({
 
   const handleCloseItemCap = () => {
     setShowItemCap(false);
+  };
+
+  const handleCloseAcquireReady = () => {
+    setAcquireReadyWish(undefined);
+  };
+
+  const handleEditAcquireReady = () => {
+    if (!acquireReadyWish) {
+      return;
+    }
+
+    const wish = acquireReadyWish;
+    setAcquireReadyWish(undefined);
+    setFormState({ open: true, mode: "edit", wish });
   };
 
   const addButton = (
@@ -314,7 +345,6 @@ export const WishListRow = ({
           mode={formState.mode}
           wish={formState.mode === "edit" ? formState.wish : undefined}
           wishlistApi={wishlistApi}
-          resourceApi={resourceApi}
           putFile={putFile}
           onClose={handleCloseForm}
           onSaved={handleSaved}
@@ -380,6 +410,14 @@ export const WishListRow = ({
             </Button>
           </DialogActions>
         </Dialog>
+      ) : null}
+      {acquireReadyWish ? (
+        <WishListAcquireReadyDialog
+          open
+          missing={acquireReadyMissing}
+          onClose={handleCloseAcquireReady}
+          onEdit={handleEditAcquireReady}
+        />
       ) : null}
       {acquireWish ? (
         <WishListAcquireDialog

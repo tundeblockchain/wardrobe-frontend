@@ -59,8 +59,8 @@ export const WishListDetailDialog = ({
 }: WishListDetailDialogProps) => {
   const copy = dashboardCopy.wishList;
   const titleId = `wish-detail-${wish.wishId}-title`;
-  const safeLink = getSafeWishLinkUrl(wish.linkUrl);
-  const priceLabel = formatWishPrice(wish.price, wish.currency);
+  const safeLink = getSafeWishLinkUrl(wish.link);
+  const priceLabel = formatWishPrice(wish.price);
   const categoryLabel = wish.category
     ? getClothingCategoryLabel(wish.category)
     : undefined;

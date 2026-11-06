@@ -10,6 +10,9 @@ describe("dashboard plan copy", () => {
     expect(copy).not.toMatch(/\bAI\b/);
     expect(dashboardCopy.wishList.title).toBe("Wish list");
     expect(dashboardCopy.wishList.addLabel).toBe("Add to wish list");
+    expect(dashboardCopy.wishList.capMessage).toBe(
+      "Wish list can hold 500 items.",
+    );
   });
 
   it("says unlimited for Basic and Premium on the suggested outfits gate", () => {

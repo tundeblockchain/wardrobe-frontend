@@ -153,7 +153,7 @@ export const dashboardCopy = {
     uploadErrorDescription:
       "The photo did not upload. Check the file and try again.",
     saveErrorFallback: "Couldn't save this wish. Try again in a moment.",
-    capMessage: "Wish list can hold 500 pieces. Remove one to add another.",
+    capMessage: "Wish list can hold 500 items.",
     linkInvalid: "Enter an https:// link.",
     openLinkLabel: "Open link",
     openLinkAriaLabel: "Open product link in a new tab",
@@ -171,6 +171,15 @@ export const dashboardCopy = {
       "Create a wardrobe so this piece can move into your closet.",
     acquireErrorFallback:
       "Couldn't mark this wish as owned. Try again in a moment.",
+    acquireNeedsDetailsTitle: "Add a few details first",
+    acquireNeedsBothDescription:
+      "Mark as owned needs a category and a photo. Save those, then try again.",
+    acquireNeedsCategoryDescription:
+      "Mark as owned needs a category. Save that, then try again.",
+    acquireNeedsPhotoDescription:
+      "Mark as owned needs a photo. Save that, then try again.",
+    acquireNeedsDetailsAction: "Add details",
+    acquireNeedsDetailsAriaLabel: "Add the missing category or photo",
     deleteLabel: "Delete",
     deleteAriaLabel: "Delete this wish",
     deleteConfirmTitle: "Delete wish?",

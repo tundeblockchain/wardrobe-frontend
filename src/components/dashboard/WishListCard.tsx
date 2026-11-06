@@ -20,7 +20,7 @@ export type WishListCardProps = {
 export const WishListCard = ({ wish, onOpen }: WishListCardProps) => {
   const copy = dashboardCopy.wishList;
   const titleId = `wish-${wish.wishId}-title`;
-  const priceLabel = formatWishPrice(wish.price, wish.currency);
+  const priceLabel = formatWishPrice(wish.price);
 
   const handleClick = () => {
     onOpen(wish);

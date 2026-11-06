@@ -6,6 +6,10 @@ const baseURL = `http://127.0.0.1:${port}`;
 
 export default defineConfig({
   testDir: "e2e",
+  testIgnore:
+    process.env.CAPTURE_SCREENSHOTS === "1"
+      ? []
+      : ["**/capture-screenshots.spec.ts"],
   fullyParallel: true,
   forbidOnly: isCi,
   retries: isCi ? 2 : 0,

@@ -14,8 +14,11 @@ import {
   createErrorWishlistApi,
   createMockWishlistApi,
   createPendingWishlistApi,
+  mockIncompleteWish,
   mockWishes,
+  WISHLIST_LIMIT_MESSAGE,
   wishlistLimitError,
+  type WishItem,
   type WishlistApi,
 } from "../../api/wishlistApi";
 import { renderWithProviders } from "../../test/renderWithProviders";
@@ -149,11 +152,7 @@ describe("WishListRow", () => {
     await user.type(screen.getByRole("textbox", { name: "Name" }), "One more");
     await user.click(screen.getByRole("button", { name: "Save wish" }));
 
-    expect(
-      await screen.findByText(
-        "Wish list can hold 500 pieces. Remove one to add another.",
-      ),
-    ).toBeInTheDocument();
+    expect(await screen.findByText(WISHLIST_LIMIT_MESSAGE)).toBeInTheDocument();
     expect(screen.queryByText("Clothing item limit reached")).not.toBeInTheDocument();
     expect(
       screen.queryByRole("button", {
@@ -210,9 +209,13 @@ describe("WishListRow", () => {
   it("acquires into the only wardrobe without a picker", async () => {
     const user = userEvent.setup();
     const acquireWish = vi.fn().mockResolvedValue({
-      wishId: "wish_loafers01",
+      itemId: "item_from_wish",
       wardrobeId: "wd_weekend01",
-      item: { itemId: "item_from_wish", wardrobeId: "wd_weekend01" },
+      name: "Black loafers",
+      category: "SHOES",
+      processingStatus: "READY",
+      createdAt: "2026-10-13T12:00:00.000Z",
+      updatedAt: "2026-10-13T12:00:00.000Z",
     });
     const listWishes = vi
       .fn()
@@ -253,9 +256,13 @@ describe("WishListRow", () => {
   it("shows a wardrobe picker when the user has more than one wardrobe", async () => {
     const user = userEvent.setup();
     const acquireWish = vi.fn().mockResolvedValue({
-      wishId: "wish_loafers01",
+      itemId: "item_from_wish",
       wardrobeId: "wd_work02",
-      item: { itemId: "item_from_wish", wardrobeId: "wd_work02" },
+      name: "Black loafers",
+      category: "SHOES",
+      processingStatus: "READY",
+      createdAt: "2026-10-13T12:00:00.000Z",
+      updatedAt: "2026-10-13T12:00:00.000Z",
     });
     renderRow(createMockWishlistApi({ acquireWish }));
 
@@ -342,6 +349,82 @@ describe("WishListRow", () => {
     await waitFor(() => {
       expect(deleteWish).toHaveBeenCalledWith("wish_scarf01");
     });
+  });
+
+  it("prompts for a missing category and photo before acquire", async () => {
+    const user = userEvent.setup();
+    const acquireWish = vi.fn();
+    renderRow(
+      createMockWishlistApi({ acquireWish }, { wishes: [mockIncompleteWish] }),
+      createMockResourceApi({}, { wardrobes: [mockWardrobes[0]!] }),
+    );
+
+    await user.click(await screen.findByRole("button", { name: "Linen shirt" }));
+    await user.click(
+      screen.getByRole("button", { name: "Mark this wish as owned" }),
+    );
+
+    expect(
+      await screen.findByRole("heading", { name: "Add a few details first" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Mark as owned needs a category and a photo. Save those, then try again.",
+      ),
+    ).toBeInTheDocument();
+    expect(acquireWish).not.toHaveBeenCalled();
+
+    await user.click(
+      screen.getByRole("button", { name: "Add the missing category or photo" }),
+    );
+    expect(
+      await screen.findByRole("heading", { name: "Edit wish" }),
+    ).toBeInTheDocument();
+  });
+
+  it("prompts for a missing photo before acquire", async () => {
+    const user = userEvent.setup();
+    const acquireWish = vi.fn();
+    renderRow(
+      createMockWishlistApi({ acquireWish }),
+      createMockResourceApi({}, { wardrobes: [mockWardrobes[0]!] }),
+    );
+
+    await user.click(await screen.findByRole("button", { name: "Forest scarf" }));
+    await user.click(
+      screen.getByRole("button", { name: "Mark this wish as owned" }),
+    );
+
+    expect(
+      await screen.findByRole("heading", { name: "Add a few details first" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Mark as owned needs a photo. Save that, then try again.",
+      ),
+    ).toBeInTheDocument();
+    expect(acquireWish).not.toHaveBeenCalled();
+  });
+
+  it("loads additional pages from nextCursor", async () => {
+    const pageOne: WishItem = mockWishes[0]!;
+    const pageTwo: WishItem = mockWishes[1]!;
+    const listWishes = vi
+      .fn()
+      .mockResolvedValueOnce({
+        wishes: [pageOne],
+        nextCursor: pageOne.wishId,
+      })
+      .mockResolvedValueOnce({
+        wishes: [pageTwo],
+      });
+    renderRow(createMockWishlistApi({ listWishes }));
+
+    expect(
+      await screen.findByRole("button", { name: "Black loafers" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Tan trench" })).toBeInTheDocument();
+    expect(listWishes).toHaveBeenCalledTimes(2);
   });
 
   it("is keyboard accessible on cards", async () => {
