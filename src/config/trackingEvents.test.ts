@@ -3,6 +3,7 @@ import { getPublicAppEnv } from "./env";
 import {
   CHECKOUT_SUCCESS_STORAGE_KEY,
   MISSING_CHECKOUT_SESSION_KEY,
+  STRIPE_CHECKOUT_SESSION_ID_MAX_LENGTH,
   isStripeCheckoutSessionId,
   isTrackingDebugEnabled,
   readCheckoutSessionId,
@@ -449,13 +450,28 @@ describe("checkout success Subscribe", () => {
     window.sessionStorage.clear();
   });
 
-  it("reads cs_ session ids and ignores other query values", () => {
+  it("accepts test, live, and plain Stripe session ids and rejects junk", () => {
     expect(isStripeCheckoutSessionId("cs_test_abc")).toBe(true);
+    expect(isStripeCheckoutSessionId("cs_live_abc123")).toBe(true);
+    expect(isStripeCheckoutSessionId("cs_a1b2c3")).toBe(true);
     expect(isStripeCheckoutSessionId("cs_live123")).toBe(true);
     expect(isStripeCheckoutSessionId("not-a-session")).toBe(false);
+    expect(isStripeCheckoutSessionId("cs_")).toBe(false);
+    expect(isStripeCheckoutSessionId("cs_test_")).toBe(false);
+    expect(isStripeCheckoutSessionId("cs_live_")).toBe(false);
+    expect(isStripeCheckoutSessionId("cs_test_abc-def")).toBe(false);
+    expect(isStripeCheckoutSessionId("cs_live_abc_def")).toBe(false);
+    expect(isStripeCheckoutSessionId("session_cs_test_abc")).toBe(false);
+    expect(
+      isStripeCheckoutSessionId(`cs_live_${"a".repeat(STRIPE_CHECKOUT_SESSION_ID_MAX_LENGTH)}`),
+    ).toBe(false);
     expect(readCheckoutSessionId("?session_id=cs_test_abc&foo=1")).toBe(
       "cs_test_abc",
     );
+    expect(readCheckoutSessionId("?session_id=cs_live_abc123")).toBe(
+      "cs_live_abc123",
+    );
+    expect(readCheckoutSessionId("?session_id=cs_a1b2c3")).toBe("cs_a1b2c3");
     expect(readCheckoutSessionId("?session_id=nope")).toBeUndefined();
   });
 
@@ -494,6 +510,28 @@ describe("checkout success Subscribe", () => {
     );
     expect((window.fbq as ReturnType<typeof vi.fn>).mock.calls[0]?.[2]).not.toHaveProperty(
       "session_id",
+    );
+  });
+
+  it("uses stripe_<sessionId> for live checkout session ids", () => {
+    installVendors();
+
+    const result = trackCheckoutSuccess(
+      { sessionId: "cs_live_abc123", tier: "basic" },
+      { ids: ALL_IDS },
+    );
+
+    expect(result.eventId).toBe("stripe_cs_live_abc123");
+    expect(window.fbq).toHaveBeenCalledWith(
+      "track",
+      "Subscribe",
+      { tier: "basic" },
+      { eventID: "stripe_cs_live_abc123" },
+    );
+    expect(window.ttq?.track).toHaveBeenCalledWith(
+      "Subscribe",
+      { tier: "basic" },
+      { event_id: "stripe_cs_live_abc123" },
     );
   });
 

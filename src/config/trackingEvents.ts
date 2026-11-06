@@ -21,6 +21,9 @@ export const CHECKOUT_SUCCESS_STORAGE_KEY =
   "wardrobe.tracking.checkoutSuccessIds";
 export const STRIPE_EVENT_ID_PREFIX = "stripe_";
 export const MISSING_CHECKOUT_SESSION_KEY = "missing-session-id";
+export const STRIPE_CHECKOUT_SESSION_ID_MAX_LENGTH = 255;
+const STRIPE_CHECKOUT_SESSION_ID_PATTERN =
+  /^cs_(?:test_|live_)?[A-Za-z0-9]+$/;
 
 const BLOCKED_PARAM_KEY_PATTERN =
   /email|(^|_)name$|user_id|\buid\b|item_id|wardrobe_id|outfit_id|wish_id|search_term|^query$|\burl\b|href|page_location|phone|address|session_id/i;
@@ -246,7 +249,15 @@ export const isStripeCheckoutSessionId = (
     return false;
   }
 
-  return /^cs_(test_)?[A-Za-z0-9]+$/.test(value.trim());
+  const trimmed = value.trim();
+  if (
+    trimmed.length === 0 ||
+    trimmed.length > STRIPE_CHECKOUT_SESSION_ID_MAX_LENGTH
+  ) {
+    return false;
+  }
+
+  return STRIPE_CHECKOUT_SESSION_ID_PATTERN.test(trimmed);
 };
 
 export const toStripeEventId = (sessionId: string): string => {
