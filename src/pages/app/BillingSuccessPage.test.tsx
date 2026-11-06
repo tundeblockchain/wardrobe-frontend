@@ -1,4 +1,4 @@
-import { act, fireEvent, screen } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { mockEntitlement, mockFreeAtLimitEntitlement } from "../../api/mockResourceApi";
 import * as trackingEvents from "../../config/trackingEvents";
@@ -190,9 +190,11 @@ describe("BillingSuccessPage", () => {
         name: "You are subscribed",
       }),
     ).toBeInTheDocument();
-    expect(trackSpy).toHaveBeenCalledWith({
-      sessionId: "cs_test_123",
-      tier: "premium",
+    await waitFor(() => {
+      expect(trackSpy).toHaveBeenCalledWith({
+        sessionId: "cs_test_123",
+        tier: "premium",
+      });
     });
   });
 
@@ -216,9 +218,11 @@ describe("BillingSuccessPage", () => {
         name: "You are subscribed",
       }),
     ).toBeInTheDocument();
-    expect(trackSpy).toHaveBeenCalledWith({
-      sessionId: "cs_test_123",
-      tier: "premium",
+    await waitFor(() => {
+      expect(trackSpy).toHaveBeenCalledWith({
+        sessionId: "cs_test_123",
+        tier: "premium",
+      });
     });
     expect(trackSpy).not.toHaveBeenCalledWith(
       expect.objectContaining({ isTrial: true }),

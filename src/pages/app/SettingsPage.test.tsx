@@ -609,7 +609,7 @@ describe("SettingsPage", () => {
       }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: pricedUpgradeAriaLabel }),
+      await screen.findByRole("button", { name: pricedUpgradeAriaLabel }),
     ).toHaveTextContent(pricedUpgradeLabel);
     expect(
       screen.getByRole("group", { name: "Billing interval" }),
