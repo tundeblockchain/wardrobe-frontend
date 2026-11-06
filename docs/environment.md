@@ -46,13 +46,14 @@ There is **no cookie consent banner** in this frontend. Pixels load as soon as t
 Event ids and identity:
 
 - Non-purchase events: generated `event_id` (`crypto.randomUUID()`). Meta 4th `fbq` argument `{ eventID }`; TikTok `{ event_id }`.
-- Subscribe / StartTrial: `event_id` = `stripe_<checkoutSessionId>` from `?session_id=` on the Stripe success URL. Same event names on both platforms (`Subscribe` / `StartTrial`). No generated fallback: if `session_id` is missing, the event still fires without an `event_id`. De-duplicate per session id in `sessionStorage`. Renewals are server-only; the web sends no renewal event. The raw session id is never sent in event params.
+- Subscribe: `event_id` = `stripe_<checkoutSessionId>` from `?session_id=` on the Stripe success URL. Meta `{ eventID }`, TikTok `{ event_id }`. No generated fallback: if `session_id` is missing, the event still fires without an `event_id`. De-duplicate per session id in `sessionStorage`. The raw session id is never sent in event params.
+- The website never sends StartTrial. Web Stripe checkout does not set a trial (`subscription_data` is metadata only), so the server always classes a web checkout as Subscribe. Trial-to-paid conversions and renewals are server-only.
 - Backend `success_url` is already `<origin>/app/billing/success?session_id={CHECKOUT_SESSION_ID}` (`wardrobe-backend` PR 92, `src/shared/billing-urls.ts`). That lands on `BillingSuccessPage`.
 - When signed in, `external_id` is the SHA-256 hex of the Firebase uid (Web Crypto). Never the raw uid, email, phone, or name. Meta: `fbq('init', id, { external_id })` (re-init after login). TikTok: `ttq.identify({ external_id })`.
 
 Page views send route templates such as `/app/wardrobes/:id`, never real IDs, emails, names, or search terms. Advanced matching is not used.
 
-Subscribe and StartTrial fire only after a successful return to `/app/billing/success` once `GET /me` shows `paidTier`, never on the checkout click. InitiateCheckout fires when checkout is created. StartTrial mirrors the server: a Stripe subscription that is `trialing` or has a future `trial_end` / `trialEnd` on `getMe` or `paidTier`. Otherwise Subscribe.
+Subscribe fires only after a successful return to `/app/billing/success` once `GET /me` shows `paidTier`, never on the checkout click. InitiateCheckout fires when checkout is created. The website does not guess trial status from the plan or entitlement. If web trials are added later, the trial flag must come from the backend (for example a `conversionEvent` field) so browser and server event names stay matched.
 
 ## Store CTA click events
 

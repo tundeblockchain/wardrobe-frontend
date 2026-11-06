@@ -234,6 +234,7 @@ test.describe("tracking pixels", () => {
     expect(countTrackingEvent(calls, "fbq", "Subscribe")).toBe(1);
     expect(countTrackingEvent(calls, "ttq", "Subscribe")).toBe(1);
     expect(findTrackingEvent(calls, "fbq", "StartTrial")).toBeUndefined();
+    expect(findTrackingEvent(calls, "ttq", "StartTrial")).toBeUndefined();
   });
 
   test("fires Subscribe once from /app/billing/success?session_id=cs_test_123", async ({
@@ -275,5 +276,7 @@ test.describe("tracking pixels", () => {
     const calls = await readTrackingCalls(page);
     expect(countTrackingEvent(calls, "fbq", "Subscribe")).toBe(1);
     expect(countTrackingEvent(calls, "ttq", "Subscribe")).toBe(1);
+    expect(findTrackingEvent(calls, "fbq", "StartTrial")).toBeUndefined();
+    expect(findTrackingEvent(calls, "ttq", "StartTrial")).toBeUndefined();
   });
 });

@@ -56,8 +56,7 @@ export type TrackingEventName =
   | "settings_change"
   | "share"
   | "initiate_checkout"
-  | "subscribe"
-  | "start_trial";
+  | "subscribe";
 
 export type VendorEventMapping = {
   name: string;
@@ -213,11 +212,6 @@ export const TRACKING_EVENT_MAP: Record<
     ga: "subscribe",
     meta: { name: "Subscribe", standard: true },
     tiktok: { name: "Subscribe", standard: true },
-  },
-  start_trial: {
-    ga: "start_trial",
-    meta: { name: "StartTrial", standard: true },
-    tiktok: { name: "StartTrial", standard: true },
   },
 };
 
@@ -540,7 +534,6 @@ const writeFiredCheckoutIds = (
 
 export type CheckoutSuccessSignal = {
   sessionId?: string | null;
-  isTrial?: boolean;
   tier?: string;
   interval?: string;
 };
@@ -573,80 +566,9 @@ export const trackCheckoutSuccess = (
     params.interval = signal.interval;
   }
 
-  return trackEvent(signal.isTrial ? "start_trial" : "subscribe", params, {
+  return trackEvent("subscribe", params, {
     ids: options.ids,
     testCodes: options.testCodes,
     eventId,
   });
-};
-
-const asRecord = (value: unknown): Record<string, unknown> | undefined => {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
-    return undefined;
-  }
-
-  return value as Record<string, unknown>;
-};
-
-const toUnixSeconds = (value: unknown): number | undefined => {
-  if (typeof value === "number" && Number.isFinite(value) && value > 0) {
-    return value > 1e12 ? Math.floor(value / 1000) : Math.floor(value);
-  }
-
-  if (typeof value !== "string" || !value.trim()) {
-    return undefined;
-  }
-
-  const trimmed = value.trim();
-  if (/^\d+$/.test(trimmed)) {
-    const numeric = Number(trimmed);
-    return numeric > 1e12 ? Math.floor(numeric / 1000) : numeric;
-  }
-
-  const parsed = Date.parse(trimmed);
-  if (Number.isNaN(parsed) || parsed <= 0) {
-    return undefined;
-  }
-
-  return Math.floor(parsed / 1000);
-};
-
-const hasFutureTrialEnd = (record: Record<string, unknown>): boolean => {
-  const trialEnd = toUnixSeconds(record.trial_end ?? record.trialEnd);
-  if (trialEnd === undefined) {
-    return false;
-  }
-
-  return trialEnd > Math.floor(Date.now() / 1000);
-};
-
-const isTrialingStatus = (status: unknown): boolean => {
-  if (typeof status !== "string") {
-    return false;
-  }
-
-  const normalized = status.trim().toLowerCase();
-  return normalized === "trialing" || normalized === "trial";
-};
-
-const isTrialRecord = (value: unknown): boolean => {
-  const record = asRecord(value);
-  if (!record) {
-    return false;
-  }
-
-  if (record.trial === true || record.isTrial === true) {
-    return true;
-  }
-
-  return isTrialingStatus(record.status) || hasFutureTrialEnd(record);
-};
-
-export const isPaidTierTrial = (value: unknown): boolean => {
-  if (isTrialRecord(value)) {
-    return true;
-  }
-
-  const record = asRecord(value);
-  return isTrialRecord(record?.paidTier);
 };

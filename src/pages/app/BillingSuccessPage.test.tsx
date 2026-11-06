@@ -192,17 +192,16 @@ describe("BillingSuccessPage", () => {
     ).toBeInTheDocument();
     expect(trackSpy).toHaveBeenCalledWith({
       sessionId: "cs_test_123",
-      isTrial: false,
       tier: "premium",
     });
   });
 
-  it("fires StartTrial when getMe shows a future trial_end", async () => {
+  it("still fires Subscribe when getMe includes trial fields", async () => {
     const trackSpy = vi.spyOn(trackingEvents, "trackCheckoutSuccess");
-    const trialEnd = Math.floor(Date.now() / 1000) + 86_400;
     const getMe = vi.fn().mockResolvedValue({
       ...mockEntitlement,
-      trial_end: trialEnd,
+      status: "trialing",
+      trial_end: Math.floor(Date.now() / 1000) + 86_400,
       paidTier: { tier: "premium", source: "stripe" },
     });
 
@@ -219,9 +218,11 @@ describe("BillingSuccessPage", () => {
     ).toBeInTheDocument();
     expect(trackSpy).toHaveBeenCalledWith({
       sessionId: "cs_test_123",
-      isTrial: true,
       tier: "premium",
     });
+    expect(trackSpy).not.toHaveBeenCalledWith(
+      expect.objectContaining({ isTrial: true }),
+    );
   });
 
   it("stops polling and aborts in-flight /me after unmount", async () => {

@@ -2,7 +2,6 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { getPublicAppEnv } from "./env";
 import {
   CHECKOUT_SUCCESS_STORAGE_KEY,
-  isPaidTierTrial,
   MISSING_CHECKOUT_SESSION_KEY,
   isStripeCheckoutSessionId,
   isTrackingDebugEnabled,
@@ -76,8 +75,7 @@ describe("event mapping", () => {
     );
     expect(TRACKING_EVENT_MAP.subscribe.meta.name).toBe("Subscribe");
     expect(TRACKING_EVENT_MAP.subscribe.tiktok.name).toBe("Subscribe");
-    expect(TRACKING_EVENT_MAP.start_trial.meta.name).toBe("StartTrial");
-    expect(TRACKING_EVENT_MAP.start_trial.tiktok.name).toBe("StartTrial");
+    expect(TRACKING_EVENT_MAP).not.toHaveProperty("start_trial");
   });
 });
 
@@ -499,24 +497,30 @@ describe("checkout success Subscribe", () => {
     );
   });
 
-  it("sends StartTrial only when a trial signal is present", () => {
+  it("always sends Subscribe for web checkout, never StartTrial", () => {
     installVendors();
 
     trackCheckoutSuccess(
-      { sessionId: "cs_test_trial", isTrial: true, tier: "premium" },
+      { sessionId: "cs_test_trial", tier: "premium" },
       { ids: ALL_IDS },
     );
 
     expect(window.fbq).toHaveBeenCalledWith(
       "track",
-      "StartTrial",
+      "Subscribe",
       { tier: "premium" },
       { eventID: "stripe_cs_test_trial" },
     );
     expect(window.ttq?.track).toHaveBeenCalledWith(
-      "StartTrial",
+      "Subscribe",
       { tier: "premium" },
       { event_id: "stripe_cs_test_trial" },
+    );
+    expect(window.fbq).not.toHaveBeenCalledWith(
+      "track",
+      "StartTrial",
+      expect.anything(),
+      expect.anything(),
     );
   });
 
@@ -546,26 +550,4 @@ describe("checkout success Subscribe", () => {
     expect(window.fbq).toHaveBeenCalledTimes(1);
   });
 
-  it("mirrors Stripe trialing status or a future trial_end from getMe or paidTier", () => {
-    const futureEnd = Math.floor(Date.now() / 1000) + 86_400;
-    const pastEnd = Math.floor(Date.now() / 1000) - 86_400;
-
-    expect(isPaidTierTrial({ tier: "basic", source: "stripe" })).toBe(false);
-    expect(isPaidTierTrial({ status: "ACTIVE" })).toBe(false);
-    expect(isPaidTierTrial({ expiresAt: new Date(futureEnd * 1000).toISOString() })).toBe(
-      false,
-    );
-    expect(isPaidTierTrial({ status: "trialing" })).toBe(true);
-    expect(isPaidTierTrial({ status: "TRIALING" })).toBe(true);
-    expect(isPaidTierTrial({ isTrial: true })).toBe(true);
-    expect(isPaidTierTrial({ trial_end: futureEnd })).toBe(true);
-    expect(isPaidTierTrial({ trialEnd: futureEnd })).toBe(true);
-    expect(isPaidTierTrial({ trial_end: pastEnd })).toBe(false);
-    expect(
-      isPaidTierTrial({
-        status: "ACTIVE",
-        paidTier: { tier: "premium", source: "stripe", trial_end: futureEnd },
-      }),
-    ).toBe(true);
-  });
 });
