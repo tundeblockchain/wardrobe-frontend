@@ -97,6 +97,7 @@ describe("sanitizeTrackingParams", () => {
       result_count: 3,
       leaked: "person@example.com",
       raw_id: "wd_weekend01",
+      session_id: "cs_test_abc",
     });
 
     expect(sanitized).toEqual({
@@ -109,6 +110,8 @@ describe("sanitizeTrackingParams", () => {
     expect(JSON.stringify(sanitized)).not.toContain("navy tee");
     expect(JSON.stringify(sanitized)).not.toContain("wd_weekend01");
     expect(JSON.stringify(sanitized)).not.toContain("user-1");
+    expect(JSON.stringify(sanitized)).not.toContain("cs_test_abc");
+    expect(sanitized).not.toHaveProperty("session_id");
   });
 });
 
@@ -488,6 +491,12 @@ describe("checkout success Subscribe", () => {
     expect(window.sessionStorage.getItem(CHECKOUT_SUCCESS_STORAGE_KEY)).toContain(
       "cs_test_once",
     );
+    expect(JSON.stringify((window.fbq as ReturnType<typeof vi.fn>).mock.calls)).not.toContain(
+      `"cs_test_once"`,
+    );
+    expect((window.fbq as ReturnType<typeof vi.fn>).mock.calls[0]?.[2]).not.toHaveProperty(
+      "session_id",
+    );
   });
 
   it("sends StartTrial only when a trial signal is present", () => {
@@ -537,10 +546,26 @@ describe("checkout success Subscribe", () => {
     expect(window.fbq).toHaveBeenCalledTimes(1);
   });
 
-  it("does not treat GET /me paidTier as a trial without an explicit trial field", () => {
+  it("mirrors Stripe trialing status or a future trial_end from getMe or paidTier", () => {
+    const futureEnd = Math.floor(Date.now() / 1000) + 86_400;
+    const pastEnd = Math.floor(Date.now() / 1000) - 86_400;
+
     expect(isPaidTierTrial({ tier: "basic", source: "stripe" })).toBe(false);
     expect(isPaidTierTrial({ status: "ACTIVE" })).toBe(false);
+    expect(isPaidTierTrial({ expiresAt: new Date(futureEnd * 1000).toISOString() })).toBe(
+      false,
+    );
     expect(isPaidTierTrial({ status: "trialing" })).toBe(true);
+    expect(isPaidTierTrial({ status: "TRIALING" })).toBe(true);
     expect(isPaidTierTrial({ isTrial: true })).toBe(true);
+    expect(isPaidTierTrial({ trial_end: futureEnd })).toBe(true);
+    expect(isPaidTierTrial({ trialEnd: futureEnd })).toBe(true);
+    expect(isPaidTierTrial({ trial_end: pastEnd })).toBe(false);
+    expect(
+      isPaidTierTrial({
+        status: "ACTIVE",
+        paidTier: { tier: "premium", source: "stripe", trial_end: futureEnd },
+      }),
+    ).toBe(true);
   });
 });

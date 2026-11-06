@@ -74,7 +74,7 @@ describe("AppHomePage", () => {
       await screen.findByRole("heading", { level: 1, name: "Your closet" }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: "Weekend closet" }),
+      await screen.findByRole("link", { name: "Weekend closet" }),
     ).toHaveAttribute("href", getAppWardrobePath("wd_weekend01"));
     expect(screen.getByRole("link", { name: "Workwear" })).toHaveAttribute(
       "href",

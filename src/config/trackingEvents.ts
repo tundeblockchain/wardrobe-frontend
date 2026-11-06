@@ -23,7 +23,7 @@ export const STRIPE_EVENT_ID_PREFIX = "stripe_";
 export const MISSING_CHECKOUT_SESSION_KEY = "missing-session-id";
 
 const BLOCKED_PARAM_KEY_PATTERN =
-  /email|(^|_)name$|user_id|\buid\b|item_id|wardrobe_id|outfit_id|wish_id|search_term|^query$|\burl\b|href|page_location|phone|address/i;
+  /email|(^|_)name$|user_id|\buid\b|item_id|wardrobe_id|outfit_id|wish_id|search_term|^query$|\burl\b|href|page_location|phone|address|session_id/i;
 const EMAIL_VALUE_PATTERN = /[^@\s]+@[^@\s]+\.[^@\s]+/;
 const ID_VALUE_PATTERN =
   /^(wd_|item_|outfit_|wish_|usr_|user-|cs_)[A-Za-z0-9_-]+$/i;
@@ -580,24 +580,73 @@ export const trackCheckoutSuccess = (
   });
 };
 
-export const isPaidTierTrial = (value: unknown): boolean => {
-  if (!value || typeof value !== "object") {
+const asRecord = (value: unknown): Record<string, unknown> | undefined => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return undefined;
+  }
+
+  return value as Record<string, unknown>;
+};
+
+const toUnixSeconds = (value: unknown): number | undefined => {
+  if (typeof value === "number" && Number.isFinite(value) && value > 0) {
+    return value > 1e12 ? Math.floor(value / 1000) : Math.floor(value);
+  }
+
+  if (typeof value !== "string" || !value.trim()) {
+    return undefined;
+  }
+
+  const trimmed = value.trim();
+  if (/^\d+$/.test(trimmed)) {
+    const numeric = Number(trimmed);
+    return numeric > 1e12 ? Math.floor(numeric / 1000) : numeric;
+  }
+
+  const parsed = Date.parse(trimmed);
+  if (Number.isNaN(parsed) || parsed <= 0) {
+    return undefined;
+  }
+
+  return Math.floor(parsed / 1000);
+};
+
+const hasFutureTrialEnd = (record: Record<string, unknown>): boolean => {
+  const trialEnd = toUnixSeconds(record.trial_end ?? record.trialEnd);
+  if (trialEnd === undefined) {
     return false;
   }
 
-  const record = value as {
-    status?: unknown;
-    trial?: unknown;
-    isTrial?: unknown;
-  };
+  return trialEnd > Math.floor(Date.now() / 1000);
+};
+
+const isTrialingStatus = (status: unknown): boolean => {
+  if (typeof status !== "string") {
+    return false;
+  }
+
+  const normalized = status.trim().toLowerCase();
+  return normalized === "trialing" || normalized === "trial";
+};
+
+const isTrialRecord = (value: unknown): boolean => {
+  const record = asRecord(value);
+  if (!record) {
+    return false;
+  }
 
   if (record.trial === true || record.isTrial === true) {
     return true;
   }
 
-  if (typeof record.status !== "string") {
-    return false;
+  return isTrialingStatus(record.status) || hasFutureTrialEnd(record);
+};
+
+export const isPaidTierTrial = (value: unknown): boolean => {
+  if (isTrialRecord(value)) {
+    return true;
   }
 
-  return record.status.toLowerCase().includes("trial");
+  const record = asRecord(value);
+  return isTrialRecord(record?.paidTier);
 };

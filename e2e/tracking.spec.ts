@@ -235,4 +235,45 @@ test.describe("tracking pixels", () => {
     expect(countTrackingEvent(calls, "ttq", "Subscribe")).toBe(1);
     expect(findTrackingEvent(calls, "fbq", "StartTrial")).toBeUndefined();
   });
+
+  test("fires Subscribe once from /app/billing/success?session_id=cs_test_123", async ({
+    page,
+  }) => {
+    await blockPixelNetwork(page);
+    await installTrackingStubs(page);
+    await installTrackingApiMocks(page, { startSubscribed: true });
+    await openTrackedSignedInHome(page);
+
+    await page.goto("/app/billing/success?session_id=cs_test_123");
+    await expect(
+      page.getByRole("heading", { name: "You are subscribed" }),
+    ).toBeVisible();
+
+    const subscribe = await waitForTrackingEvent(page, "fbq", "Subscribe");
+    expect(subscribe[3]).toEqual(
+      expect.objectContaining({ eventID: "stripe_cs_test_123" }),
+    );
+    expect(subscribe[2]).not.toEqual(
+      expect.objectContaining({ session_id: expect.anything() }),
+    );
+    expect(JSON.stringify(subscribe[2])).not.toContain("cs_test_123");
+
+    const tiktokSubscribe = await waitForTrackingEvent(
+      page,
+      "ttq",
+      "Subscribe",
+    );
+    expect(tiktokSubscribe[2]).toEqual(
+      expect.objectContaining({ event_id: "stripe_cs_test_123" }),
+    );
+    expect(JSON.stringify(tiktokSubscribe[1])).not.toContain("cs_test_123");
+
+    await page.reload();
+    await expect(
+      page.getByRole("heading", { name: "You are subscribed" }),
+    ).toBeVisible();
+    const calls = await readTrackingCalls(page);
+    expect(countTrackingEvent(calls, "fbq", "Subscribe")).toBe(1);
+    expect(countTrackingEvent(calls, "ttq", "Subscribe")).toBe(1);
+  });
 });

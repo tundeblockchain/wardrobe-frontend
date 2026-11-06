@@ -40,6 +40,7 @@ export const BillingSuccessPage = ({
   const [round, setRound] = useState(0);
   const [view, setView] = useState<SuccessView>("polling");
   const [resolvedPaidTier, setResolvedPaidTier] = useState<PaidTier>();
+  const [resolvedMe, setResolvedMe] = useState<unknown>();
   const getMeRef = useRef<BillingSuccessGetMeFn>(
     getMeProp ?? ((signal) => api.request<Entitlement>(ME_PATH, { signal })),
   );
@@ -72,6 +73,7 @@ export const BillingSuccessPage = ({
         }
 
         if (me.paidTier) {
+          setResolvedMe(me);
           setResolvedPaidTier(me.paidTier);
           setView("ready");
           return;
@@ -115,10 +117,10 @@ export const BillingSuccessPage = ({
 
     trackCheckoutSuccess({
       sessionId: readCheckoutSessionId(location.search),
-      isTrial: isPaidTierTrial(paidTierRecord),
+      isTrial: isPaidTierTrial(resolvedMe ?? paidTierRecord),
       tier: paidTierRecord?.tier,
     });
-  }, [view, resolvedPaidTier, location.search]);
+  }, [view, resolvedMe, resolvedPaidTier, location.search]);
 
   const handleRetry = () => {
     setView("polling");
