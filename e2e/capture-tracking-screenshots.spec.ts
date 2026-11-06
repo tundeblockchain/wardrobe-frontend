@@ -33,6 +33,14 @@ const openThemedPrivacy = async (
   await expect(
     page.getByRole("heading", { name: "Mobile advertising and attribution" }),
   ).toBeVisible();
+  if (capturePhase === "before") {
+    await expect(page.getByText("Last updated 4 November 2026")).toBeVisible();
+  } else {
+    await expect(page.getByText("Last updated 6 November 2026")).toBeVisible();
+    await expect(
+      page.getByText(/Names and email addresses are not sent/),
+    ).toBeVisible();
+  }
 };
 
 const screenshotPath = (

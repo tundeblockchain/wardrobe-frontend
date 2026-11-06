@@ -70,9 +70,14 @@ test.describe("tracking pixels", () => {
     await mockFirebaseEmailAuth(page);
 
     await page.goto("/login?mode=signup");
-    await page.getByLabel("Email").fill(E2E_USER_EMAIL);
-    await page.getByLabel("Password", { exact: true }).fill("password1");
-    await page.getByLabel("Confirm password").fill("password1");
+    await expect(
+      page.getByRole("heading", { name: "Create account" }),
+    ).toBeVisible();
+    await page.getByRole("textbox", { name: "Email" }).fill(E2E_USER_EMAIL);
+    await page
+      .getByRole("textbox", { name: "Password", exact: true })
+      .fill("password1");
+    await page.getByRole("textbox", { name: "Confirm password" }).fill("password1");
     await page.getByRole("button", { name: "Create account" }).click();
 
     const signUp = await waitForTrackingEvent(
@@ -94,8 +99,11 @@ test.describe("tracking pixels", () => {
     await expect(page.getByRole("heading", { name: /sign in/i })).toBeVisible();
 
     await page.goto("/login");
-    await page.getByLabel("Email").fill(E2E_USER_EMAIL);
-    await page.getByLabel("Password", { exact: true }).fill("password1");
+    await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
+    await page.getByRole("textbox", { name: "Email" }).fill(E2E_USER_EMAIL);
+    await page
+      .getByRole("textbox", { name: "Password", exact: true })
+      .fill("password1");
     await page.getByRole("button", { name: "Sign in with email" }).click();
     await waitForTrackingEvent(page, "fbq", "Login");
     await waitForTrackingEvent(page, "gtag", "login");
@@ -116,7 +124,7 @@ test.describe("tracking pixels", () => {
 
     await page.getByRole("link", { name: "Add a wardrobe" }).click();
     await expect(
-      page.getByRole("heading", { name: "Add wardrobe" }),
+      page.getByRole("heading", { level: 1, name: "Add wardrobe" }),
     ).toBeVisible();
     await page.getByRole("textbox", { name: "Name" }).fill("Travel");
     await page.getByRole("button", { name: "Save wardrobe" }).click();
@@ -129,12 +137,12 @@ test.describe("tracking pixels", () => {
       .getByRole("link", { name: "Add a clothing item to this wardrobe" })
       .click();
     await expect(
-      page.getByRole("heading", { name: "Add clothing item" }),
+      page.getByRole("heading", { level: 1, name: "Add clothing item" }),
     ).toBeVisible();
     await page.getByRole("textbox", { name: "Name" }).fill("Navy tee");
     await page.getByRole("combobox", { name: "Category" }).click();
     await page.getByRole("option", { name: "Top" }).click();
-    await page.getByLabel("Photo").setInputFiles({
+    await page.getByLabel("Photo", { exact: true }).setInputFiles({
       name: "tee.jpg",
       mimeType: "image/jpeg",
       buffer: Buffer.from("fake-image"),
@@ -147,7 +155,7 @@ test.describe("tracking pixels", () => {
 
     await page.goto("/app/outfits/new");
     await expect(
-      page.getByRole("heading", { name: "Add outfit" }),
+      page.getByRole("heading", { level: 1, name: "Add outfit" }),
     ).toBeVisible();
     await page.getByRole("textbox", { name: "Name" }).fill("Cafe look");
     await page.getByRole("combobox", { name: "Wardrobe" }).click();
@@ -174,7 +182,11 @@ test.describe("tracking pixels", () => {
     await waitForTrackingEvent(page, "ttq", "AddToWishlist");
 
     await page.getByRole("button", { name: "Wanted coat" }).click();
-    await page.getByRole("button", { name: "Mark this wish as owned" }).click();
+    const wishDetail = page.getByRole("dialog", { name: "Wanted coat" });
+    await expect(wishDetail).toBeVisible();
+    await wishDetail
+      .getByRole("button", { name: "Mark this wish as owned" })
+      .click();
     await waitForTrackingEvent(page, "fbq", "WishlistMarkOwned");
     await waitForTrackingEvent(page, "gtag", "wishlist_mark_owned");
   });
@@ -186,16 +198,17 @@ test.describe("tracking pixels", () => {
     await openTrackedSignedInHome(page);
 
     await page.goto("/app/pricing");
-    await expect(page.getByRole("heading", { name: "Pricing" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { level: 1, name: "Pricing" }),
+    ).toBeVisible();
     await page.getByRole("button", { name: "Upgrade to Basic" }).click();
-
-    await waitForTrackingEvent(page, "fbq", "InitiateCheckout");
-    await waitForTrackingEvent(page, "gtag", "begin_checkout");
-    await waitForTrackingEvent(page, "ttq", "InitiateCheckout");
 
     await expect(
       page.getByRole("heading", { name: "You are subscribed" }),
     ).toBeVisible();
+    await waitForTrackingEvent(page, "fbq", "InitiateCheckout");
+    await waitForTrackingEvent(page, "gtag", "begin_checkout");
+    await waitForTrackingEvent(page, "ttq", "InitiateCheckout");
     const subscribe = await waitForTrackingEvent(page, "fbq", "Subscribe");
     expect(subscribe[3]).toEqual(
       expect.objectContaining({ eventID: "cs_test_e2e" }),

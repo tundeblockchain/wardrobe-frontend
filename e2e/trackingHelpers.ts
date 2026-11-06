@@ -23,50 +23,74 @@ export const blockPixelNetwork = async (page: Page): Promise<void> => {
   });
 };
 
+const TRACKING_CALLS_STORAGE_KEY = "__WARDROBE_TRACKING_CALLS__";
+
 export const installTrackingStubs = async (page: Page): Promise<void> => {
   await page.addInitScript(
-    ({ ids }) => {
-      const existing = (
-        window as Window & {
-          __WARDROBE_TRACKING_CALLS__?: TrackingCallLog;
+    ({ ids, storageKey }) => {
+      const emptyLog = (): TrackingCallLog => ({
+        gtag: [],
+        fbq: [],
+        ttq: [],
+      });
+
+      const readStoredLog = (): TrackingCallLog => {
+        try {
+          const raw = window.sessionStorage.getItem(storageKey);
+          if (!raw) {
+            return emptyLog();
+          }
+          const parsed: unknown = JSON.parse(raw);
+          if (
+            parsed &&
+            typeof parsed === "object" &&
+            Array.isArray((parsed as TrackingCallLog).gtag) &&
+            Array.isArray((parsed as TrackingCallLog).fbq) &&
+            Array.isArray((parsed as TrackingCallLog).ttq)
+          ) {
+            return parsed as TrackingCallLog;
+          }
+        } catch {
+          return emptyLog();
         }
-      ).__WARDROBE_TRACKING_CALLS__;
-      const calls = existing ?? {
-        gtag: [] as unknown[][],
-        fbq: [] as unknown[][],
-        ttq: [] as unknown[][],
+        return emptyLog();
       };
-      (
-        window as Window & {
-          __WARDROBE_E2E_TRACKING_IDS__?: typeof ids;
-          __WARDROBE_TRACKING_CALLS__?: typeof calls;
+
+      const persistLog = (next: TrackingCallLog): void => {
+        try {
+          window.sessionStorage.setItem(storageKey, JSON.stringify(next));
+        } catch {
+          // Ignore quota or private-mode failures; in-memory log still works.
         }
-      ).__WARDROBE_E2E_TRACKING_IDS__ = ids;
-      (
-        window as Window & {
-          __WARDROBE_TRACKING_CALLS__?: typeof calls;
-        }
-      ).__WARDROBE_TRACKING_CALLS__ = calls;
+      };
+
+      const calls = readStoredLog();
+      window.__WARDROBE_E2E_TRACKING_IDS__ = ids;
+      window.__WARDROBE_TRACKING_CALLS__ = calls;
 
       window.gtag = (...args: unknown[]) => {
         calls.gtag.push(args);
+        persistLog(calls);
       };
       window.fbq = (...args: unknown[]) => {
         calls.fbq.push(args);
+        persistLog(calls);
       };
       const ttq = ((...args: unknown[]) => {
         calls.ttq.push(args);
+        persistLog(calls);
       }) as Window["ttq"];
       if (ttq) {
         ttq.track = (...args: unknown[]) => {
           calls.ttq.push(args);
+          persistLog(calls);
         };
         ttq.page = () => undefined;
         ttq.load = () => undefined;
       }
       window.ttq = ttq;
     },
-    { ids: E2E_TRACKING_IDS },
+    { ids: E2E_TRACKING_IDS, storageKey: TRACKING_CALLS_STORAGE_KEY },
   );
 };
 
@@ -106,8 +130,12 @@ export const waitForTrackingEvent = async (
 ): Promise<unknown[]> => {
   await expect
     .poll(async () => {
-      const calls = await readTrackingCalls(page);
-      return findTrackingEvent(calls, vendor, eventName) !== undefined;
+      try {
+        const calls = await readTrackingCalls(page);
+        return findTrackingEvent(calls, vendor, eventName) !== undefined;
+      } catch {
+        return false;
+      }
     })
     .toBe(true);
 

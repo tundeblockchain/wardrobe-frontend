@@ -29,6 +29,8 @@ export type TrackingApiState = {
   wishes: Array<{
     wishId: string;
     name: string;
+    category?: string;
+    originalImageUrl?: string;
     createdAt: string;
     updatedAt: string;
   }>;
@@ -170,10 +172,16 @@ export const installTrackingApiMocks = async (
 
       if (method === "POST" && path === "/billing/checkout-session") {
         state.subscribed = true;
+        let pageOrigin = "http://127.0.0.1:5173";
+        try {
+          pageOrigin = new URL(page.url()).origin;
+        } catch {
+          pageOrigin = "http://127.0.0.1:5173";
+        }
         const requestOrigin = request.headers()["origin"];
         const successUrl =
           options.checkoutSuccessUrl ??
-          `${requestOrigin ?? "http://127.0.0.1:4173"}/app/billing/success?session_id=cs_test_e2e`;
+          `${requestOrigin ?? pageOrigin}/app/billing/success?session_id=cs_test_e2e`;
         await fulfillJson(route, 200, { url: successUrl });
         return;
       }
@@ -306,14 +314,24 @@ export const installTrackingApiMocks = async (
       const acquireMatch = path.match(/^\/wishlist\/([^/]+)\/acquire$/);
       if (method === "POST" && acquireMatch) {
         const wishId = decodeURIComponent(acquireMatch[1] ?? "");
-        state.wishes = state.wishes.filter((wish) => wish.wishId !== wishId);
-        await fulfillJson(route, 200, {
+        const wish = state.wishes.find((entry) => entry.wishId === wishId);
+        state.wishes = state.wishes.filter((entry) => entry.wishId !== wishId);
+        const wardrobeId =
+          typeof body.wardrobeId === "string"
+            ? body.wardrobeId
+            : weekendWardrobe.wardrobeId;
+        const acquired = {
           itemId: "item_acquired",
-          wardrobeId:
-            typeof body.wardrobeId === "string"
-              ? body.wardrobeId
-              : weekendWardrobe.wardrobeId,
-        });
+          wardrobeId,
+          name: wish?.name ?? "Wish",
+          category: wish?.category ?? "OUTERWEAR",
+          processingStatus: "READY",
+          originalImageUrl: wish?.originalImageUrl,
+          createdAt: nowIso,
+          updatedAt: nowIso,
+        };
+        state.items.push(acquired);
+        await fulfillJson(route, 201, acquired);
         return;
       }
 
