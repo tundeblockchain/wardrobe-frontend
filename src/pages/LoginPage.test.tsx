@@ -36,6 +36,7 @@ const firebaseAuthMocks = vi.hoisted(() => {
       return vi.fn();
     }),
     signInWithPopup: vi.fn(),
+    getAdditionalUserInfo: vi.fn(() => ({ isNewUser: false })),
     signInWithEmailAndPassword: vi.fn(),
     createUserWithEmailAndPassword: vi.fn(),
     sendPasswordResetEmail: vi.fn(),
@@ -48,6 +49,7 @@ vi.mock("firebase/auth", () => ({
   OAuthProvider: firebaseAuthMocks.OAuthProvider,
   onAuthStateChanged: firebaseAuthMocks.onAuthStateChanged,
   signInWithPopup: firebaseAuthMocks.signInWithPopup,
+  getAdditionalUserInfo: firebaseAuthMocks.getAdditionalUserInfo,
   signInWithEmailAndPassword: firebaseAuthMocks.signInWithEmailAndPassword,
   createUserWithEmailAndPassword:
     firebaseAuthMocks.createUserWithEmailAndPassword,

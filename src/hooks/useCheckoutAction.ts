@@ -15,6 +15,7 @@ import {
 } from "../api/billing";
 import type { Entitlement, PaidTier } from "../api/resourceTypes";
 import { useApi } from "../api/useApi";
+import { trackEvent } from "../config/trackingEvents";
 import { dashboardCopy } from "../content/dashboardCopy";
 
 export type StartCheckoutFn = (
@@ -90,6 +91,7 @@ export const useCheckoutAction = (
 
     try {
       const session = await startCheckout(tier, interval);
+      trackEvent("initiate_checkout", { tier, interval });
       redirectToBillingSession(session);
     } catch (caughtError) {
       if (isAlreadySubscribedError(caughtError)) {

@@ -500,7 +500,7 @@ describe("VirtualTryOnPage", () => {
         name: "Virtual Try On is a Premium feature",
       }),
     );
-    const upgrade = screen.getByRole("button", { name: pricedAriaLabel });
+    const upgrade = await screen.findByRole("button", { name: pricedAriaLabel });
     expect(upgrade).toHaveTextContent(pricedActionLabel);
     expectActionButtonNotFullWidth(upgrade);
     expectActionButtonNotFullWidth(
@@ -528,7 +528,7 @@ describe("VirtualTryOnPage", () => {
       }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: pricedAriaLabel }),
+      await screen.findByRole("button", { name: pricedAriaLabel }),
     ).toHaveTextContent(
       getUpgradePriceLabel({
         actionLabel: dashboardCopy.upgrade.premium.actionLabel,

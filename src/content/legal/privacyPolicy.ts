@@ -51,7 +51,7 @@ export const getPrivacyPolicyContent = (
           "Create and secure accounts, and prevent abuse or fraud",
           "Respond to support, privacy, and legal requests",
           "Understand aggregate product usage so the service can be improved",
-          "Measure advertising campaign performance, as described in Mobile advertising and attribution",
+          "Measure advertising campaign performance and product usage, as described in Mobile advertising and attribution",
           "Comply with law and enforce these terms and this policy",
         ],
       },
@@ -82,8 +82,9 @@ export const getPrivacyPolicyContent = (
         id: "mobile-advertising",
         title: "Mobile advertising and attribution",
         paragraphs: [
-          `The ${appName} iOS and Android apps may include the TikTok Business SDK and the Meta Platforms Facebook SDK so the operator can measure advertising campaign performance. Those SDKs are used side by side. The operator does not sell personal information.`,
-          "The third parties that may receive this data are TikTok (TikTok Business SDK) and Meta Platforms (Facebook SDK).",
+          `The ${appName} iOS and Android apps may include the TikTok Business SDK and the Meta Platforms Facebook SDK so the operator can measure advertising campaign performance. Those SDKs are used side by side. The marketing website may also load the Meta Pixel and the TikTok pixel when the operator has set public environment identifiers for those tools. The operator does not sell personal information.`,
+          "The operator measures in-app and website actions — for example creating wardrobes, adding items, saving outfits, using the wish list, and subscriptions — through the Meta Pixel and the TikTok pixel on the website and through the TikTok Business SDK and Facebook SDK in the apps. Names and email addresses are not sent with those measurement events.",
+          "The third parties that may receive this data are TikTok (TikTok Business SDK and TikTok pixel) and Meta Platforms (Facebook SDK and Meta Pixel).",
           "Data that may be shared with those partners includes:",
         ],
         bullets: [
@@ -173,7 +174,7 @@ export const getPrivacyPolicyContent = (
         id: "cookies",
         title: "Cookies and similar technologies",
         paragraphs: [
-          "The marketing website may use strictly necessary cookies to operate the site. Optional analytics or advertising pixels (for example Google Analytics or Meta Pixel) load only when the operator has set public environment identifiers for those tools. They are not required to use the core wardrobe features. Some tracking can also be controlled through browser, device, and store settings.",
+          "The marketing website may use strictly necessary cookies to operate the site. Optional analytics or advertising pixels (Google Analytics, the Meta Pixel, and the TikTok pixel) load only when the operator has set public environment identifiers for those tools. They are not required to use the core wardrobe features. Some tracking can also be controlled through browser, device, and store settings.",
           "Mobile apps may use on-device identifiers, diagnostic software development kits, and advertising software development kits, including the TikTok Business SDK and the Facebook SDK, as described in Mobile advertising and attribution. You can control some tracking through device and store settings.",
         ],
       },

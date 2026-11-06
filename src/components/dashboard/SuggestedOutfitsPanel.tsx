@@ -1,4 +1,4 @@
-import { useMemo, useState, type ChangeEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import {
   Alert,
   Button,
@@ -24,6 +24,7 @@ import {
 } from "../../api/outfitRecommendations";
 import type { ResourceApi } from "../../api/resourceApi";
 import type { Entitlement, Wardrobe } from "../../api/resourceTypes";
+import { trackEvent } from "../../config/trackingEvents";
 import { dashboardCopy } from "../../content/dashboardCopy";
 import { invalidateResourceQueries } from "../../hooks/resourceQueryCache";
 import { useAbortableResourceQuery } from "../../hooks/useAbortableResourceQuery";
@@ -102,7 +103,9 @@ export const SuggestedOutfitsPanel = ({
   >(undefined);
   const [saveUpgradeCode, setSaveUpgradeCode] = useState<string | undefined>();
 
+  const userFiltered = useRef(false);
   const handleWardrobeChange = (event: ChangeEvent<HTMLInputElement>) => {
+    userFiltered.current = true;
     onWardrobeChange?.(event.target.value);
     setSelectedView(undefined);
     setSaveError(undefined);
@@ -147,6 +150,7 @@ export const SuggestedOutfitsPanel = ({
         wardrobeId,
         toCreateOutfitRequest(selectedView.recommendation, name),
       );
+      trackEvent("save_outfit", { source: "recommendation" });
       invalidateResourceQueries(["outfits"]);
       setSaveSuccess(true);
       setSelectedView(undefined);
@@ -173,6 +177,20 @@ export const SuggestedOutfitsPanel = ({
   const handleSaveRetry = () => {
     void handleSave();
   };
+
+  const recommendationCount =
+    query.status === "ready" ? query.data.recommendations.length : undefined;
+
+  useEffect(() => {
+    if (!userFiltered.current || recommendationCount === undefined) {
+      return;
+    }
+
+    trackEvent("search", {
+      filter_type: "wardrobe",
+      result_count: recommendationCount,
+    });
+  }, [wardrobeId, recommendationCount]);
 
   const toolbar = (
     <Stack

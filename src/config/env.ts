@@ -18,6 +18,10 @@ export type PublicAppEnv = {
   apiBaseUrl: string | undefined;
   gaMeasurementId: string | undefined;
   metaPixelId: string | undefined;
+  tiktokPixelId: string | undefined;
+  trackingDebug: boolean;
+  metaTestEventCode: string | undefined;
+  tiktokTestEventCode: string | undefined;
   legalContactEmail: string | undefined;
   legalContactUrl: string | undefined;
   firebaseApiKey: string | undefined;
@@ -37,6 +41,10 @@ export type EnvSource = {
   VITE_API_BASE_URL?: string;
   VITE_GA_MEASUREMENT_ID?: string;
   VITE_META_PIXEL_ID?: string;
+  VITE_TIKTOK_PIXEL_ID?: string;
+  VITE_TRACKING_DEBUG?: string;
+  VITE_META_TEST_EVENT_CODE?: string;
+  VITE_TIKTOK_TEST_EVENT_CODE?: string;
   VITE_LEGAL_CONTACT_EMAIL?: string;
   VITE_LEGAL_CONTACT_URL?: string;
   VITE_FIREBASE_API_KEY?: string;
@@ -120,6 +128,10 @@ export const getPublicAppEnv = (
     apiBaseUrl: readOptionalOrigin(source.VITE_API_BASE_URL),
     gaMeasurementId: readOptionalEnv(source.VITE_GA_MEASUREMENT_ID),
     metaPixelId: readOptionalEnv(source.VITE_META_PIXEL_ID),
+    tiktokPixelId: readOptionalEnv(source.VITE_TIKTOK_PIXEL_ID),
+    trackingDebug: readBooleanEnv(source.VITE_TRACKING_DEBUG),
+    metaTestEventCode: readOptionalEnv(source.VITE_META_TEST_EVENT_CODE),
+    tiktokTestEventCode: readOptionalEnv(source.VITE_TIKTOK_TEST_EVENT_CODE),
     legalContactEmail: readOptionalEnv(source.VITE_LEGAL_CONTACT_EMAIL),
     legalContactUrl: readOptionalEnv(source.VITE_LEGAL_CONTACT_URL),
     firebaseApiKey: readOptionalEnv(source.VITE_FIREBASE_API_KEY),

@@ -20,6 +20,10 @@ describe("getPublicAppEnv", () => {
     expect(env.apiBaseUrl).toBeUndefined();
     expect(env.gaMeasurementId).toBeUndefined();
     expect(env.metaPixelId).toBeUndefined();
+    expect(env.tiktokPixelId).toBeUndefined();
+    expect(env.trackingDebug).toBe(false);
+    expect(env.metaTestEventCode).toBeUndefined();
+    expect(env.tiktokTestEventCode).toBeUndefined();
     expect(env.legalContactEmail).toBeUndefined();
     expect(env.legalContactUrl).toBeUndefined();
     expect(env.firebaseApiKey).toBeUndefined();
@@ -39,6 +43,10 @@ describe("getPublicAppEnv", () => {
       VITE_API_BASE_URL: " ",
       VITE_GA_MEASUREMENT_ID: " \n",
       VITE_META_PIXEL_ID: "  ",
+      VITE_TIKTOK_PIXEL_ID: "  ",
+      VITE_TRACKING_DEBUG: "  ",
+      VITE_META_TEST_EVENT_CODE: " ",
+      VITE_TIKTOK_TEST_EVENT_CODE: "\n",
       VITE_LEGAL_CONTACT_EMAIL: "   ",
       VITE_LEGAL_CONTACT_URL: " ",
       VITE_FIREBASE_API_KEY: "  ",
@@ -56,6 +64,10 @@ describe("getPublicAppEnv", () => {
     expect(env.apiBaseUrl).toBeUndefined();
     expect(env.gaMeasurementId).toBeUndefined();
     expect(env.metaPixelId).toBeUndefined();
+    expect(env.tiktokPixelId).toBeUndefined();
+    expect(env.trackingDebug).toBe(false);
+    expect(env.metaTestEventCode).toBeUndefined();
+    expect(env.tiktokTestEventCode).toBeUndefined();
     expect(env.legalContactEmail).toBeUndefined();
     expect(env.legalContactUrl).toBeUndefined();
     expect(env.firebaseApiKey).toBeUndefined();
@@ -76,6 +88,10 @@ describe("getPublicAppEnv", () => {
       VITE_API_BASE_URL: " https://api.example.com/ ",
       VITE_GA_MEASUREMENT_ID: " G-XXXXXXXXXX ",
       VITE_META_PIXEL_ID: " 000000000000000 ",
+      VITE_TIKTOK_PIXEL_ID: " CXXXXXXXXXXXXXXXXX ",
+      VITE_TRACKING_DEBUG: " true ",
+      VITE_META_TEST_EVENT_CODE: " TEST12345 ",
+      VITE_TIKTOK_TEST_EVENT_CODE: " TEST67890 ",
       VITE_LEGAL_CONTACT_EMAIL: " legal@example.com ",
       VITE_LEGAL_CONTACT_URL: " https://example.com/contact ",
       VITE_FIREBASE_API_KEY: " test-api-key ",
@@ -96,6 +112,10 @@ describe("getPublicAppEnv", () => {
     expect(env.apiBaseUrl).toBe("https://api.example.com");
     expect(env.gaMeasurementId).toBe("G-XXXXXXXXXX");
     expect(env.metaPixelId).toBe("000000000000000");
+    expect(env.tiktokPixelId).toBe("CXXXXXXXXXXXXXXXXX");
+    expect(env.trackingDebug).toBe(true);
+    expect(env.metaTestEventCode).toBe("TEST12345");
+    expect(env.tiktokTestEventCode).toBe("TEST67890");
     expect(env.legalContactEmail).toBe("legal@example.com");
     expect(env.legalContactUrl).toBe("https://example.com/contact");
     expect(env.firebaseApiKey).toBe("test-api-key");

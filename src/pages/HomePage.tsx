@@ -3,11 +3,11 @@ import { FeatureSection } from "../components/landing/FeatureSection";
 import { ScreenshotShowcase } from "../components/landing/ScreenshotShowcase";
 import { StoreCtaSection } from "../components/landing/StoreCtaSection";
 import { getPublicAppEnv } from "../config/env";
+import { resolveTrackingIds } from "../config/trackingEvents";
 
 export const HomePage = () => {
-  const { appName, appStoreUrl, playStoreUrl, gaMeasurementId, metaPixelId } =
-    getPublicAppEnv();
-  const trackingIds = { gaMeasurementId, metaPixelId };
+  const { appName, appStoreUrl, playStoreUrl } = getPublicAppEnv();
+  const trackingIds = resolveTrackingIds();
 
   return (
     <>

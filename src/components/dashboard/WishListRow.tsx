@@ -23,6 +23,7 @@ import {
   type WishItem,
   type WishlistApi,
 } from "../../api/wishlistApi";
+import { trackEvent } from "../../config/trackingEvents";
 import { dashboardCopy } from "../../content/dashboardCopy";
 import {
   CATALOG_LIST_QUERY_KEYS,
@@ -147,6 +148,7 @@ export const WishListRow = ({
     setDeleteError(undefined);
     try {
       await wishlistApi.deleteWish(deleteWish.wishId);
+      trackEvent("delete_wishlist_item");
       setDeleteWish(undefined);
       setSelectedWish(undefined);
       invalidateResourceQueries([CATALOG_LIST_QUERY_KEYS.wishlist]);
@@ -178,6 +180,7 @@ export const WishListRow = ({
     setAcquireError(undefined);
     try {
       await wishlistApi.acquireWish(wish.wishId, { wardrobeId });
+      trackEvent("wishlist_mark_owned");
       setAcquireWish(undefined);
       setSelectedWish(undefined);
       invalidateResourceQueries([

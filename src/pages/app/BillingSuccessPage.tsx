@@ -1,10 +1,14 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { Button, Stack } from "@mui/material";
-import { Link as RouterLink } from "react-router-dom";
+import { Link as RouterLink, useLocation } from "react-router-dom";
 import { ME_PATH } from "../../api/authenticatedApi";
-import type { Entitlement } from "../../api/resourceTypes";
+import type { Entitlement, PaidTier } from "../../api/resourceTypes";
 import { useApi } from "../../api/useApi";
 import { DashboardPage } from "../../components/dashboard/DashboardPage";
+import {
+  readCheckoutSessionId,
+  trackCheckoutSuccess,
+} from "../../config/trackingEvents";
 import { dashboardCopy } from "../../content/dashboardCopy";
 import { appPaths } from "../../routes/paths";
 
@@ -31,8 +35,10 @@ export const BillingSuccessPage = ({
   maxAttempts = BILLING_SUCCESS_MAX_ATTEMPTS,
 }: BillingSuccessPageProps) => {
   const api = useApi();
+  const location = useLocation();
   const [round, setRound] = useState(0);
   const [view, setView] = useState<SuccessView>("polling");
+  const [resolvedPaidTier, setResolvedPaidTier] = useState<PaidTier>();
   const getMeRef = useRef<BillingSuccessGetMeFn>(
     getMeProp ?? ((signal) => api.request<Entitlement>(ME_PATH, { signal })),
   );
@@ -65,6 +71,7 @@ export const BillingSuccessPage = ({
         }
 
         if (me.paidTier) {
+          setResolvedPaidTier(me.paidTier);
           setView("ready");
           return;
         }
@@ -94,6 +101,22 @@ export const BillingSuccessPage = ({
       }
     };
   }, [round, pollIntervalMs, maxAttempts]);
+
+  useEffect(() => {
+    if (view !== "ready") {
+      return;
+    }
+
+    const paidTierRecord =
+      resolvedPaidTier && typeof resolvedPaidTier === "object"
+        ? resolvedPaidTier
+        : undefined;
+
+    trackCheckoutSuccess({
+      sessionId: readCheckoutSessionId(location.search),
+      tier: paidTierRecord?.tier,
+    });
+  }, [view, resolvedPaidTier, location.search]);
 
   const handleRetry = () => {
     setView("polling");

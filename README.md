@@ -12,7 +12,7 @@ Terms of Service (`/terms`) and Privacy Policy (`/privacy`) are linked from the 
 
 Contact Us (`/contact`) is a public form that POSTs to `{VITE_API_BASE_URL}/support/contact` with no auth header and no cookies. If that env var is unset, the page still renders and submit stays disabled. The backend must allowlist this site’s origin(s) via `SUPPORT_CONTACT_ALLOWED_ORIGINS` (production plus the Netlify deploy-preview pattern).
 
-The landing and legal pages ship semantic markup, Open Graph / Twitter tags, and JSON-LD (`SoftwareApplication` / `WebPage`). Optional Google Analytics (`VITE_GA_MEASUREMENT_ID`) and Meta Pixel (`VITE_META_PIXEL_ID`) inject only when those public IDs are set. Store CTA clicks then send `store_cta_click` (GA) and `StoreCtaClick` (Meta custom event); see [docs/environment.md](docs/environment.md).
+The landing and legal pages ship semantic markup, Open Graph / Twitter tags, and JSON-LD (`SoftwareApplication` / `WebPage`). Optional Google Analytics (`VITE_GA_MEASUREMENT_ID`), Meta Pixel (`VITE_META_PIXEL_ID`), and TikTok Pixel (`VITE_TIKTOK_PIXEL_ID`) inject only when those public IDs are set. Store CTA clicks then send `store_cta_click` (GA), `StoreCtaClick` (Meta custom event), and `ClickButton` (TikTok); see [docs/environment.md](docs/environment.md).
 
 ## Scripts
 
@@ -35,7 +35,7 @@ The landing and legal pages ship semantic markup, Open Graph / Twitter tags, and
 
 ## Environment variables
 
-Required and optional public env vars (store URLs, backend API origin, legal contact, GA, Meta Pixel IDs, Firebase web config) are listed in [docs/environment.md](docs/environment.md) and `.env.example`. Values must use the `VITE_` prefix. Never put private keys or Firebase Admin credentials in this repo.
+Required and optional public env vars (store URLs, backend API origin, legal contact, GA, Meta Pixel, TikTok Pixel IDs, Firebase web config) are listed in [docs/environment.md](docs/environment.md) and `.env.example`. Values must use the `VITE_` prefix. Never put private keys, Firebase Admin credentials, or pixel IDs in this repo.
 
 ## Firebase console setup
 
@@ -51,7 +51,7 @@ Landing and share-preview CTAs read `VITE_APP_STORE_URL` and `VITE_PLAY_STORE_UR
 
 Set `VITE_API_BASE_URL` to the public backend origin (for example `https://api.example.com`, no trailing slash) so `/share/:token` can fetch `GET /public/shares/{token}`, `/contact` can POST `/support/contact`, and `/pricing` can fetch `GET /billing/plans`. Leave it blank to show a clear unavailable state on those pages.
 
-Set `VITE_PUBLIC_SITE_URL` to the public origin (for example `https://example.com`) so canonical and social URLs are absolute. Leave `VITE_GA_MEASUREMENT_ID` and `VITE_META_PIXEL_ID` blank to ship no analytics or advertising scripts.
+Set `VITE_PUBLIC_SITE_URL` to the public origin (for example `https://example.com`) so canonical and social URLs are absolute. Leave `VITE_GA_MEASUREMENT_ID`, `VITE_META_PIXEL_ID`, and `VITE_TIKTOK_PIXEL_ID` blank to ship no analytics or advertising scripts.
 
 ## Screenshots
 

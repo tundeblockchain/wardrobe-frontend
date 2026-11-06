@@ -28,6 +28,7 @@ import { ItemForm } from "../../components/dashboard/ItemForm";
 import { ResourceEmptyState } from "../../components/dashboard/ResourceEmptyState";
 import { ResourceErrorState } from "../../components/dashboard/ResourceErrorState";
 import { ResourceLoadingState } from "../../components/dashboard/ResourceLoadingState";
+import { trackEvent } from "../../config/trackingEvents";
 import { dashboardCopy } from "../../content/dashboardCopy";
 import {
   loadUnusedResource,
@@ -289,6 +290,7 @@ const ItemFormReady = ({
           file: selectedFile,
           putFile,
         });
+        trackEvent("item_image_uploaded");
         setIsUploading(false);
       }
 
@@ -322,6 +324,7 @@ const ItemFormReady = ({
         }
 
         const created = await resourceApi.createItem(wardrobeId, body);
+        trackEvent("add_item", { category: values.category });
         navigate(getAppItemPath(created.itemId, created.wardrobeId));
         return;
       }
@@ -339,6 +342,7 @@ const ItemFormReady = ({
         acquiredAt: acquiredAt || null,
         ...(imageKey ? { imageKey } : {}),
       });
+      trackEvent("edit_item", { category: values.category });
       navigate(getAppItemPath(updated.itemId, updated.wardrobeId));
     } catch (error) {
       if (isCatalogLimitError(error)) {

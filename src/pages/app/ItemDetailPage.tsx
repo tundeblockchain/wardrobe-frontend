@@ -42,6 +42,8 @@ import { ResourceEmptyState } from "../../components/dashboard/ResourceEmptyStat
 import { ResourceErrorState } from "../../components/dashboard/ResourceErrorState";
 import { ResourceImage } from "../../components/dashboard/ResourceImage";
 import { ResourceLoadingState } from "../../components/dashboard/ResourceLoadingState";
+import { trackEvent } from "../../config/trackingEvents";
+import { useTrackOnce } from "../../config/useTrackOnce";
 import { dashboardCopy } from "../../content/dashboardCopy";
 import { useResourceQuery } from "../../hooks/useResourceQuery";
 import {
@@ -206,6 +208,13 @@ export const ItemDetailPage = ({
     [itemId, resourceApi],
   );
   const query = useResourceQuery(queryKey, loadItem);
+  useTrackOnce(
+    "view_item",
+    query.status === "ready",
+    query.status === "ready"
+      ? { content_type: "item", category: query.data.item.category }
+      : undefined,
+  );
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | undefined>(undefined);
@@ -317,6 +326,7 @@ export const ItemDetailPage = ({
     setDeleteError(undefined);
     try {
       await resourceApi.deleteItem(item.wardrobeId, item.itemId);
+      trackEvent("delete_item");
       setIsDeleteOpen(false);
       navigate(getAppWardrobePath(item.wardrobeId));
     } catch (error) {

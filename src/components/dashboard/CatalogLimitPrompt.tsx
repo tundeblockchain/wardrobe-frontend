@@ -7,6 +7,7 @@ import type {
 import type { FetchBillingPlansFn } from "../../api/billingPlans";
 import type { CheckoutGetMeFn, StartCheckoutFn } from "../../hooks/useCheckoutAction";
 import { getCatalogLimitDescription } from "../../content/catalogLimitCopy";
+import { useTrackOnce } from "../../config/useTrackOnce";
 import { dashboardCopy } from "../../content/dashboardCopy";
 import { StatusCard } from "../StatusCard";
 import { CheckoutUpgradeAction } from "../billing/CheckoutUpgradeAction";
@@ -34,6 +35,11 @@ export const CatalogLimitPrompt = ({
   fetchPlans,
 }: CatalogLimitPromptProps) => {
   const copy = dashboardCopy.catalogLimit[kind];
+  useTrackOnce("paywall_shown", true, {
+    surface: "catalog",
+    catalog_kind: kind,
+  });
+  useTrackOnce("limit_hit", true, { kind });
 
   return (
     <DashboardNarrowContent>

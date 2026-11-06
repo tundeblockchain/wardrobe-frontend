@@ -16,7 +16,11 @@ Never commit secrets, tokens, or private keys.
 | `VITE_PUBLIC_SITE_URL` | No | Public origin for canonical, Open Graph, and Twitter URLs (no trailing slash). When unset, the current origin is used in the browser. | `https://example.com` |
 | `VITE_API_BASE_URL` | No | Public backend API origin (no trailing slash) for public routes (`GET /public/shares/{token}`, `POST /support/contact`, `GET /billing/plans`) and signed-in app calls (including `GET /me`). Empty values keep public pages rendering with a clear unavailable state. | `https://api.example.com` |
 | `VITE_GA_MEASUREMENT_ID` | No | Google Analytics 4 measurement ID. Scripts are injected only when this value is a `G-` ID. | `G-XXXXXXXXXX` |
-| `VITE_META_PIXEL_ID` | No | Meta Pixel ID. The pixel is injected only when this value is a numeric ID. | `000000000000000` |
+| `VITE_META_PIXEL_ID` | No | Meta Pixel ID. The pixel is injected only when this value is a numeric ID. Sends PageView on route changes plus in-app/website action events. | `000000000000000` |
+| `VITE_TIKTOK_PIXEL_ID` | No | TikTok Pixel ID. The pixel is injected only when this value is an alphanumeric ID (`ttq.load(id)` + `ttq.page()`). Never commit a real ID. | `CXXXXXXXXXXXXXXXXX` |
+| `VITE_TRACKING_DEBUG` | No (defaults to `false`) | When `true` or `1`, each tracking event is written with `console.debug`. Also on in Vite DEV. Keep false in production. | `false` |
+| `VITE_META_TEST_EVENT_CODE` | No | Optional Meta Events Manager test code. Env only; never commit a value; leave blank in production. | |
+| `VITE_TIKTOK_TEST_EVENT_CODE` | No | Optional TikTok Test Events code. Env only; never commit a value; leave blank in production. | |
 | `VITE_LEGAL_CONTACT_EMAIL` | No | Public operator contact email shown on Terms of Service and Privacy Policy. Empty values show a store-listing contact fallback. | `legal@example.com` |
 | `VITE_LEGAL_CONTACT_URL` | No | Optional public operator contact page shown on Terms of Service and Privacy Policy. | `https://example.com/contact` |
 | `VITE_FIREBASE_API_KEY` | For `/login` and `/app` sign-in | Public Firebase web API key for the same project as the mobile app | |
@@ -29,7 +33,27 @@ Never commit secrets, tokens, or private keys.
 
 Empty or whitespace-only values are treated as unset by `getPublicAppEnv()`.
 
-Google Analytics and Meta Pixel snippets are omitted entirely when their IDs are missing, blank, or not a valid public identifier. Do not put real measurement IDs in the repository.
+Google Analytics, Meta Pixel, and TikTok Pixel snippets are omitted entirely when their IDs are missing, blank, or not a valid public identifier. Do not put real measurement IDs, test event codes, or debug flags in the repository.
+
+Set the same `VITE_*` keys in the **Netlify UI** (Site settings → Environment variables) for production and deploy previews. Pixel IDs are public; still do not commit them.
+
+There is **no cookie consent banner** in this frontend. Pixels load as soon as their env IDs are set. That is a product/legal decision still needed before enabling advertising pixels in production.
+
+## Website and /app measurement events
+
+`trackEvent` in `src/config/trackingEvents.ts` fans each action to GA4 (`gtag`), Meta (`fbq`), and TikTok (`ttq`). A vendor is called only when its env ID is valid **and** that vendor’s function is present. Wrappers no-op otherwise.
+
+Event ids and identity:
+
+- Non-purchase events: generated `event_id` (`crypto.randomUUID()`). Meta 4th `fbq` argument `{ eventID }`; TikTok `{ event_id }`.
+- Subscribe: `event_id` = `stripe_<checkoutSessionId>` from `?session_id=` on the Stripe success URL. Meta `{ eventID }`, TikTok `{ event_id }`. No generated fallback: if `session_id` is missing, the event still fires without an `event_id`. De-duplicate per session id in `sessionStorage`. The raw session id is never sent in event params.
+- The website never sends StartTrial. Web Stripe checkout does not set a trial (`subscription_data` is metadata only), so the server always classes a web checkout as Subscribe. Trial-to-paid conversions and renewals are server-only.
+- Backend `success_url` is already `<origin>/app/billing/success?session_id={CHECKOUT_SESSION_ID}` (`wardrobe-backend` PR 92, `src/shared/billing-urls.ts`). That lands on `BillingSuccessPage`.
+- When signed in, `external_id` is the SHA-256 hex of the Firebase uid (Web Crypto). Never the raw uid, email, phone, or name. Meta: `fbq('init', id, { external_id })` (re-init after login). TikTok: `ttq.identify({ external_id })`.
+
+Page views send route templates such as `/app/wardrobes/:id`, never real IDs, emails, names, or search terms. Advanced matching is not used.
+
+Subscribe fires only after a successful return to `/app/billing/success` once `GET /me` shows `paidTier`, never on the checkout click. InitiateCheckout fires when checkout is created. The website does not guess trial status from the plan or entitlement. If web trials are added later, the trial flag must come from the backend (for example a `conversionEvent` field) so browser and server event names stay matched.
 
 ## Store CTA click events
 
@@ -39,8 +63,17 @@ Enabled App Store and Google Play buttons (hero, download band, and share previe
 | --- | --- | --- | --- |
 | Google Analytics 4 | `store_cta_click` | `gtag('event', ...)` | `store`: `appStore` or `playStore`; `placement`: `hero`, `download`, or `share` |
 | Meta Pixel | `StoreCtaClick` | `fbq('trackCustom', ...)` | `store`: `appStore` or `playStore`; `placement`: `hero`, `download`, or `share` |
+| TikTok Pixel | `ClickButton` | `ttq.track(...)` | `store`: `appStore` or `playStore`; `placement`: `hero`, `download`, or `share` |
 
-A vendor is called only when its env ID is a valid public identifier **and** that vendor’s function (`gtag` or `fbq`) is present. Empty, blank, or malformed IDs are a no-op. Disabled Google Play “coming soon” buttons do not send events. App Store buttons are live by default and do send events when a vendor ID is set.
+Disabled Google Play “coming soon” buttons do not send events. App Store buttons are live by default and do send events when a vendor ID is set.
+
+## How to test pixels
+
+1. Set `VITE_GA_MEASUREMENT_ID`, `VITE_META_PIXEL_ID`, and/or `VITE_TIKTOK_PIXEL_ID` in `.env.local` (or Netlify for a preview deploy).
+2. Optionally set `VITE_TRACKING_DEBUG=true` and watch `[tracking]` in the browser console.
+3. Meta: Events Manager → Test Events. Optionally set `VITE_META_TEST_EVENT_CODE` while testing; leave it blank in production.
+4. TikTok: Events Manager → Test Events. Optionally set `VITE_TIKTOK_TEST_EVENT_CODE` while testing; leave it blank in production.
+5. Confirm Subscribe `eventID` / `event_id` is `stripe_` plus the Stripe `session_id` query value, and that the raw session id is not in event params. After sign-in, confirm Meta `init` and TikTok `identify` carry only the hashed `external_id`.
 
 Legal pages always refer to **the operator** (no personal names). Set `VITE_LEGAL_CONTACT_EMAIL` in Netlify so store reviewers have a visible contact address.
 

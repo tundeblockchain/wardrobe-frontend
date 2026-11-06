@@ -1,6 +1,7 @@
-import { act, fireEvent, screen } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { mockEntitlement, mockFreeAtLimitEntitlement } from "../../api/mockResourceApi";
+import * as trackingEvents from "../../config/trackingEvents";
 import { appPaths } from "../../routes/paths";
 import { renderWithProviders } from "../../test/renderWithProviders";
 import {
@@ -19,6 +20,8 @@ const flushPoll = async (intervalMs = 2_500) => {
 describe("BillingSuccessPage", () => {
   afterEach(() => {
     vi.useRealTimers();
+    vi.restoreAllMocks();
+    window.sessionStorage.clear();
   });
 
   it("stays in processing while paidTier is missing, even with session_id in the URL", async () => {
@@ -167,6 +170,63 @@ describe("BillingSuccessPage", () => {
       }),
     ).toBeInTheDocument();
     expect(getMe).toHaveBeenCalledTimes(BILLING_SUCCESS_MAX_ATTEMPTS * 2);
+  });
+
+  it("fires Subscribe with stripe session id and no session id in params", async () => {
+    const trackSpy = vi.spyOn(trackingEvents, "trackCheckoutSuccess");
+    const getMe = vi.fn().mockResolvedValue({
+      ...mockEntitlement,
+      paidTier: { tier: "premium", source: "stripe" },
+    });
+
+    renderWithProviders(<BillingSuccessPage getMe={getMe} />, {
+      route: `${appPaths.appBillingSuccess}?session_id=cs_test_123`,
+      auth: { user: { id: "user-1" } },
+    });
+
+    expect(
+      await screen.findByRole("heading", {
+        level: 1,
+        name: "You are subscribed",
+      }),
+    ).toBeInTheDocument();
+    await waitFor(() => {
+      expect(trackSpy).toHaveBeenCalledWith({
+        sessionId: "cs_test_123",
+        tier: "premium",
+      });
+    });
+  });
+
+  it("still fires Subscribe when getMe includes trial fields", async () => {
+    const trackSpy = vi.spyOn(trackingEvents, "trackCheckoutSuccess");
+    const getMe = vi.fn().mockResolvedValue({
+      ...mockEntitlement,
+      status: "trialing",
+      trial_end: Math.floor(Date.now() / 1000) + 86_400,
+      paidTier: { tier: "premium", source: "stripe" },
+    });
+
+    renderWithProviders(<BillingSuccessPage getMe={getMe} />, {
+      route: `${appPaths.appBillingSuccess}?session_id=cs_test_123`,
+      auth: { user: { id: "user-1" } },
+    });
+
+    expect(
+      await screen.findByRole("heading", {
+        level: 1,
+        name: "You are subscribed",
+      }),
+    ).toBeInTheDocument();
+    await waitFor(() => {
+      expect(trackSpy).toHaveBeenCalledWith({
+        sessionId: "cs_test_123",
+        tier: "premium",
+      });
+    });
+    expect(trackSpy).not.toHaveBeenCalledWith(
+      expect.objectContaining({ isTrial: true }),
+    );
   });
 
   it("stops polling and aborts in-flight /me after unmount", async () => {

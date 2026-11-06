@@ -34,6 +34,7 @@ import { setLoginNotice } from "../../auth/loginNotice";
 import { useAuth } from "../../auth/useAuth";
 import { UpgradePriceLabel } from "../../components/billing/UpgradePriceLabel";
 import { DashboardPage } from "../../components/dashboard/DashboardPage";
+import { trackEvent } from "../../config/trackingEvents";
 import { dashboardCopy } from "../../content/dashboardCopy";
 import { invalidateResourceQueries } from "../../hooks/resourceQueryInvalidation";
 import { appPaths, getContactPath } from "../../routes/paths";
@@ -236,6 +237,10 @@ export const SettingsPage = ({
     }
 
     handlePreferenceChange(nextPreference);
+    trackEvent("settings_change", {
+      setting: "theme",
+      value: nextPreference,
+    });
   };
 
   const handleSignOut = async () => {

@@ -4,6 +4,7 @@ import {
   useState,
   type PropsWithChildren,
 } from "react";
+import { trackEvent } from "../config/trackingEvents";
 import {
   AuthContext,
   AuthControllerContext,
@@ -57,8 +58,12 @@ export const AuthProvider = ({
   }, []);
 
   const signOut = useCallback(async () => {
-    const { signOutUser } = await loadAuthProviders();
-    await signOutUser();
+    try {
+      const { signOutUser } = await loadAuthProviders();
+      await signOutUser();
+    } finally {
+      trackEvent("logout");
+    }
     if (isControlled) {
       setUser(null);
     }

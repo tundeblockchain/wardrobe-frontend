@@ -54,6 +54,8 @@ describe("legal content", () => {
     );
     const cookiesCopy = cookies?.paragraphs.join(" ") ?? "";
     expect(cookiesCopy).toMatch(/load only when the operator has set public environment identifiers/);
+    expect(cookiesCopy).toMatch(/TikTok pixel/);
+    expect(cookiesCopy).toMatch(/Meta Pixel/);
     expect(cookiesCopy).not.toMatch(/not wired in this MVP/);
 
     const mobileAdvertising = content.sections.find(
@@ -64,8 +66,12 @@ describe("legal content", () => {
       ...(mobileAdvertising?.bullets ?? []),
     ].join(" ");
     expect(mobileAdvertisingCopy).toMatch(/TikTok Business SDK/);
+    expect(mobileAdvertisingCopy).toMatch(/TikTok pixel/);
+    expect(mobileAdvertisingCopy).toMatch(/Meta Pixel/);
     expect(mobileAdvertisingCopy).toMatch(/Meta Platforms/);
     expect(mobileAdvertisingCopy).toMatch(/does not sell personal information/);
+    expect(mobileAdvertisingCopy).toMatch(/Names and email addresses are not sent/);
+    expect(mobileAdvertisingCopy).toMatch(/creating wardrobes/);
     expect(mobileAdvertising?.links?.map((link) => link.label)).toEqual([
       "TikTok Privacy Policy",
       "Meta Privacy Policy",

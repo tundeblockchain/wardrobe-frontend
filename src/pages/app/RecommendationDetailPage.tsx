@@ -19,6 +19,7 @@ import { useResourceApi } from "../../api/useResourceApi";
 import { DashboardPage } from "../../components/dashboard/DashboardPage";
 import { ForbiddenUpgradePrompt } from "../../components/dashboard/ForbiddenUpgradePrompt";
 import { SuggestedOutfitItems } from "../../components/dashboard/SuggestedOutfitItems";
+import { trackEvent } from "../../config/trackingEvents";
 import { dashboardCopy } from "../../content/dashboardCopy";
 import { invalidateResourceQueries } from "../../hooks/resourceQueryCache";
 import {
@@ -71,6 +72,7 @@ export const RecommendationDetailPage = ({
         wardrobeId,
         toCreateOutfitRequest(suggestedOutfit.recommendation),
       );
+      trackEvent("save_outfit", { source: "recommendation" });
       invalidateResourceQueries(["outfits"]);
       setSaveSuccess(true);
     } catch (error) {

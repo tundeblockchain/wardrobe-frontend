@@ -7,6 +7,8 @@ import { StoreCtaButtons } from "../components/landing/StoreCtaButtons";
 import { SectionSurface } from "../components/surfaces/SectionSurface";
 import { fetchSharePreview } from "../api/sharePreview";
 import { getPublicAppEnv, type PublicAppEnv } from "../config/env";
+import { resolveTrackingIds } from "../config/trackingEvents";
+import { useTrackOnce } from "../config/useTrackOnce";
 import { areStoreLinksPublished } from "../config/storeCtas";
 import { getPageSeo } from "../content/seo";
 import { getSharePreviewStatusCopy } from "../content/sharePreviewCopy";
@@ -31,6 +33,9 @@ export const SharePreviewPage = ({
     token,
     requestSharePreview,
   });
+  useTrackOnce("share", sharePreviewState.status === "ok", {
+    content_type: "look",
+  });
   const sharePath = token ? getSharePath(token) : appPaths.home;
   const pageSeo = getPageSeo({
     pathname: sharePath,
@@ -47,10 +52,11 @@ export const SharePreviewPage = ({
     appStoreUrl: env.appStoreUrl,
     playStoreUrl: env.playStoreUrl,
   });
-  const trackingIds = {
+  const trackingIds = resolveTrackingIds({
     gaMeasurementId: env.gaMeasurementId,
     metaPixelId: env.metaPixelId,
-  };
+    tiktokPixelId: env.tiktokPixelId,
+  });
 
   const handleRetryClick = () => {
     sharePreviewState.handleRetry();
