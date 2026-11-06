@@ -33,8 +33,8 @@ export type LegalContactCopy = {
   contactUrl: string | undefined;
 };
 
-export const LEGAL_LAST_UPDATED = "4 November 2026";
-export const LEGAL_LAST_UPDATED_ISO = "2026-11-04";
+export const LEGAL_LAST_UPDATED = "6 November 2026";
+export const LEGAL_LAST_UPDATED_ISO = "2026-11-06";
 
 export const getLegalContactCopy = ({
   appName,

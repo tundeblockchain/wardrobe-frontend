@@ -24,6 +24,7 @@ import { ResourceCardGrid } from "../../components/dashboard/ResourceCardGrid";
 import { ResourceEmptyState } from "../../components/dashboard/ResourceEmptyState";
 import { ResourceErrorState } from "../../components/dashboard/ResourceErrorState";
 import { ResourceLoadingState } from "../../components/dashboard/ResourceLoadingState";
+import { trackEvent } from "../../config/trackingEvents";
 import { dashboardCopy } from "../../content/dashboardCopy";
 import { invalidateCatalogLists } from "../../hooks/resourceQueryCache";
 import { useResourceQuery } from "../../hooks/useResourceQuery";
@@ -80,6 +81,7 @@ export const WardrobeDetailPage = ({
     setDeleteError(undefined);
     try {
       await resourceApi.deleteWardrobe(id);
+      trackEvent("delete_wardrobe");
       invalidateCatalogLists();
       navigate(appPaths.app);
     } catch (error) {

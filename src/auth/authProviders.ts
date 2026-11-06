@@ -1,26 +1,39 @@
 import {
   createUserWithEmailAndPassword,
+  getAdditionalUserInfo,
   GoogleAuthProvider,
   OAuthProvider,
   sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signInWithPopup,
   signOut,
+  type UserCredential,
 } from "firebase/auth";
+import { trackEvent } from "../config/trackingEvents";
 import { getFirebaseAuth } from "../firebase/config";
 
 export const APPLE_AUTH_PROVIDER_ID = "apple.com";
 
+const trackSocialCredential = (
+  credential: UserCredential,
+  method: "google" | "apple",
+): void => {
+  const isNewUser = Boolean(getAdditionalUserInfo(credential)?.isNewUser);
+  trackEvent(isNewUser ? "sign_up" : "login", { method });
+};
+
 export const signInWithGoogle = async (): Promise<void> => {
   const provider = new GoogleAuthProvider();
-  await signInWithPopup(getFirebaseAuth(), provider);
+  const credential = await signInWithPopup(getFirebaseAuth(), provider);
+  trackSocialCredential(credential, "google");
 };
 
 export const signInWithApple = async (): Promise<void> => {
   const provider = new OAuthProvider(APPLE_AUTH_PROVIDER_ID);
   provider.addScope("email");
   provider.addScope("name");
-  await signInWithPopup(getFirebaseAuth(), provider);
+  const credential = await signInWithPopup(getFirebaseAuth(), provider);
+  trackSocialCredential(credential, "apple");
 };
 
 export const signInWithEmail = async (
@@ -28,6 +41,7 @@ export const signInWithEmail = async (
   password: string,
 ): Promise<void> => {
   await signInWithEmailAndPassword(getFirebaseAuth(), email.trim(), password);
+  trackEvent("login", { method: "email" });
 };
 
 export const registerWithEmail = async (
@@ -39,6 +53,7 @@ export const registerWithEmail = async (
     email.trim(),
     password,
   );
+  trackEvent("sign_up", { method: "email" });
 };
 
 export const sendPasswordReset = async (email: string): Promise<void> => {

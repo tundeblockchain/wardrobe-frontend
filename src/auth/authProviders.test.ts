@@ -19,6 +19,7 @@ const firebaseAuthMocks = vi.hoisted(() => {
     GoogleAuthProvider,
     OAuthProvider,
     signInWithPopup: vi.fn(),
+    getAdditionalUserInfo: vi.fn(),
     signInWithEmailAndPassword: vi.fn(),
     createUserWithEmailAndPassword: vi.fn(),
     sendPasswordResetEmail: vi.fn(),
@@ -33,6 +34,7 @@ vi.mock("firebase/auth", () => ({
   GoogleAuthProvider: firebaseAuthMocks.GoogleAuthProvider,
   OAuthProvider: firebaseAuthMocks.OAuthProvider,
   signInWithPopup: firebaseAuthMocks.signInWithPopup,
+  getAdditionalUserInfo: firebaseAuthMocks.getAdditionalUserInfo,
   signInWithEmailAndPassword: firebaseAuthMocks.signInWithEmailAndPassword,
   createUserWithEmailAndPassword:
     firebaseAuthMocks.createUserWithEmailAndPassword,
@@ -64,6 +66,7 @@ describe("authProviders", () => {
     vi.clearAllMocks();
     firebaseAuthMocks.currentUser.getIdToken.mockResolvedValue("id-token");
     firebaseAuthMocks.signInWithPopup.mockResolvedValue({});
+    firebaseAuthMocks.getAdditionalUserInfo.mockReturnValue({ isNewUser: false });
     firebaseAuthMocks.signInWithEmailAndPassword.mockResolvedValue({});
     firebaseAuthMocks.createUserWithEmailAndPassword.mockResolvedValue({});
     firebaseAuthMocks.sendPasswordResetEmail.mockResolvedValue(undefined);

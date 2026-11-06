@@ -22,6 +22,7 @@ import { ResourceEmptyState } from "../../components/dashboard/ResourceEmptyStat
 import { ResourceErrorState } from "../../components/dashboard/ResourceErrorState";
 import { ResourceLoadingState } from "../../components/dashboard/ResourceLoadingState";
 import { SuggestedOutfitItems } from "../../components/dashboard/SuggestedOutfitItems";
+import { useTrackOnce } from "../../config/useTrackOnce";
 import { dashboardCopy } from "../../content/dashboardCopy";
 import { useAbortableResourceQuery } from "../../hooks/useAbortableResourceQuery";
 import {
@@ -218,6 +219,10 @@ const RecommendationsReady = ({
 }: RecommendationsReadyProps) => {
   const copy = dashboardCopy.recommendations;
   const navigate = useNavigate();
+  useTrackOnce("view_recommendations", true, {
+    content_type: "recommendations",
+    result_count: views.length,
+  });
 
   const handleOpenSuggestion = (view: SuggestedOutfitView) => {
     navigate(getAppWardrobeRecommendationDetailPath(wardrobeId), {

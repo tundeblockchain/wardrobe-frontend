@@ -8,6 +8,10 @@ interface ImportMetaEnv {
   readonly VITE_API_BASE_URL?: string;
   readonly VITE_GA_MEASUREMENT_ID?: string;
   readonly VITE_META_PIXEL_ID?: string;
+  readonly VITE_TIKTOK_PIXEL_ID?: string;
+  readonly VITE_TRACKING_DEBUG?: string;
+  readonly VITE_META_TEST_EVENT_CODE?: string;
+  readonly VITE_TIKTOK_TEST_EVENT_CODE?: string;
   readonly VITE_LEGAL_CONTACT_EMAIL?: string;
   readonly VITE_LEGAL_CONTACT_URL?: string;
   readonly VITE_FIREBASE_API_KEY?: string;

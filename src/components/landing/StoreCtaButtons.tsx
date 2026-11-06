@@ -6,11 +6,8 @@ import {
   isStoreCtaAvailable,
   type StoreKind,
 } from "../../config/storeCtas";
-import {
-  trackStoreCtaClick,
-  type StoreCtaPlacement,
-  type TrackingIds,
-} from "../../config/tracking";
+import type { StoreCtaPlacement, TrackingIds } from "../../config/tracking";
+import { trackStoreCtaClick } from "../../config/trackingEvents";
 
 export type StoreCtaButtonsProps = {
   appStoreUrl: string | undefined;
@@ -69,6 +66,7 @@ export const StoreCtaButtons = ({
             trackingIds ?? {
               gaMeasurementId: undefined,
               metaPixelId: undefined,
+              tiktokPixelId: undefined,
             },
           );
         };

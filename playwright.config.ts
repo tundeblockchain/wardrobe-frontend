@@ -9,7 +9,7 @@ export default defineConfig({
   testIgnore:
     process.env.CAPTURE_SCREENSHOTS === "1"
       ? []
-      : ["**/capture-screenshots.spec.ts"],
+      : ["**/capture-*.spec.ts"],
   fullyParallel: true,
   forbidOnly: isCi,
   retries: isCi ? 2 : 0,

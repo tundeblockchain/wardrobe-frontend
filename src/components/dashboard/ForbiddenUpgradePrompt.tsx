@@ -9,6 +9,7 @@ import type {
 import type { ForbiddenUpgradeKind } from "../../api/entitlementGating";
 import type { FetchBillingPlansFn } from "../../api/billingPlans";
 import type { CheckoutGetMeFn, StartCheckoutFn } from "../../hooks/useCheckoutAction";
+import { useTrackOnce } from "../../config/useTrackOnce";
 import { dashboardCopy } from "../../content/dashboardCopy";
 import { appPaths } from "../../routes/paths";
 import { StatusCard } from "../StatusCard";
@@ -53,6 +54,11 @@ export const ForbiddenUpgradePrompt = ({
   assignLocation,
   fetchPlans,
 }: ForbiddenUpgradePromptProps) => {
+  const delegatesToCatalogLimit = kind === "basic" && Boolean(catalogKind);
+  useTrackOnce("paywall_shown", !delegatesToCatalogLimit, {
+    surface: kind,
+  });
+
   if (kind === "basic") {
     if (catalogKind) {
       return (

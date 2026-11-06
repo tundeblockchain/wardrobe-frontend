@@ -37,6 +37,7 @@ import {
   type WishItem,
   type WishlistApi,
 } from "../../api/wishlistApi";
+import { trackEvent } from "../../config/trackingEvents";
 import { dashboardCopy } from "../../content/dashboardCopy";
 import { ResourceImage } from "./ResourceImage";
 
@@ -145,6 +146,9 @@ export const WishListFormDialog = ({
               toUpdateWishRequest(values, imageKey),
             )
           : await wishlistApi.createWish(toCreateWishRequest(values, imageKey));
+      if (mode !== "edit") {
+        trackEvent("add_to_wishlist");
+      }
       onSaved(saved);
     } catch (error) {
       if (isWishlistLimitError(error)) {

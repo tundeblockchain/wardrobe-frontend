@@ -21,6 +21,7 @@ import {
   type ContactFormValues,
   type SendContactMessageInput,
 } from "../../api/contact";
+import { trackEvent } from "../../config/trackingEvents";
 import { ContactFormStatus } from "./ContactFormStatus";
 import { ContactHoneypotField } from "./ContactHoneypotField";
 
@@ -132,6 +133,9 @@ export const ContactForm = ({
       setStatusMessage(
         `Thanks for contacting ${appName}. We received your message and will reply if a response is needed.`,
       );
+      trackEvent("contact", {
+        form_type: values.subject === "Report a bug" ? "bug" : "contact",
+      });
       return;
     }
 

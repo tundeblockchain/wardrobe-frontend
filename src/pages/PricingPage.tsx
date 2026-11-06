@@ -27,6 +27,7 @@ import { PricingPlanCard } from "../components/pricing/PricingPlanCard";
 import { StatusCard } from "../components/StatusCard";
 import { SectionSurface } from "../components/surfaces/SectionSurface";
 import { getPublicAppEnv } from "../config/env";
+import { useTrackOnce } from "../config/useTrackOnce";
 import { getPaidTier } from "../content/planDisplay";
 import { DashboardThemeProvider } from "../theme/DashboardThemeProvider";
 import {
@@ -109,6 +110,7 @@ export const PricingPage = ({
   const { user } = useAuth();
   const api = useApi();
   const { appName } = getPublicAppEnv();
+  useTrackOnce("view_pricing", true, { content_type: "pricing" });
   const isDashboard = isAppPath(location.pathname);
   const pricingPath = `${location.pathname}${location.search}`;
   const [billingInterval, setBillingInterval] = useState<BillingInterval>(

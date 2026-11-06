@@ -4,7 +4,11 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { StoreCtaButtons } from "./StoreCtaButtons";
 import { renderWithProviders } from "../../test/renderWithProviders";
 import { DEFAULT_APP_STORE_URL } from "../../config/env";
-import { STORE_CTA_GA_EVENT, STORE_CTA_META_EVENT } from "../../config/tracking";
+import {
+  STORE_CTA_GA_EVENT,
+  STORE_CTA_META_EVENT,
+  STORE_CTA_TIKTOK_EVENT,
+} from "../../config/tracking";
 
 const publishedStoreUrls = {
   appStoreUrl: "https://apps.apple.com/app/id000000000",
@@ -15,6 +19,7 @@ describe("StoreCtaButtons", () => {
   afterEach(() => {
     delete window.gtag;
     delete window.fbq;
+    delete window.ttq;
   });
 
   it("links the App Store button to the live listing and keeps Google Play coming soon", () => {
@@ -66,6 +71,7 @@ describe("StoreCtaButtons", () => {
         trackingIds={{
           gaMeasurementId: undefined,
           metaPixelId: undefined,
+          tiktokPixelId: undefined,
         }}
       />,
     );
@@ -102,6 +108,7 @@ describe("StoreCtaButtons", () => {
     const user = userEvent.setup();
     window.gtag = vi.fn();
     window.fbq = vi.fn();
+    window.ttq = Object.assign(vi.fn(), { track: vi.fn() });
 
     renderWithProviders(
       <StoreCtaButtons
@@ -110,6 +117,7 @@ describe("StoreCtaButtons", () => {
         trackingIds={{
           gaMeasurementId: "G-XXXXXXXXXX",
           metaPixelId: "000000000000000",
+          tiktokPixelId: "CXXXXXXXXXXXXXXXXX",
         }}
       />,
     );
@@ -129,6 +137,15 @@ describe("StoreCtaButtons", () => {
         store: "appStore",
         placement: "hero",
       },
+      expect.objectContaining({ eventID: expect.any(String) }),
+    );
+    expect(window.ttq?.track).toHaveBeenCalledWith(
+      STORE_CTA_TIKTOK_EVENT,
+      {
+        store: "appStore",
+        placement: "hero",
+      },
+      expect.objectContaining({ event_id: expect.any(String) }),
     );
     expect(window.gtag).not.toHaveBeenCalledWith(
       "event",
@@ -142,6 +159,7 @@ describe("StoreCtaButtons", () => {
     const user = userEvent.setup();
     window.gtag = vi.fn();
     window.fbq = vi.fn();
+    window.ttq = Object.assign(vi.fn(), { track: vi.fn() });
 
     renderWithProviders(
       <StoreCtaButtons
@@ -150,6 +168,7 @@ describe("StoreCtaButtons", () => {
         trackingIds={{
           gaMeasurementId: "G-XXXXXXXXXX",
           metaPixelId: "000000000000000",
+          tiktokPixelId: "CXXXXXXXXXXXXXXXXX",
         }}
       />,
     );
@@ -167,6 +186,15 @@ describe("StoreCtaButtons", () => {
         store: "playStore",
         placement: "download",
       },
+      expect.objectContaining({ eventID: expect.any(String) }),
+    );
+    expect(window.ttq?.track).toHaveBeenCalledWith(
+      STORE_CTA_TIKTOK_EVENT,
+      {
+        store: "playStore",
+        placement: "download",
+      },
+      expect.objectContaining({ event_id: expect.any(String) }),
     );
   });
 });

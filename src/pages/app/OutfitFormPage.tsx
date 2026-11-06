@@ -19,6 +19,7 @@ import { OutfitForm } from "../../components/dashboard/OutfitForm";
 import { ResourceEmptyState } from "../../components/dashboard/ResourceEmptyState";
 import { ResourceErrorState } from "../../components/dashboard/ResourceErrorState";
 import { ResourceLoadingState } from "../../components/dashboard/ResourceLoadingState";
+import { trackEvent } from "../../config/trackingEvents";
 import { dashboardCopy } from "../../content/dashboardCopy";
 import {
   loadUnusedResource,
@@ -263,6 +264,7 @@ const OutfitFormReady = ({
           name: values.name.trim(),
           items: values.items,
         });
+        trackEvent("save_outfit", { item_count: values.items.length });
         navigate(appPaths.appOutfits);
         return;
       }
@@ -275,6 +277,7 @@ const OutfitFormReady = ({
         name: values.name.trim(),
         items: values.items,
       });
+      trackEvent("save_outfit", { item_count: values.items.length });
       navigate(appPaths.appOutfits);
     } catch (error) {
       if (isCatalogLimitError(error)) {

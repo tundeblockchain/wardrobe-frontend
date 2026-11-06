@@ -37,7 +37,7 @@ describe("PrivacyPolicyPage", () => {
     expect(
       screen.getByText(/This Privacy Policy explains how the operator of Pocket Closet/),
     ).toBeInTheDocument();
-    expect(screen.getByText("Last updated 4 November 2026")).toBeInTheDocument();
+    expect(screen.getByText("Last updated 6 November 2026")).toBeInTheDocument();
   });
 
   it("renders mobile advertising attribution disclosures required for store review", () => {

@@ -24,6 +24,7 @@ import {
   appPaths,
   getAppWardrobePath,
 } from "../../routes/paths";
+import { trackEvent } from "../../config/trackingEvents";
 import { useResourceApi } from "../../api/useResourceApi";
 
 export type WardrobeFormPageProps = {
@@ -205,6 +206,7 @@ const WardrobeFormReady = ({
         const created = await resourceApi.createWardrobe({
           name: values.name.trim(),
         });
+        trackEvent("create_wardrobe");
         navigate(getAppWardrobePath(created.wardrobeId));
         return;
       }
@@ -216,6 +218,7 @@ const WardrobeFormReady = ({
       const updated = await resourceApi.updateWardrobe(wardrobe.wardrobeId, {
         name: values.name.trim(),
       });
+      trackEvent("rename_wardrobe");
       navigate(getAppWardrobePath(updated.wardrobeId));
     } catch (error) {
       if (isCatalogLimitError(error)) {
