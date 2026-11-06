@@ -8,6 +8,9 @@ export const E2E_TRACKING_IDS = {
   tiktokPixelId: "CXXXXXXXXXXXXXXXXX",
 } as const;
 
+export const E2E_USER_EXTERNAL_ID =
+  "c6c289e49e9c05b2145860387b73bcb18df43fb09a1e4a4a9713c76c88bb541b";
+
 export type TrackingCallLog = {
   gtag: unknown[][];
   fbq: unknown[][];
@@ -83,6 +86,10 @@ export const installTrackingStubs = async (page: Page): Promise<void> => {
       if (ttq) {
         ttq.track = (...args: unknown[]) => {
           calls.ttq.push(args);
+          persistLog(calls);
+        };
+        ttq.identify = (payload: Record<string, unknown>) => {
+          calls.ttq.push(["identify", payload]);
           persistLog(calls);
         };
         ttq.page = () => undefined;
@@ -267,4 +274,55 @@ export const openTrackedSignedInHome = async (page: Page): Promise<void> => {
   await expect(
     page.getByRole("heading", { level: 1, name: "Your closet" }),
   ).toBeVisible();
+};
+
+const isHashedExternalIdPayload = (value: unknown): boolean => {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  return (value as { external_id?: unknown }).external_id === E2E_USER_EXTERNAL_ID;
+};
+
+export const waitForHashedExternalId = async (page: Page): Promise<void> => {
+  await expect
+    .poll(async () => {
+      try {
+        const calls = await readTrackingCalls(page);
+        const metaInit = calls.fbq.find(
+          (call) => call[0] === "init" && isHashedExternalIdPayload(call[2]),
+        );
+        const tiktokIdentify = calls.ttq.find(
+          (call) => call[0] === "identify" && isHashedExternalIdPayload(call[1]),
+        );
+        return Boolean(metaInit && tiktokIdentify);
+      } catch {
+        return false;
+      }
+    })
+    .toBe(true);
+};
+
+export const expectHashedExternalIdOnly = async (page: Page): Promise<void> => {
+  await waitForHashedExternalId(page);
+  const calls = await readTrackingCalls(page);
+  const matchingPayloads = [
+    ...calls.fbq.filter((call) => call[0] === "init").map((call) => call[2]),
+    ...calls.ttq.filter((call) => call[0] === "identify").map((call) => call[1]),
+  ].filter(
+    (payload): payload is Record<string, unknown> =>
+      Boolean(payload) && typeof payload === "object",
+  );
+
+  expect(matchingPayloads.length).toBeGreaterThan(0);
+  for (const payload of matchingPayloads) {
+    expect(Object.keys(payload)).toEqual(["external_id"]);
+    expect(payload.external_id).toBe(E2E_USER_EXTERNAL_ID);
+  }
+
+  const serialized = JSON.stringify(matchingPayloads);
+  expect(serialized).not.toContain(E2E_USER_EMAIL);
+  expect(serialized).not.toContain(E2E_USER_ID);
+  expect(serialized.toLowerCase()).not.toContain("email");
+  expect(serialized.toLowerCase()).not.toContain("phone");
 };

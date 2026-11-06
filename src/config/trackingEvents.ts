@@ -19,6 +19,8 @@ import { getTrackingPageTitle, toTrackingPath } from "./trackingPath";
 
 export const CHECKOUT_SUCCESS_STORAGE_KEY =
   "wardrobe.tracking.checkoutSuccessIds";
+export const STRIPE_EVENT_ID_PREFIX = "stripe_";
+export const MISSING_CHECKOUT_SESSION_KEY = "missing-session-id";
 
 const BLOCKED_PARAM_KEY_PATTERN =
   /email|(^|_)name$|user_id|\buid\b|item_id|wardrobe_id|outfit_id|wish_id|search_term|^query$|\burl\b|href|page_location|phone|address/i;
@@ -225,7 +227,7 @@ export type TrackingParams = Record<string, TrackingParamValue>;
 
 export type TrackEventOptions = {
   ids?: Partial<TrackingIds>;
-  eventId?: string;
+  eventId?: string | null;
   testCodes?: TrackingTestCodes;
 };
 
@@ -251,6 +253,10 @@ export const isStripeCheckoutSessionId = (
   }
 
   return /^cs_(test_)?[A-Za-z0-9]+$/.test(value.trim());
+};
+
+export const toStripeEventId = (sessionId: string): string => {
+  return `${STRIPE_EVENT_ID_PREFIX}${sessionId}`;
 };
 
 export const readCheckoutSessionId = (
@@ -402,12 +408,18 @@ export const trackEvent = (
 
   const mapping = TRACKING_EVENT_MAP[name];
   const sanitizedParams = sanitizeTrackingParams(params);
-  const eventId = options.eventId ?? createEventId();
+  const eventId =
+    options.eventId === null
+      ? undefined
+      : (options.eventId ?? createEventId());
   const testCodes = resolveTrackingTestCodes(options.testCodes);
   const result: TrackEventResult = {
     ...emptyResult(),
     eventId,
   };
+  const vendorOptions = eventId
+    ? { eventId, testCodes }
+    : { testCodes };
 
   if (gaMeasurementId) {
     result.googleAnalytics = sendGoogleAnalyticsEvent(
@@ -420,7 +432,7 @@ export const trackEvent = (
     result.metaPixel = sendMetaPixelEvent(
       mapping.meta.name,
       sanitizedParams,
-      { eventId, testCodes },
+      vendorOptions,
       mapping.meta.standard,
     );
   }
@@ -429,7 +441,7 @@ export const trackEvent = (
     result.tiktokPixel = sendTikTokPixelEvent(
       mapping.tiktok.name,
       sanitizedParams,
-      { eventId, testCodes },
+      vendorOptions,
     );
   }
 
@@ -540,16 +552,17 @@ export const trackCheckoutSuccess = (
   const sessionId = isStripeCheckoutSessionId(signal.sessionId)
     ? signal.sessionId.trim()
     : undefined;
-  const eventId = sessionId ?? options.eventId ?? "checkout-success";
+  const eventId = sessionId ? toStripeEventId(sessionId) : null;
+  const dedupeKey = sessionId ?? MISSING_CHECKOUT_SESSION_KEY;
   const storage =
     typeof window === "undefined" ? undefined : window.sessionStorage;
   const firedIds = readFiredCheckoutIds(storage);
 
-  if (firedIds.has(eventId)) {
+  if (firedIds.has(dedupeKey)) {
     return emptyResult();
   }
 
-  firedIds.add(eventId);
+  firedIds.add(dedupeKey);
   writeFiredCheckoutIds(storage, firedIds);
 
   const params: TrackingParams = {};
@@ -561,7 +574,8 @@ export const trackCheckoutSuccess = (
   }
 
   return trackEvent(signal.isTrial ? "start_trial" : "subscribe", params, {
-    ...options,
+    ids: options.ids,
+    testCodes: options.testCodes,
     eventId,
   });
 };

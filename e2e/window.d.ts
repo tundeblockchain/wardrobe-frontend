@@ -9,6 +9,7 @@ declare global {
       track?: (...args: unknown[]) => void;
       page?: (...args: unknown[]) => void;
       load?: (...args: unknown[]) => void;
+      identify?: (payload: Record<string, unknown>) => void;
     };
     __WARDROBE_E2E_TRACKING_IDS__?: {
       gaMeasurementId?: string;

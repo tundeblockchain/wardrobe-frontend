@@ -59,11 +59,16 @@ export type TtqTrackFunction = (
   options?: Record<string, unknown>,
 ) => void;
 
+export type TtqIdentifyFunction = (
+  payload: Record<string, unknown>,
+) => void;
+
 export type TtqFunction = {
   (...args: unknown[]): unknown;
   track?: TtqTrackFunction;
   page?: (...args: unknown[]) => void;
   load?: (...args: unknown[]) => void;
+  identify?: TtqIdentifyFunction;
   instance?: (...args: unknown[]) => unknown;
 };
 
@@ -373,9 +378,33 @@ export const isTikTokPixelLoaded = (): boolean => {
   return typeof window.ttq?.track === "function";
 };
 
+export const isTikTokIdentifyLoaded = (): boolean => {
+  return typeof window.ttq?.identify === "function";
+};
+
 export type VendorEventOptions = {
-  eventId: string;
+  eventId?: string;
   testCodes?: TrackingTestCodes;
+};
+
+const buildVendorEventOptions = (
+  eventIdKey: "eventID" | "event_id",
+  options: VendorEventOptions,
+  testEventCode: string | undefined,
+): Record<string, string> | undefined => {
+  const eventOptions: Record<string, string> = {};
+  if (options.eventId) {
+    eventOptions[eventIdKey] = options.eventId;
+  }
+  if (testEventCode) {
+    eventOptions.test_event_code = testEventCode;
+  }
+
+  if (Object.keys(eventOptions).length === 0) {
+    return undefined;
+  }
+
+  return eventOptions;
 };
 
 export const sendGoogleAnalyticsEvent = (
@@ -401,15 +430,17 @@ export const sendMetaPixelEvent = (
   }
 
   const command = standard ? "track" : "trackCustom";
-  const eventOptions: Record<string, string> = {
-    eventID: options.eventId,
-  };
-  const testEventCode = options.testCodes?.metaTestEventCode;
-  if (testEventCode) {
-    eventOptions.test_event_code = testEventCode;
-  }
+  const eventOptions = buildVendorEventOptions(
+    "eventID",
+    options,
+    options.testCodes?.metaTestEventCode,
+  );
 
-  window.fbq(command, eventName, params, eventOptions);
+  if (eventOptions) {
+    window.fbq(command, eventName, params, eventOptions);
+  } else {
+    window.fbq(command, eventName, params);
+  }
   return true;
 };
 
@@ -422,14 +453,16 @@ export const sendTikTokPixelEvent = (
     return false;
   }
 
-  const eventOptions: Record<string, string> = {
-    event_id: options.eventId,
-  };
-  const testEventCode = options.testCodes?.tiktokTestEventCode;
-  if (testEventCode) {
-    eventOptions.test_event_code = testEventCode;
-  }
+  const eventOptions = buildVendorEventOptions(
+    "event_id",
+    options,
+    options.testCodes?.tiktokTestEventCode,
+  );
 
-  window.ttq.track(eventName, params, eventOptions);
+  if (eventOptions) {
+    window.ttq.track(eventName, params, eventOptions);
+  } else {
+    window.ttq.track(eventName, params);
+  }
   return true;
 };

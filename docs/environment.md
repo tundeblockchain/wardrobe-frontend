@@ -43,17 +43,16 @@ There is **no cookie consent banner** in this frontend. Pixels load as soon as t
 
 `trackEvent` in `src/config/trackingEvents.ts` fans each action to GA4 (`gtag`), Meta (`fbq`), and TikTok (`ttq`). A vendor is called only when its env ID is valid **and** that vendor’s function is present. Wrappers no-op otherwise.
 
-Every event includes a de-duplication id:
+Event ids and identity:
 
-- Meta: 4th `fbq` argument `{ eventID }`
-- TikTok: options `{ event_id }`
-- Generated with `crypto.randomUUID()` except Subscribe/StartTrial, which use the Stripe Checkout Session id (`cs_...`) from `?session_id=` when present
+- Non-purchase events: generated `event_id` (`crypto.randomUUID()`). Meta 4th `fbq` argument `{ eventID }`; TikTok `{ event_id }`.
+- Subscribe / StartTrial: `event_id` = `stripe_<checkoutSessionId>` from `?session_id=` on the Stripe success URL. Same event names on both platforms (`Subscribe` / `StartTrial`). No generated fallback: if `session_id` is missing, the event still fires without an `event_id`. De-duplicate per session id in `sessionStorage`. Renewals are server-only; the web sends no renewal event.
+- Backend must add `session_id={CHECKOUT_SESSION_ID}` to Stripe `success_url`.
+- When signed in, `external_id` is the SHA-256 hex of the Firebase uid (Web Crypto). Never the raw uid, email, phone, or name. Meta: `fbq('init', id, { external_id })` (re-init after login). TikTok: `ttq.identify({ external_id })`.
 
 Page views send route templates such as `/app/wardrobes/:id`, never real IDs, emails, names, or search terms. Advanced matching is not used.
 
 Subscribe and StartTrial fire only after a successful return to `/app/billing/success` once `GET /me` shows `paidTier`, never on the checkout click. InitiateCheckout fires when checkout is created. StartTrial is sent only if `paidTier.status` (or `isTrial`/`trial`) indicates a trial; `GET /me` currently has no trial field, so production sends Subscribe.
-
-The backend should set Stripe `success_url` to include `session_id={CHECKOUT_SESSION_ID}` so browser and server events can de-duplicate.
 
 ## Store CTA click events
 
@@ -73,7 +72,7 @@ Disabled Google Play “coming soon” buttons do not send events. App Store but
 2. Optionally set `VITE_TRACKING_DEBUG=true` and watch `[tracking]` in the browser console.
 3. Meta: Events Manager → Test Events. Optionally set `VITE_META_TEST_EVENT_CODE` while testing; leave it blank in production.
 4. TikTok: Events Manager → Test Events. Optionally set `VITE_TIKTOK_TEST_EVENT_CODE` while testing; leave it blank in production.
-5. Confirm `eventID` / `event_id` on Subscribe matches the Stripe `session_id` query value.
+5. Confirm Subscribe `eventID` / `event_id` is `stripe_` plus the Stripe `session_id` query value. After sign-in, confirm Meta `init` and TikTok `identify` carry only the hashed `external_id`.
 
 Legal pages always refer to **the operator** (no personal names). Set `VITE_LEGAL_CONTACT_EMAIL` in Netlify so store reviewers have a visible contact address.
 

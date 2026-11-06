@@ -2,8 +2,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { getPublicAppEnv } from "./env";
 import {
   CHECKOUT_SUCCESS_STORAGE_KEY,
-  createEventId,
   isPaidTierTrial,
+  MISSING_CHECKOUT_SESSION_KEY,
   isStripeCheckoutSessionId,
   isTrackingDebugEnabled,
   readCheckoutSessionId,
@@ -29,7 +29,11 @@ const ALL_IDS = {
 const installVendors = () => {
   window.gtag = vi.fn();
   window.fbq = vi.fn();
-  window.ttq = Object.assign(vi.fn(), { track: vi.fn(), page: vi.fn() });
+  window.ttq = Object.assign(vi.fn(), {
+    track: vi.fn(),
+    page: vi.fn(),
+    identify: vi.fn(),
+  });
 };
 
 describe("isTrackingDebugEnabled", () => {
@@ -71,6 +75,8 @@ describe("event mapping", () => {
       "InitiateCheckout",
     );
     expect(TRACKING_EVENT_MAP.subscribe.meta.name).toBe("Subscribe");
+    expect(TRACKING_EVENT_MAP.subscribe.tiktok.name).toBe("Subscribe");
+    expect(TRACKING_EVENT_MAP.start_trial.meta.name).toBe("StartTrial");
     expect(TRACKING_EVENT_MAP.start_trial.tiktok.name).toBe("StartTrial");
   });
 });
@@ -186,6 +192,25 @@ describe("trackEvent", () => {
       "CompleteRegistration",
       { method: "email" },
       { event_id: "evt_signup_1" },
+    );
+  });
+
+  it("generates an event_id for non-purchase events when none is passed", () => {
+    installVendors();
+
+    const result = trackEvent("login", { method: "email" }, { ids: ALL_IDS });
+
+    expect(result.eventId).toEqual(expect.any(String));
+    expect(window.fbq).toHaveBeenCalledWith(
+      "trackCustom",
+      "Login",
+      { method: "email" },
+      { eventID: result.eventId },
+    );
+    expect(window.ttq?.track).toHaveBeenCalledWith(
+      "Login",
+      { method: "email" },
+      { event_id: result.eventId },
     );
   });
 
@@ -433,7 +458,7 @@ describe("checkout success Subscribe", () => {
     expect(readCheckoutSessionId("?session_id=nope")).toBeUndefined();
   });
 
-  it("fires Subscribe once per session id and uses it as event_id", () => {
+  it("fires Subscribe once per session id as stripe_<checkoutSessionId>", () => {
     installVendors();
 
     const first = trackCheckoutSuccess(
@@ -446,19 +471,19 @@ describe("checkout success Subscribe", () => {
     );
 
     expect(first.metaPixel).toBe(true);
-    expect(first.eventId).toBe("cs_test_once");
+    expect(first.eventId).toBe("stripe_cs_test_once");
     expect(second.metaPixel).toBe(false);
     expect(window.fbq).toHaveBeenCalledTimes(1);
     expect(window.fbq).toHaveBeenCalledWith(
       "track",
       "Subscribe",
       { tier: "basic", interval: "monthly" },
-      { eventID: "cs_test_once" },
+      { eventID: "stripe_cs_test_once" },
     );
     expect(window.ttq?.track).toHaveBeenCalledWith(
       "Subscribe",
       { tier: "basic", interval: "monthly" },
-      { event_id: "cs_test_once" },
+      { event_id: "stripe_cs_test_once" },
     );
     expect(window.sessionStorage.getItem(CHECKOUT_SUCCESS_STORAGE_KEY)).toContain(
       "cs_test_once",
@@ -477,26 +502,39 @@ describe("checkout success Subscribe", () => {
       "track",
       "StartTrial",
       { tier: "premium" },
-      { eventID: "cs_test_trial" },
+      { eventID: "stripe_cs_test_trial" },
+    );
+    expect(window.ttq?.track).toHaveBeenCalledWith(
+      "StartTrial",
+      { tier: "premium" },
+      { event_id: "stripe_cs_test_trial" },
     );
   });
 
-  it("falls back to a generated event id when session_id is missing", () => {
+  it("fires Subscribe without event_id when session_id is missing", () => {
     installVendors();
-    const eventId = createEventId();
 
     const result = trackCheckoutSuccess(
       { sessionId: null },
-      { ids: ALL_IDS, eventId },
+      { ids: ALL_IDS, eventId: "should-not-be-used" },
     );
 
-    expect(result.eventId).toBe(eventId);
-    expect(window.fbq).toHaveBeenCalledWith(
+    expect(result.eventId).toBeUndefined();
+    expect(window.fbq).toHaveBeenCalledWith("track", "Subscribe", {});
+    expect(window.fbq).not.toHaveBeenCalledWith(
       "track",
       "Subscribe",
       {},
-      { eventID: eventId },
+      expect.anything(),
     );
+    expect(window.ttq?.track).toHaveBeenCalledWith("Subscribe", {});
+    expect(window.sessionStorage.getItem(CHECKOUT_SUCCESS_STORAGE_KEY)).toContain(
+      MISSING_CHECKOUT_SESSION_KEY,
+    );
+
+    const second = trackCheckoutSuccess({ sessionId: null }, { ids: ALL_IDS });
+    expect(second.metaPixel).toBe(false);
+    expect(window.fbq).toHaveBeenCalledTimes(1);
   });
 
   it("does not treat GET /me paidTier as a trial without an explicit trial field", () => {

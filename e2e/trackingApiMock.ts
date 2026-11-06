@@ -176,7 +176,7 @@ export const installTrackingApiMocks = async (
         try {
           pageOrigin = new URL(page.url()).origin;
         } catch {
-          pageOrigin = "http://127.0.0.1:5173";
+          // Keep the local Vite origin when Playwright has no page URL yet.
         }
         const requestOrigin = request.headers()["origin"];
         const successUrl =

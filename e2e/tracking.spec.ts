@@ -6,6 +6,7 @@ import {
   countTrackingEvent,
   expectNoPixelScripts,
   findTrackingEvent,
+  expectHashedExternalIdOnly,
   installTrackingStubs,
   mockFirebaseEmailAuth,
   openTrackedSignedInHome,
@@ -92,6 +93,7 @@ test.describe("tracking pixels", () => {
     await expect(
       page.getByRole("heading", { level: 1, name: "Your closet" }),
     ).toBeVisible();
+    await expectHashedExternalIdOnly(page);
 
     await page.getByRole("button", { name: "Account menu" }).click();
     await page.getByRole("menuitem", { name: "Sign out" }).click();
@@ -114,6 +116,7 @@ test.describe("tracking pixels", () => {
       "Login",
     );
     expect(JSON.stringify(login)).not.toMatch(/@|password/i);
+    await expectHashedExternalIdOnly(page);
   });
 
   test("records creating a wardrobe, adding an item, and saving an outfit", async ({
@@ -196,6 +199,7 @@ test.describe("tracking pixels", () => {
   }) => {
     await setupTrackedApp(page);
     await openTrackedSignedInHome(page);
+    await expectHashedExternalIdOnly(page);
 
     await page.goto("/app/pricing");
     await expect(
@@ -211,7 +215,7 @@ test.describe("tracking pixels", () => {
     await waitForTrackingEvent(page, "ttq", "InitiateCheckout");
     const subscribe = await waitForTrackingEvent(page, "fbq", "Subscribe");
     expect(subscribe[3]).toEqual(
-      expect.objectContaining({ eventID: "cs_test_e2e" }),
+      expect.objectContaining({ eventID: "stripe_cs_test_e2e" }),
     );
     const tiktokSubscribe = await waitForTrackingEvent(
       page,
@@ -219,7 +223,7 @@ test.describe("tracking pixels", () => {
       "Subscribe",
     );
     expect(tiktokSubscribe[2]).toEqual(
-      expect.objectContaining({ event_id: "cs_test_e2e" }),
+      expect.objectContaining({ event_id: "stripe_cs_test_e2e" }),
     );
 
     await page.reload();
