@@ -1,0 +1,210 @@
+import { expect, test, type Page } from "@playwright/test";
+import {
+  mockFirebaseAuthNetwork,
+  openSignedInHome,
+  seedFirebaseAuth,
+} from "./signedInApp";
+import {
+  httpsWish,
+  httpLinkWish,
+  installWishlistApiMocks,
+  populatedWishes,
+  unsafeLinkWish,
+  weekendWardrobe,
+  workWardrobe,
+  type WishlistMockOptions,
+} from "./wishlistApiMock";
+
+const openHome = async (
+  page: Page,
+  options?: WishlistMockOptions,
+): Promise<void> => {
+  await seedFirebaseAuth(page);
+  await mockFirebaseAuthNetwork(page);
+  await installWishlistApiMocks(page, options);
+  await openSignedInHome(page);
+};
+
+test.describe("Wish list row", () => {
+  test("shows loading skeleton cards", async ({ page }) => {
+    await openHome(page, {
+      wishes: populatedWishes,
+      listDelayMs: 8_000,
+    });
+
+    await expect(
+      page.getByRole("status", { name: "Loading wish list" }),
+    ).toBeVisible();
+    await expect(page.getByTestId("wish-list-skeleton")).toBeVisible();
+  });
+
+  test("shows an empty state with an add button", async ({ page }) => {
+    await openHome(page, { wishes: [] });
+
+    const wishList = page.getByTestId("wish-list-row");
+    await expect(
+      wishList.getByRole("heading", { name: "No wishes yet" }),
+    ).toBeVisible();
+    await expect(
+      wishList.getByRole("button", { name: "Add to wish list" }),
+    ).toBeVisible();
+    await expect(wishList.getByText(/upgrade/i)).toHaveCount(0);
+  });
+
+  test("adds a wish from the empty state", async ({ page }) => {
+    await openHome(page, { wishes: [] });
+
+    await page.getByRole("button", { name: "Add to wish list" }).click();
+    await expect(
+      page.getByRole("heading", { name: "Add to wish list" }),
+    ).toBeVisible();
+    await page.getByRole("textbox", { name: "Name" }).fill("Ivory midi");
+    await page.getByRole("button", { name: "Save wish" }).click();
+
+    await expect(
+      page.getByRole("button", { name: "Ivory midi" }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "No wishes yet" }),
+    ).toHaveCount(0);
+  });
+
+  test("opens wish detail and edits the name", async ({ page }) => {
+    await openHome(page, { wishes: [httpsWish] });
+
+    await page.getByRole("button", { name: "Black loafers" }).click();
+    const detail = page.getByRole("dialog", { name: "Black loafers" });
+    await expect(detail).toBeVisible();
+    await expect(
+      detail.getByRole("button", { name: "Mark this wish as owned" }),
+    ).toBeVisible();
+
+    await detail.getByRole("button", { name: "Edit this wish" }).click();
+    await expect(
+      page.getByRole("heading", { name: "Edit wish" }),
+    ).toBeVisible();
+    await page.getByRole("textbox", { name: "Name" }).fill("Black loafers v2");
+    await page.getByRole("button", { name: "Save changes" }).click();
+
+    await expect(
+      page.getByRole("button", { name: "Black loafers v2" }),
+    ).toBeVisible();
+  });
+
+  test("acquires into the only wardrobe without a picker", async ({ page }) => {
+    await openHome(page, {
+      wishes: [httpsWish],
+      wardrobes: [weekendWardrobe],
+    });
+
+    await page.getByRole("button", { name: "Black loafers" }).click();
+    await page
+      .getByRole("button", { name: "Mark this wish as owned" })
+      .click();
+
+    await expect(
+      page.getByRole("heading", { name: "Choose a wardrobe" }),
+    ).toHaveCount(0);
+    await expect(
+      page.getByRole("button", { name: "Black loafers" }),
+    ).toHaveCount(0);
+  });
+
+  test("shows a wardrobe picker when several wardrobes exist", async ({
+    page,
+  }) => {
+    await openHome(page, {
+      wishes: [httpsWish],
+      wardrobes: [weekendWardrobe, workWardrobe],
+    });
+
+    await page.getByRole("button", { name: "Black loafers" }).click();
+    await page
+      .getByRole("button", { name: "Mark this wish as owned" })
+      .click();
+
+    await expect(
+      page.getByRole("heading", { name: "Choose a wardrobe" }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("combobox", { name: "Wardrobe" }),
+    ).toBeVisible();
+    await page.getByRole("button", { name: "Cancel" }).click();
+    await expect(
+      page.getByRole("button", { name: "Black loafers" }),
+    ).toBeVisible();
+  });
+
+  test("keeps the wish and shows the item-cap paywall when acquire is blocked", async ({
+    page,
+  }) => {
+    await openHome(page, {
+      wishes: [httpsWish],
+      wardrobes: [weekendWardrobe],
+      acquireItemCap: true,
+    });
+
+    await page.getByRole("button", { name: "Black loafers" }).click();
+    await page
+      .getByRole("button", { name: "Mark this wish as owned" })
+      .click();
+
+    await expect(
+      page.getByRole("heading", { name: "Clothing item limit reached" }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("button", {
+        name: "Upgrade to Basic to add more clothing items",
+      }),
+    ).toBeVisible();
+
+    await page.getByRole("button", { name: "Close" }).click();
+    await expect(
+      page.getByRole("button", { name: "Black loafers" }),
+    ).toBeVisible();
+  });
+
+  test("rejects non-https links in the form and does not render unsafe stored links", async ({
+    page,
+  }) => {
+    await openHome(page, {
+      wishes: [httpsWish, unsafeLinkWish, httpLinkWish],
+    });
+
+    await page.getByRole("button", { name: "Add to wish list" }).first().click();
+    await page.getByRole("textbox", { name: "Name" }).fill("Blocked link");
+    await page.getByRole("textbox", { name: "Link" }).fill("http://example.com");
+    await page.getByRole("button", { name: "Save wish" }).click();
+    await expect(page.getByText("Enter an https:// link.")).toBeVisible();
+
+    await page
+      .getByRole("textbox", { name: "Link" })
+      .fill("javascript:alert(1)");
+    await page.getByRole("button", { name: "Save wish" }).click();
+    await expect(page.getByText("Enter an https:// link.")).toBeVisible();
+    await page.getByRole("button", { name: "Cancel" }).click();
+
+    await page.getByRole("button", { name: "Black loafers" }).click();
+    const httpsLink = page.getByRole("link", {
+      name: "Open product link in a new tab",
+    });
+    await expect(httpsLink).toHaveAttribute(
+      "href",
+      "https://example.com/black-loafers",
+    );
+    await expect(httpsLink).toHaveAttribute("target", "_blank");
+    await expect(httpsLink).toHaveAttribute("rel", "noopener noreferrer");
+    await page.getByRole("button", { name: "Close" }).click();
+
+    await page.getByRole("button", { name: "Unsafe link coat" }).click();
+    await expect(
+      page.getByRole("link", { name: "Open product link in a new tab" }),
+    ).toHaveCount(0);
+    await page.getByRole("button", { name: "Close" }).click();
+
+    await page.getByRole("button", { name: "Http link bag" }).click();
+    await expect(
+      page.getByRole("link", { name: "Open product link in a new tab" }),
+    ).toHaveCount(0);
+  });
+});
