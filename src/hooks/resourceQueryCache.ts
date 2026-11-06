@@ -7,6 +7,7 @@ export const CATALOG_LIST_QUERY_KEYS = {
   virtualTryOn: "virtual-try-on",
   virtualProfile: "virtual-profile",
   recommendations: "recommendations",
+  wishlist: "wishlist",
 } as const;
 
 export const SESSION_QUERY_CACHE_KEYS = {

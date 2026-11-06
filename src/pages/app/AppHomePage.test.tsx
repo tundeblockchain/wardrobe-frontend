@@ -5,10 +5,16 @@ import { resetWardrobeCoverImageRetries } from "../../components/dashboard/wardr
 import {
   createEmptyResourceApi,
   createErrorResourceApi,
+  createFreeAtLimitResourceApi,
   createMockResourceApi,
   WEEKEND_WARDROBE_IMAGE_URL,
   WORKWEAR_WARDROBE_COVER_IMAGE_URL,
 } from "../../api/mockResourceApi";
+import {
+  createEmptyWishlistApi,
+  createMockWishlistApi,
+  type WishlistApi,
+} from "../../api/wishlistApi";
 import { WARDROBE_COVER_ITEM_LIMIT } from "../../api/resourceApi";
 import type { Wardrobe } from "../../api/resourceTypes";
 import { getAppWardrobePath } from "../../routes/paths";
@@ -21,10 +27,14 @@ import { AppHomePage } from "./AppHomePage";
 
 const renderPage = (
   resourceApi: ReturnType<typeof createMockResourceApi>,
+  wishlistApi: WishlistApi = createMockWishlistApi(),
 ) => {
-  return renderWithProviders(<AppHomePage resourceApi={resourceApi} />, {
-    auth: { user: { id: "user-1", email: "user@example.com" } },
-  });
+  return renderWithProviders(
+    <AppHomePage resourceApi={resourceApi} wishlistApi={wishlistApi} />,
+    {
+      auth: { user: { id: "user-1", email: "user@example.com" } },
+    },
+  );
 };
 
 const pendingApi = createMockResourceApi({
@@ -453,6 +463,43 @@ describe("AppHomePage", () => {
     );
     expect(
       screen.getByRole("heading", { name: "Couldn't load wardrobes" }),
+    ).toBeInTheDocument();
+  });
+
+  it("renders the wish list row below wardrobes", async () => {
+    renderPage(createMockResourceApi());
+
+    expect(
+      await screen.findByRole("link", { name: "Weekend closet" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { level: 2, name: "Wish list" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Black loafers" })).toBeInTheDocument();
+  });
+
+  it("shows the wish list for a Free-tier user with no upgrade prompt", async () => {
+    renderPage(createFreeAtLimitResourceApi(), createMockWishlistApi());
+
+    expect(
+      await screen.findByRole("heading", { level: 2, name: "Wish list" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Black loafers" })).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", {
+        name: "Upgrade to Basic to add more clothing items",
+      }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("keeps wardrobe cards independent of an empty wish list", async () => {
+    renderPage(createMockResourceApi(), createEmptyWishlistApi());
+
+    expect(
+      await screen.findByRole("link", { name: "Weekend closet" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "No wishes yet" }),
     ).toBeInTheDocument();
   });
 });

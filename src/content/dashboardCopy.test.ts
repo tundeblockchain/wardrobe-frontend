@@ -5,6 +5,16 @@ const SUGGESTION_CAP_COPY_PATTERN =
   /up to\s+\d+|\d+\s+per\s+(day|week|month)|suggestion cap|\d+\s+(outfit suggestions|suggested outfits)/i;
 
 describe("dashboard plan copy", () => {
+  it("does not use the word AI in wish list copy", () => {
+    const copy = Object.values(dashboardCopy.wishList).join("\n");
+    expect(copy).not.toMatch(/\bAI\b/);
+    expect(dashboardCopy.wishList.title).toBe("Wish list");
+    expect(dashboardCopy.wishList.addLabel).toBe("Add to wish list");
+    expect(dashboardCopy.wishList.capMessage).toBe(
+      "Wish list can hold 500 items.",
+    );
+  });
+
   it("says unlimited for Basic and Premium on the suggested outfits gate", () => {
     const copy = [
       dashboardCopy.recommendations.upgradeTitle,

@@ -5,7 +5,16 @@ import reactRefresh from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
-  { ignores: ["dist", "coverage", "node_modules"] },
+  {
+    ignores: [
+      "dist",
+      "coverage",
+      "node_modules",
+      "playwright-report",
+      "test-results",
+      "blob-report",
+    ],
+  },
   js.configs.recommended,
   {
     files: ["scripts/**/*.mjs"],
@@ -32,6 +41,12 @@ export default tseslint.config(
         "warn",
         { allowConstantExport: true },
       ],
+    },
+  },
+  {
+    files: ["e2e/**/*.ts", "playwright.config.ts"],
+    rules: {
+      "react-refresh/only-export-components": "off",
     },
   },
 );
