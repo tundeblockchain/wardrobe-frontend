@@ -39,7 +39,8 @@ export type E2EWardrobe = {
 export type WishlistMockOptions = {
   wishes?: E2EWish[];
   wardrobes?: E2EWardrobe[];
-  listDelayMs?: number;
+  /** Keep GET /wishlist pending so the loading state stays on screen. */
+  holdWishlistList?: boolean;
   acquireItemCap?: boolean;
 };
 
@@ -99,7 +100,7 @@ export const workWardrobe: E2EWardrobe = {
   imageUrl: "/screenshots/try-on-blue-mini-390.jpg",
 };
 
-const freeAtItemCapEntitlement = {
+export const freeEntitlement = {
   userId: E2E_USER_ID,
   tier: "FREE",
   status: "NONE",
@@ -205,7 +206,7 @@ export const installWishlistApiMocks = async (
       const wishMatch = path.match(/^\/wishlist\/([^/]+)$/);
 
       if (method === "GET" && path === "/me") {
-        await fulfillJson(route, 200, freeAtItemCapEntitlement);
+        await fulfillJson(route, 200, freeEntitlement);
         return;
       }
 
@@ -225,11 +226,11 @@ export const installWishlistApiMocks = async (
       }
 
       if (method === "GET" && path === "/wishlist") {
-        if (options.listDelayMs && options.listDelayMs > 0) {
-          await new Promise((resolve) => {
-            setTimeout(resolve, options.listDelayMs);
-          });
+        if (options.holdWishlistList) {
+          await new Promise<void>(() => undefined);
+          return;
         }
+
         await fulfillJson(route, 200, {
           wishes: wishes.map(cloneWish),
         });
