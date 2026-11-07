@@ -4,6 +4,12 @@ export type LegalSectionLink = {
   ariaLabel: string;
 };
 
+export type LegalSectionAction = {
+  id: string;
+  label: string;
+  ariaLabel: string;
+};
+
 export type LegalSection = {
   id: string;
   title: string;
@@ -11,6 +17,7 @@ export type LegalSection = {
   bullets?: string[];
   linkIntro?: string;
   links?: LegalSectionLink[];
+  action?: LegalSectionAction;
 };
 
 export type LegalDocumentContent = {
@@ -33,8 +40,8 @@ export type LegalContactCopy = {
   contactUrl: string | undefined;
 };
 
-export const LEGAL_LAST_UPDATED = "6 November 2026";
-export const LEGAL_LAST_UPDATED_ISO = "2026-11-06";
+export const LEGAL_LAST_UPDATED = "7 November 2026";
+export const LEGAL_LAST_UPDATED_ISO = "2026-11-07";
 
 export const getLegalContactCopy = ({
   appName,

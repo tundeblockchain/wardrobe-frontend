@@ -1,5 +1,5 @@
 import { screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { LegalDocument } from "./LegalDocument";
 import { getTermsOfServiceContent } from "../../content/legal/termsOfService";
 import { renderWithProviders } from "../../test/renderWithProviders";
@@ -115,5 +115,45 @@ describe("LegalDocument", () => {
     expect(
       screen.getByRole("link", { name: "Meta Privacy Policy" }),
     ).toHaveAttribute("href", "https://www.facebook.com/privacy/policy/");
+  });
+
+  it("renders a section action button", async () => {
+    const onSectionAction = vi.fn();
+
+    renderWithProviders(
+      <LegalDocument
+        appName="Pocket Closet"
+        content={{
+          title: "Privacy Policy",
+          lastUpdated: "7 November 2026",
+          intro: "Test intro.",
+          sections: [
+            {
+              id: "cookies",
+              title: "Cookies and similar technologies",
+              paragraphs: ["Cookie groups are described here."],
+              action: {
+                id: "cookie-settings",
+                label: "Cookie settings",
+                ariaLabel: "Cookie settings",
+              },
+            },
+          ],
+        }}
+        contactEmail={undefined}
+        contactUrl={undefined}
+        relatedLink={{
+          to: appPaths.privacy,
+          label: "Privacy Policy",
+          ariaLabel: "Privacy Policy",
+        }}
+        onSectionAction={onSectionAction}
+      />,
+    );
+
+    const action = screen.getByRole("button", { name: "Cookie settings" });
+    expect(action).toBeInTheDocument();
+    action.click();
+    expect(onSectionAction).toHaveBeenCalledWith("cookie-settings");
   });
 });

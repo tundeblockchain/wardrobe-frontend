@@ -1,10 +1,12 @@
 import { render } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { clearConsent, writeConsent } from "../../config/consent";
 import { AnalyticsListener } from "./AnalyticsListener";
 
 describe("AnalyticsListener", () => {
   afterEach(() => {
+    clearConsent();
     delete window.gtag;
     delete window.fbq;
     delete window.ttq;
@@ -50,7 +52,28 @@ describe("AnalyticsListener", () => {
     expect(window.ttq?.track).not.toHaveBeenCalled();
   });
 
+  it("does not fire page views before a consent choice", () => {
+    window.gtag = vi.fn();
+    window.fbq = vi.fn();
+    window.ttq = Object.assign(vi.fn(), { track: vi.fn() });
+
+    render(
+      <MemoryRouter>
+        <AnalyticsListener
+          gaMeasurementId="G-XXXXXXXXXX"
+          metaPixelId="000000000000000"
+          tiktokPixelId="CXXXXXXXXXXXXXXXXX"
+        />
+      </MemoryRouter>,
+    );
+
+    expect(window.gtag).not.toHaveBeenCalled();
+    expect(window.fbq).not.toHaveBeenCalled();
+    expect(window.ttq?.track).not.toHaveBeenCalled();
+  });
+
   it("fires a templated page view when a valid Google Analytics ID is provided", () => {
+    writeConsent({ analytics: true, marketing: false }, 1);
     window.gtag = vi.fn();
 
     render(
@@ -75,6 +98,7 @@ describe("AnalyticsListener", () => {
   });
 
   it("fires Meta and TikTok page views when those IDs are provided", () => {
+    writeConsent({ analytics: false, marketing: true }, 1);
     window.fbq = vi.fn();
     window.ttq = Object.assign(vi.fn(), { track: vi.fn() });
 

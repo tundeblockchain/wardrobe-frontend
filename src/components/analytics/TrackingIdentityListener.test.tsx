@@ -1,6 +1,7 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useAuthController } from "../../auth/useAuth";
+import { clearConsent, writeConsent } from "../../config/consent";
 import * as trackingIdentity from "../../config/trackingIdentity";
 import { renderWithProviders } from "../../test/renderWithProviders";
 import { TrackingIdentityListener } from "./TrackingIdentityListener";
@@ -28,7 +29,12 @@ const installVendors = () => {
 };
 
 describe("TrackingIdentityListener", () => {
+  beforeEach(() => {
+    writeConsent({ analytics: false, marketing: true }, 1);
+  });
+
   afterEach(() => {
+    clearConsent();
     delete window.fbq;
     delete window.ttq;
     vi.restoreAllMocks();
@@ -127,6 +133,31 @@ describe("TrackingIdentityListener", () => {
         metaPixelId: undefined,
         tiktokPixelId: undefined,
       });
+    });
+    expect(window.fbq).not.toHaveBeenCalled();
+    expect(window.ttq?.identify).not.toHaveBeenCalled();
+  });
+
+  it("does not identify without marketing consent", async () => {
+    clearConsent();
+    installVendors();
+    const applySpy = vi.spyOn(trackingIdentity, "applyTrackingExternalId");
+
+    renderWithProviders(
+      <TrackingIdentityListener
+        metaPixelId={META_PIXEL_ID}
+        tiktokPixelId={TIKTOK_PIXEL_ID}
+      />,
+      {
+        auth: {
+          user: { id: "user-1" },
+          loading: false,
+        },
+      },
+    );
+
+    await waitFor(() => {
+      expect(applySpy).not.toHaveBeenCalled();
     });
     expect(window.fbq).not.toHaveBeenCalled();
     expect(window.ttq?.identify).not.toHaveBeenCalled();

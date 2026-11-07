@@ -2,10 +2,11 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./theme/fonts";
 import { App } from "./App";
-import { getPublicAppEnv } from "./config/env";
-import { installPublicTracking } from "./config/tracking";
+import { getConsent } from "./config/consent";
+import { applyConsentedTracking } from "./config/tracking";
+import { resolveTrackingIds } from "./config/trackingEvents";
 
-installPublicTracking(getPublicAppEnv());
+applyConsentedTracking(resolveTrackingIds(), getConsent());
 
 const rootElement = document.getElementById("root");
 if (!rootElement) {

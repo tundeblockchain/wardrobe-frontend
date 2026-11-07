@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { StoreCtaButtons } from "./StoreCtaButtons";
 import { renderWithProviders } from "../../test/renderWithProviders";
+import { clearConsent, writeConsent } from "../../config/consent";
 import { DEFAULT_APP_STORE_URL } from "../../config/env";
 import {
   STORE_CTA_GA_EVENT,
@@ -17,6 +18,7 @@ const publishedStoreUrls = {
 
 describe("StoreCtaButtons", () => {
   afterEach(() => {
+    clearConsent();
     delete window.gtag;
     delete window.fbq;
     delete window.ttq;
@@ -106,6 +108,7 @@ describe("StoreCtaButtons", () => {
 
   it("fires store CTA click events for the hero App Store button when IDs are set", async () => {
     const user = userEvent.setup();
+    writeConsent({ analytics: true, marketing: true }, 1);
     window.gtag = vi.fn();
     window.fbq = vi.fn();
     window.ttq = Object.assign(vi.fn(), { track: vi.fn() });
@@ -157,6 +160,7 @@ describe("StoreCtaButtons", () => {
 
   it("fires store CTA click events for the download Play Store button when IDs are set", async () => {
     const user = userEvent.setup();
+    writeConsent({ analytics: true, marketing: true }, 1);
     window.gtag = vi.fn();
     window.fbq = vi.fn();
     window.ttq = Object.assign(vi.fn(), { track: vi.fn() });

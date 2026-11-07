@@ -174,9 +174,18 @@ export const getPrivacyPolicyContent = (
         id: "cookies",
         title: "Cookies and similar technologies",
         paragraphs: [
-          "The marketing website may use strictly necessary cookies to operate the site. Optional analytics or advertising pixels (Google Analytics, the Meta Pixel, and the TikTok pixel) load only when the operator has set public environment identifiers for those tools. They are not required to use the core wardrobe features. Some tracking can also be controlled through browser, device, and store settings.",
+          `The ${appName} website uses cookies and similar technologies in three groups. Non-essential tools run only after you choose to allow them in the cookie banner or Cookie settings.`,
+          "Essential: always on. These are needed to run the site and keep accounts secure. They include Firebase Authentication storage and cookies used to sign in, keep your session, and load the service. Essential storage stays on even if you reject analytics and marketing.",
+          "Analytics: Google Analytics 4 (GA4). This helps the operator understand how the website is used. The GA4 script is loaded from Google Tag Manager only if you allow Analytics.",
+          "Marketing: the Meta Pixel and the TikTok pixel. These help the operator measure advertising. Those scripts load from Meta and TikTok only if you allow Marketing.",
+          "You can change your choice at any time with the Cookie settings link in the footer on every page, including signed-in app pages, or with the Cookie settings button in this section. If the operator updates the consent version, you will be asked again.",
           "Mobile apps may use on-device identifiers, diagnostic software development kits, and advertising software development kits, including the TikTok Business SDK and the Facebook SDK, as described in Mobile advertising and attribution. You can control some tracking through device and store settings.",
         ],
+        action: {
+          id: "cookie-settings",
+          label: "Cookie settings",
+          ariaLabel: "Cookie settings",
+        },
       },
       {
         id: "changes",

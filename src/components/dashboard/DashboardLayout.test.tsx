@@ -296,6 +296,9 @@ describe("DashboardLayout", () => {
       within(legalNav).getByRole("link", { name: "Contact us" }),
     ).toHaveAttribute("href", appPaths.contact);
     expect(
+      within(footer).getByRole("button", { name: "Cookie settings" }),
+    ).toBeInTheDocument();
+    expect(
       within(screen.getByRole("banner")).queryByRole("link", {
         name: "Terms of Service",
       }),

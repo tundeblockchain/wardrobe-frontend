@@ -1,5 +1,6 @@
 import { AnalyticsListener } from "./components/analytics/AnalyticsListener";
 import { TrackingIdentityListener } from "./components/analytics/TrackingIdentityListener";
+import { CookieConsentHost } from "./components/consent/CookieConsentHost";
 import { SeoRouteHead } from "./components/seo/SeoRouteHead";
 import { resolveTrackingIds } from "./config/trackingEvents";
 import { AppProviders } from "./providers/AppProviders";
@@ -11,6 +12,7 @@ export const App = () => {
   return (
     <AppProviders>
       <SeoRouteHead />
+      <CookieConsentHost />
       <AnalyticsListener
         gaMeasurementId={gaMeasurementId}
         metaPixelId={metaPixelId}
