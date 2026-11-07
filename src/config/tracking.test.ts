@@ -1,11 +1,15 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { clearConsent, writeConsent } from "./consent";
 import { getPublicAppEnv } from "./env";
 import {
+  applyConsentedTracking,
   canTrackGoogleAnalytics,
   canTrackMetaPixel,
   canTrackTikTokPixel,
+  commitConsentChoice,
   GA_SCRIPT_HOST,
   getTrackingSnippets,
+  GOOGLE_CONSENT_DEFAULT,
   installPublicTracking,
   isGaMeasurementId,
   isMetaPixelId,
@@ -121,6 +125,9 @@ describe("getTrackingSnippets", () => {
     expect(serialized).toContain("G-XXXXXXXXXX");
     expect(serialized).toContain(GA_SCRIPT_HOST);
     expect(serialized).toContain("gtag");
+    expect(serialized).toContain("'consent', 'default'");
+    expect(serialized).toContain(GOOGLE_CONSENT_DEFAULT.ad_storage);
+    expect(serialized).toContain(GOOGLE_CONSENT_DEFAULT.analytics_storage);
     expect(serialized).not.toContain(META_PIXEL_SCRIPT_SRC);
     expect(serialized).not.toContain(META_PIXEL_NOSCRIPT_HOST);
     expect(serialized).not.toContain("fbq");
@@ -165,6 +172,33 @@ describe("getTrackingSnippets", () => {
     expect(serialized).not.toContain(META_PIXEL_SCRIPT_SRC);
     expect(serialized).not.toContain("fbq");
   });
+
+  it("omits GA snippets without analytics consent and pixels without marketing consent", () => {
+    const ids = {
+      gaMeasurementId: "G-XXXXXXXXXX",
+      metaPixelId: "000000000000000",
+      tiktokPixelId: VALID_TIKTOK_PIXEL_ID,
+    };
+
+    const analyticsOnly = serializeSnippets(
+      getTrackingSnippets(ids, { analytics: true, marketing: false }),
+    );
+    const marketingOnly = serializeSnippets(
+      getTrackingSnippets(ids, { analytics: false, marketing: true }),
+    );
+    const none = getTrackingSnippets(ids, {
+      analytics: false,
+      marketing: false,
+    });
+
+    expect(analyticsOnly).toContain(GA_SCRIPT_HOST);
+    expect(analyticsOnly).not.toContain(META_PIXEL_SCRIPT_SRC);
+    expect(analyticsOnly).not.toContain(TIKTOK_PIXEL_SCRIPT_SRC);
+    expect(marketingOnly).not.toContain(GA_SCRIPT_HOST);
+    expect(marketingOnly).toContain(META_PIXEL_SCRIPT_SRC);
+    expect(marketingOnly).toContain(TIKTOK_PIXEL_SCRIPT_SRC);
+    expect(none).toEqual([]);
+  });
 });
 
 describe("installPublicTracking", () => {
@@ -200,6 +234,7 @@ describe("installPublicTracking", () => {
         tiktokPixelId: undefined,
       },
       doc,
+      { analytics: true, marketing: false },
     );
     const html = doc.documentElement.outerHTML;
 
@@ -211,9 +246,33 @@ describe("installPublicTracking", () => {
     expect(html).toContain(GA_SCRIPT_HOST);
     expect(html).toContain("G-XXXXXXXXXX");
     expect(html).toContain("gtag");
+    expect(html).toContain("'consent', 'default'");
+    expect(html).toContain('"analytics_storage":"denied"');
     expect(html).not.toContain(META_PIXEL_SCRIPT_SRC);
     expect(html).not.toContain(META_PIXEL_NOSCRIPT_HOST);
     expect(html).not.toContain("fbq");
+    expect(html).not.toContain(TIKTOK_PIXEL_SCRIPT_SRC);
+  });
+
+  it("does not inject scripts when IDs are valid but consent is denied", () => {
+    const doc = document.implementation.createHTMLDocument("denied");
+    const result = installPublicTracking(
+      {
+        gaMeasurementId: "G-XXXXXXXXXX",
+        metaPixelId: "000000000000000",
+        tiktokPixelId: VALID_TIKTOK_PIXEL_ID,
+      },
+      doc,
+    );
+    const html = doc.documentElement.outerHTML;
+
+    expect(result).toEqual({
+      googleAnalytics: false,
+      metaPixel: false,
+      tiktokPixel: false,
+    });
+    expect(html).not.toContain(GA_SCRIPT_HOST);
+    expect(html).not.toContain(META_PIXEL_SCRIPT_SRC);
     expect(html).not.toContain(TIKTOK_PIXEL_SCRIPT_SRC);
   });
 
@@ -226,6 +285,7 @@ describe("installPublicTracking", () => {
         tiktokPixelId: undefined,
       },
       doc,
+      { analytics: false, marketing: true },
     );
     const html = doc.documentElement.outerHTML;
 
@@ -253,6 +313,7 @@ describe("installPublicTracking", () => {
         tiktokPixelId: VALID_TIKTOK_PIXEL_ID,
       },
       doc,
+      { analytics: false, marketing: true },
     );
     const html = doc.documentElement.outerHTML;
 
@@ -270,3 +331,63 @@ describe("installPublicTracking", () => {
     expect(html).not.toContain("fbq");
   });
 });
+
+describe("commitConsentChoice", () => {
+  const ALL_IDS = {
+    gaMeasurementId: "G-XXXXXXXXXX",
+    metaPixelId: "000000000000000",
+    tiktokPixelId: VALID_TIKTOK_PIXEL_ID,
+  };
+
+  afterEach(() => {
+    clearConsent();
+  });
+
+  it("installs consented scripts immediately without a reload", () => {
+    const doc = document.implementation.createHTMLDocument("grant");
+    const reload = vi.fn();
+
+    const saved = commitConsentChoice(
+      { analytics: true, marketing: true },
+      ALL_IDS,
+      { doc, reload },
+    );
+
+    expect(saved.analytics).toBe(true);
+    expect(saved.marketing).toBe(true);
+    expect(doc.documentElement.outerHTML).toContain(GA_SCRIPT_HOST);
+    expect(doc.documentElement.outerHTML).toContain(META_PIXEL_SCRIPT_SRC);
+    expect(doc.documentElement.outerHTML).toContain(TIKTOK_PIXEL_SCRIPT_SRC);
+    expect(reload).not.toHaveBeenCalled();
+  });
+
+  it("reloads after withdrawal when scripts were already installed", () => {
+    const doc = document.implementation.createHTMLDocument("withdraw");
+    const reload = vi.fn();
+    writeConsent({ analytics: true, marketing: true }, 1);
+    applyConsentedTracking(ALL_IDS, { analytics: true, marketing: true }, doc);
+
+    commitConsentChoice(
+      { analytics: false, marketing: false },
+      ALL_IDS,
+      { doc, reload },
+    );
+
+    expect(reload).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not reload when rejecting on a first visit with no scripts", () => {
+    const doc = document.implementation.createHTMLDocument("first-reject");
+    const reload = vi.fn();
+
+    commitConsentChoice(
+      { analytics: false, marketing: false },
+      ALL_IDS,
+      { doc, reload },
+    );
+
+    expect(reload).not.toHaveBeenCalled();
+    expect(doc.head.querySelectorAll("script")).toHaveLength(0);
+  });
+});
+

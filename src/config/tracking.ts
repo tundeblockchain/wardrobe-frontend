@@ -1,3 +1,11 @@
+import {
+  clearTrackingCookies,
+  getConsent,
+  isWithdrawingConsent,
+  notifyConsentListeners,
+  writeConsent,
+  type ConsentFlags,
+} from "./consent";
 import type { PublicAppEnv } from "./env";
 import type { StoreKind } from "./storeCtas";
 
@@ -34,6 +42,31 @@ export type TrackingInstallResult = {
   googleAnalytics: boolean;
   metaPixel: boolean;
   tiktokPixel: boolean;
+};
+
+export type GoogleConsentState = "granted" | "denied";
+
+export const GOOGLE_CONSENT_DEFAULT = {
+  ad_storage: "denied",
+  ad_user_data: "denied",
+  ad_personalization: "denied",
+  analytics_storage: "denied",
+} as const;
+
+const toGoogleConsentState = (allowed: boolean): GoogleConsentState => {
+  return allowed ? "granted" : "denied";
+};
+
+export const getGoogleConsentUpdate = (
+  consent: ConsentFlags,
+): Record<keyof typeof GOOGLE_CONSENT_DEFAULT, GoogleConsentState> => {
+  const adState = toGoogleConsentState(consent.marketing);
+  return {
+    ad_storage: adState,
+    ad_user_data: adState,
+    ad_personalization: adState,
+    analytics_storage: toGoogleConsentState(consent.analytics),
+  };
 };
 
 export const STORE_CTA_GA_EVENT = "store_cta_click";
@@ -149,26 +182,47 @@ export const sanitizeTikTokPixelId = (
   return value;
 };
 
-const getGaSnippets = (measurementId: string): TrackingSnippet[] => {
+const serializeConsentCommand = (
+  command: "default" | "update",
+  payload: Record<string, GoogleConsentState | number | undefined>,
+): string => {
+  return `window.gtag('consent', '${command}', ${JSON.stringify(payload)});`;
+};
+
+const getGaSnippets = (
+  measurementId: string,
+  marketingConsent: boolean,
+): TrackingSnippet[] => {
+  const consentUpdate = getGoogleConsentUpdate({
+    analytics: true,
+    marketing: marketingConsent,
+  });
+
   return [
-    {
-      id: "wardrobe-ga-src",
-      vendor: "google-analytics",
-      tagName: "script",
-      src: `${GA_SCRIPT_HOST}/gtag/js?id=${encodeURIComponent(measurementId)}`,
-      async: true,
-    },
     {
       id: "wardrobe-ga-inline",
       vendor: "google-analytics",
       tagName: "script",
       inlineContent: [
         "window.dataLayer = window.dataLayer || [];",
-        "function gtag(){window.dataLayer.push(arguments);}",
-        "window.gtag = gtag;",
-        "gtag('js', new Date());",
-        `gtag('config', '${measurementId}', { send_page_view: false });`,
+        "if (typeof window.gtag !== 'function') {",
+        "  window.gtag = function () { window.dataLayer.push(arguments); };",
+        "}",
+        serializeConsentCommand("default", {
+          ...GOOGLE_CONSENT_DEFAULT,
+          wait_for_update: 500,
+        }),
+        serializeConsentCommand("update", consentUpdate),
+        "window.gtag('js', new Date());",
+        `window.gtag('config', '${measurementId}', { send_page_view: false });`,
       ].join("\n"),
+    },
+    {
+      id: "wardrobe-ga-src",
+      vendor: "google-analytics",
+      tagName: "script",
+      src: `${GA_SCRIPT_HOST}/gtag/js?id=${encodeURIComponent(measurementId)}`,
+      async: true,
     },
   ];
 };
@@ -268,14 +322,23 @@ const getTikTokPixelSnippets = (pixelId: string): TrackingSnippet[] => {
   ];
 };
 
-export const getTrackingSnippets = (ids: TrackingIds): TrackingSnippet[] => {
+export const getTrackingSnippets = (
+  ids: TrackingIds,
+  consent: ConsentFlags = { analytics: true, marketing: true },
+): TrackingSnippet[] => {
   const snippets: TrackingSnippet[] = [];
-  const gaMeasurementId = sanitizeGaMeasurementId(ids.gaMeasurementId);
-  const metaPixelId = sanitizeMetaPixelId(ids.metaPixelId);
-  const tiktokPixelId = sanitizeTikTokPixelId(ids.tiktokPixelId);
+  const gaMeasurementId = consent.analytics
+    ? sanitizeGaMeasurementId(ids.gaMeasurementId)
+    : undefined;
+  const metaPixelId = consent.marketing
+    ? sanitizeMetaPixelId(ids.metaPixelId)
+    : undefined;
+  const tiktokPixelId = consent.marketing
+    ? sanitizeTikTokPixelId(ids.tiktokPixelId)
+    : undefined;
 
   if (gaMeasurementId) {
-    snippets.push(...getGaSnippets(gaMeasurementId));
+    snippets.push(...getGaSnippets(gaMeasurementId, consent.marketing));
   }
 
   if (metaPixelId) {
@@ -335,8 +398,9 @@ const appendSnippet = (doc: Document, snippet: TrackingSnippet): void => {
 export const installPublicTracking = (
   ids: TrackingIds,
   doc: Document = document,
+  consent: ConsentFlags = { analytics: false, marketing: false },
 ): TrackingInstallResult => {
-  const snippets = getTrackingSnippets(ids);
+  const snippets = getTrackingSnippets(ids, consent);
   snippets.forEach((snippet) => {
     appendSnippet(doc, snippet);
   });
@@ -348,6 +412,67 @@ export const installPublicTracking = (
     metaPixel: snippets.some((snippet) => snippet.vendor === "meta-pixel"),
     tiktokPixel: snippets.some((snippet) => snippet.vendor === "tiktok-pixel"),
   };
+};
+
+export const hasInstalledTrackingScripts = (
+  doc: Document = document,
+): boolean => {
+  return Boolean(doc.querySelector(`[${TRACKING_ATTR}]`));
+};
+
+export const updateGoogleConsentMode = (consent: ConsentFlags): void => {
+  if (typeof window.gtag !== "function") {
+    return;
+  }
+
+  window.gtag("consent", "update", getGoogleConsentUpdate(consent));
+};
+
+export const applyConsentedTracking = (
+  ids: TrackingIds,
+  consent: ConsentFlags | null,
+  doc: Document = document,
+): TrackingInstallResult => {
+  if (!consent) {
+    return {
+      googleAnalytics: false,
+      metaPixel: false,
+      tiktokPixel: false,
+    };
+  }
+
+  updateGoogleConsentMode(consent);
+  return installPublicTracking(ids, doc, consent);
+};
+
+// Withdrawing a category that already loaded scripts this session reloads the
+// page after cookies are cleared so Meta, TikTok, and GA4 cannot keep firing.
+export const commitConsentChoice = (
+  flags: ConsentFlags,
+  ids: TrackingIds,
+  options: {
+    doc?: Document;
+    reload?: () => void;
+  } = {},
+) => {
+  const previous = getConsent();
+  const saved = writeConsent(flags);
+  const doc = options.doc ?? document;
+  const withdrawing = isWithdrawingConsent(previous, flags);
+
+  if (withdrawing) {
+    clearTrackingCookies(doc);
+    notifyConsentListeners(saved);
+    if (hasInstalledTrackingScripts(doc)) {
+      const reload = options.reload ?? (() => window.location.reload());
+      reload();
+    }
+    return saved;
+  }
+
+  applyConsentedTracking(ids, saved, doc);
+  notifyConsentListeners(saved);
+  return saved;
 };
 
 export const canTrackGoogleAnalytics = (

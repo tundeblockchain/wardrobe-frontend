@@ -1,3 +1,7 @@
+import {
+  hasAnalyticsConsent,
+  hasMarketingConsent,
+} from "./consent";
 import { getPublicAppEnv } from "./env";
 import {
   canTrackGoogleAnalytics,
@@ -15,6 +19,12 @@ import {
   type TrackingInstallResult,
   type TrackingTestCodes,
 } from "./tracking";
+
+export {
+  getConsent,
+  hasAnalyticsConsent,
+  hasMarketingConsent,
+} from "./consent";
 import { getTrackingPageTitle, toTrackingPath } from "./trackingPath";
 
 export const CHECKOUT_SUCCESS_STORAGE_KEY =
@@ -397,15 +407,18 @@ export const trackEvent = (
   options: TrackEventOptions = {},
 ): TrackEventResult => {
   const ids = resolveTrackingIds(options.ids);
-  const gaMeasurementId = canTrackGoogleAnalytics(ids.gaMeasurementId)
-    ? ids.gaMeasurementId
-    : undefined;
-  const metaPixelId = canTrackMetaPixel(ids.metaPixelId)
-    ? ids.metaPixelId
-    : undefined;
-  const tiktokPixelId = canTrackTikTokPixel(ids.tiktokPixelId)
-    ? ids.tiktokPixelId
-    : undefined;
+  const gaMeasurementId =
+    hasAnalyticsConsent() && canTrackGoogleAnalytics(ids.gaMeasurementId)
+      ? ids.gaMeasurementId
+      : undefined;
+  const metaPixelId =
+    hasMarketingConsent() && canTrackMetaPixel(ids.metaPixelId)
+      ? ids.metaPixelId
+      : undefined;
+  const tiktokPixelId =
+    hasMarketingConsent() && canTrackTikTokPixel(ids.tiktokPixelId)
+      ? ids.tiktokPixelId
+      : undefined;
 
   if (!gaMeasurementId && !metaPixelId && !tiktokPixelId) {
     return emptyResult();

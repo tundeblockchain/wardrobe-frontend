@@ -1,5 +1,6 @@
 import {
   Box,
+  Button,
   Container,
   Link,
   List,
@@ -23,6 +24,7 @@ export type LegalDocumentProps = {
   contactEmail: string | undefined;
   contactUrl: string | undefined;
   relatedLink: LegalRelatedLink;
+  onSectionAction?: (actionId: string) => void;
 };
 
 export const LegalDocument = ({
@@ -31,8 +33,12 @@ export const LegalDocument = ({
   contactEmail,
   contactUrl,
   relatedLink,
+  onSectionAction,
 }: LegalDocumentProps) => {
   const headingId = "legal-document-heading";
+  const handleSectionAction = (actionId: string) => {
+    onSectionAction?.(actionId);
+  };
   const contactCopy = getLegalContactCopy({
     appName,
     contactEmail,
@@ -177,6 +183,22 @@ export const LegalDocument = ({
                         </Link>
                       ))
                     : null}
+                  {section.action ? (
+                    <Box>
+                      <Button
+                        type="button"
+                        variant="outlined"
+                        color="secondary"
+                        onClick={() => {
+                          handleSectionAction(section.action?.id ?? "");
+                        }}
+                        tabIndex={0}
+                        aria-label={section.action.ariaLabel}
+                      >
+                        {section.action.label}
+                      </Button>
+                    </Box>
+                  ) : null}
                 </Stack>
               </Box>
             ))}

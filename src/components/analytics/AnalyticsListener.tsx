@@ -6,6 +6,7 @@ import {
   canTrackTikTokPixel,
 } from "../../config/tracking";
 import { trackSpaPageView } from "../../config/trackingEvents";
+import { useConsent } from "../../hooks/useConsent";
 
 export type AnalyticsListenerProps = {
   gaMeasurementId: string | undefined;
@@ -19,10 +20,13 @@ export const AnalyticsListener = ({
   tiktokPixelId,
 }: AnalyticsListenerProps) => {
   const location = useLocation();
+  const consent = useConsent();
+  const analyticsOk = consent?.analytics === true;
+  const marketingOk = consent?.marketing === true;
   const shouldTrack =
-    canTrackGoogleAnalytics(gaMeasurementId) ||
-    canTrackMetaPixel(metaPixelId) ||
-    canTrackTikTokPixel(tiktokPixelId);
+    (analyticsOk && canTrackGoogleAnalytics(gaMeasurementId)) ||
+    (marketingOk &&
+      (canTrackMetaPixel(metaPixelId) || canTrackTikTokPixel(tiktokPixelId)));
   const lastTrackedPath = useRef<string | undefined>(undefined);
   const pageKey = `${location.pathname}${location.search}`;
 

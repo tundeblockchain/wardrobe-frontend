@@ -2,8 +2,9 @@ export {};
 
 declare global {
   interface Window {
+    dataLayer?: unknown[];
     gtag?: (...args: unknown[]) => void;
-    fbq?: (...args: unknown[]) => void;
+    fbq?: ((...args: unknown[]) => void) & { queue?: unknown[] };
     ttq?: {
       (...args: unknown[]): unknown;
       track?: (...args: unknown[]) => void;

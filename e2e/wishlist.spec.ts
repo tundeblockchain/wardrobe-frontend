@@ -4,6 +4,7 @@ import {
   openSignedInHome,
   seedFirebaseAuth,
 } from "./signedInApp";
+import { seedConsent } from "./trackingHelpers";
 import {
   httpsWish,
   httpLinkWish,
@@ -24,6 +25,7 @@ const openHome = async (
   page: Page,
   options?: WishlistMockOptions,
 ): Promise<void> => {
+  await seedConsent(page, { analytics: false, marketing: false });
   await seedFirebaseAuth(page);
   await mockFirebaseAuthNetwork(page);
   await installWishlistApiMocks(page, options);

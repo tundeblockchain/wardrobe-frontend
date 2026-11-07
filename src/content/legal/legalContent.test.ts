@@ -53,9 +53,13 @@ describe("legal content", () => {
       (section) => section.id === "cookies",
     );
     const cookiesCopy = cookies?.paragraphs.join(" ") ?? "";
-    expect(cookiesCopy).toMatch(/load only when the operator has set public environment identifiers/);
+    expect(cookiesCopy).toMatch(/Firebase Authentication/);
+    expect(cookiesCopy).toMatch(/Google Analytics 4/);
     expect(cookiesCopy).toMatch(/TikTok pixel/);
     expect(cookiesCopy).toMatch(/Meta Pixel/);
+    expect(cookiesCopy).toMatch(/only after you choose to allow them/);
+    expect(cookiesCopy).toMatch(/Cookie settings link in the footer/);
+    expect(cookies?.action?.label).toBe("Cookie settings");
     expect(cookiesCopy).not.toMatch(/not wired in this MVP/);
 
     const mobileAdvertising = content.sections.find(

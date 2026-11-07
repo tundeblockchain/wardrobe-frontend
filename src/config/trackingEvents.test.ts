@@ -1,4 +1,5 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { clearConsent, writeConsent } from "./consent";
 import { getPublicAppEnv } from "./env";
 import {
   CHECKOUT_SUCCESS_STORAGE_KEY,
@@ -114,8 +115,17 @@ describe("sanitizeTrackingParams", () => {
   });
 });
 
+const grantAllConsent = () => {
+  writeConsent({ analytics: true, marketing: true }, 1);
+};
+
 describe("trackEvent", () => {
+  beforeEach(() => {
+    grantAllConsent();
+  });
+
   afterEach(() => {
+    clearConsent();
     delete window.gtag;
     delete window.fbq;
     delete window.ttq;
@@ -308,10 +318,59 @@ describe("trackEvent", () => {
       /Navy tee|@|item_navytee01/,
     );
   });
+
+  it("drops events when no consent choice has been saved", () => {
+    clearConsent();
+    installVendors();
+
+    const result = trackEvent("sign_up", { method: "email" }, { ids: ALL_IDS });
+
+    expect(result).toEqual({
+      googleAnalytics: false,
+      metaPixel: false,
+      tiktokPixel: false,
+    });
+    expect(window.gtag).not.toHaveBeenCalled();
+    expect(window.fbq).not.toHaveBeenCalled();
+    expect(window.ttq?.track).not.toHaveBeenCalled();
+  });
+
+  it("sends only GA when analytics is allowed and marketing is not", () => {
+    writeConsent({ analytics: true, marketing: false }, 1);
+    installVendors();
+
+    const result = trackEvent("login", { method: "email" }, { ids: ALL_IDS });
+
+    expect(result.googleAnalytics).toBe(true);
+    expect(result.metaPixel).toBe(false);
+    expect(result.tiktokPixel).toBe(false);
+    expect(window.gtag).toHaveBeenCalled();
+    expect(window.fbq).not.toHaveBeenCalled();
+    expect(window.ttq?.track).not.toHaveBeenCalled();
+  });
+
+  it("sends only Meta and TikTok when marketing is allowed and analytics is not", () => {
+    writeConsent({ analytics: false, marketing: true }, 1);
+    installVendors();
+
+    const result = trackEvent("login", { method: "email" }, { ids: ALL_IDS });
+
+    expect(result.googleAnalytics).toBe(false);
+    expect(result.metaPixel).toBe(true);
+    expect(result.tiktokPixel).toBe(true);
+    expect(window.gtag).not.toHaveBeenCalled();
+    expect(window.fbq).toHaveBeenCalled();
+    expect(window.ttq?.track).toHaveBeenCalled();
+  });
 });
 
 describe("trackSpaPageView", () => {
+  beforeEach(() => {
+    grantAllConsent();
+  });
+
   afterEach(() => {
+    clearConsent();
     delete window.gtag;
     delete window.fbq;
     delete window.ttq;
@@ -360,7 +419,12 @@ describe("trackSpaPageView", () => {
 });
 
 describe("trackStoreCtaClick", () => {
+  beforeEach(() => {
+    grantAllConsent();
+  });
+
   afterEach(() => {
+    clearConsent();
     delete window.gtag;
     delete window.fbq;
     delete window.ttq;
@@ -443,7 +507,12 @@ describe("trackStoreCtaClick", () => {
 });
 
 describe("checkout success Subscribe", () => {
+  beforeEach(() => {
+    grantAllConsent();
+  });
+
   afterEach(() => {
+    clearConsent();
     delete window.gtag;
     delete window.fbq;
     delete window.ttq;

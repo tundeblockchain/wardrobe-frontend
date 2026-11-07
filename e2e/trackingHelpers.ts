@@ -28,7 +28,49 @@ export const blockPixelNetwork = async (page: Page): Promise<void> => {
 
 const TRACKING_CALLS_STORAGE_KEY = "__WARDROBE_TRACKING_CALLS__";
 
+export const E2E_CONSENT_STORAGE_KEY = "pc_consent_v1";
+export const E2E_CONSENT_VERSION = 1;
+
+export const ACCEPT_ALL_CONSENT = {
+  analytics: true,
+  marketing: true,
+  ts: 1,
+  version: E2E_CONSENT_VERSION,
+} as const;
+
+export const seedConsent = async (
+  page: Page,
+  choice: {
+    analytics: boolean;
+    marketing: boolean;
+    ts?: number;
+    version?: number;
+  } = ACCEPT_ALL_CONSENT,
+): Promise<void> => {
+  await page.addInitScript(
+    ({ key, value }) => {
+      window.localStorage.setItem(key, JSON.stringify(value));
+    },
+    {
+      key: E2E_CONSENT_STORAGE_KEY,
+      value: {
+        analytics: choice.analytics,
+        marketing: choice.marketing,
+        ts: choice.ts ?? Date.now(),
+        version: choice.version ?? E2E_CONSENT_VERSION,
+      },
+    },
+  );
+};
+
+export const seedTrackingIds = async (page: Page): Promise<void> => {
+  await page.addInitScript(({ ids }) => {
+    window.__WARDROBE_E2E_TRACKING_IDS__ = ids;
+  }, { ids: E2E_TRACKING_IDS });
+};
+
 export const installTrackingStubs = async (page: Page): Promise<void> => {
+  await seedConsent(page);
   await page.addInitScript(
     ({ ids, storageKey }) => {
       const emptyLog = (): TrackingCallLog => ({

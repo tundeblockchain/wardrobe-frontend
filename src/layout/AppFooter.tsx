@@ -1,6 +1,7 @@
 import { Box, Stack, Typography } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 import { BrandLogo } from "../components/brand/BrandLogo";
+import { CookieSettingsControl } from "../components/consent/CookieSettingsControl";
 import { SectionSurface } from "../components/surfaces/SectionSurface";
 import { getPublicAppEnv } from "../config/env";
 import { appPaths } from "../routes/paths";
@@ -50,6 +51,7 @@ export const AppFooter = () => {
           links={legalNavLinks}
           justifyContent="center"
         />
+        <CookieSettingsControl variant="link" />
         <Typography variant="body2" align="center" sx={{ opacity: 0.85 }}>
           © {currentYear} {appName}
         </Typography>

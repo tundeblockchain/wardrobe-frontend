@@ -37,7 +37,20 @@ describe("PrivacyPolicyPage", () => {
     expect(
       screen.getByText(/This Privacy Policy explains how the operator of Pocket Closet/),
     ).toBeInTheDocument();
-    expect(screen.getByText("Last updated 6 November 2026")).toBeInTheDocument();
+    expect(screen.getByText("Last updated 7 November 2026")).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Cookies and similar technologies" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Cookie settings" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Firebase Authentication storage/),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Google Analytics 4/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Marketing: the Meta Pixel and the TikTok pixel/),
+    ).toBeInTheDocument();
   });
 
   it("renders mobile advertising attribution disclosures required for store review", () => {
