@@ -7,6 +7,11 @@ export type ConsentFlags = {
   marketing: boolean;
 };
 
+export const DENIED_CONSENT_FLAGS: ConsentFlags = {
+  analytics: false,
+  marketing: false,
+};
+
 export type ConsentChoice = ConsentFlags & {
   ts: number;
   version: number;
@@ -93,6 +98,24 @@ export const subscribeCookiePreferences = (
   window.addEventListener(COOKIE_PREFERENCES_EVENT, listener);
   return () => {
     window.removeEventListener(COOKIE_PREFERENCES_EVENT, listener);
+  };
+};
+
+export const normalizeConsentFlags = (value: unknown): ConsentFlags => {
+  if (!isObject(value)) {
+    return { ...DENIED_CONSENT_FLAGS };
+  }
+
+  if (
+    typeof value.analytics !== "boolean" ||
+    typeof value.marketing !== "boolean"
+  ) {
+    return { ...DENIED_CONSENT_FLAGS };
+  }
+
+  return {
+    analytics: value.analytics,
+    marketing: value.marketing,
   };
 };
 

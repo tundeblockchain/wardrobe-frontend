@@ -1,4 +1,5 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { clearConsent, writeConsent } from "../config/consent";
 import type { AuthenticatedApi } from "./authenticatedApi";
 import {
   ALREADY_SUBSCRIBED_CODE,
@@ -35,7 +36,23 @@ const createApi = (request: AuthenticatedApi["request"]): AuthenticatedApi => {
   };
 };
 
+const expectBooleanMarketingConsent = (
+  body: unknown,
+  expected: boolean,
+): void => {
+  expect(body).toEqual(expect.objectContaining({ marketingConsent: expected }));
+  const record = body as { marketingConsent?: unknown };
+  expect(typeof record.marketingConsent).toBe("boolean");
+  const serialized = JSON.stringify(body);
+  expect(serialized).toContain(`"marketingConsent":${expected}`);
+  expect(serialized).not.toContain(`"marketingConsent":"${expected}"`);
+};
+
 describe("billing API", () => {
+  afterEach(() => {
+    clearConsent();
+  });
+
   it("posts checkout-session with the selected tier", async () => {
     const request = vi.fn().mockResolvedValue({
       url: "https://checkout.stripe.com/c/pay/cs_test",
@@ -47,7 +64,11 @@ describe("billing API", () => {
     });
     expect(request).toHaveBeenCalledWith(BILLING_CHECKOUT_PATH, {
       method: "POST",
-      body: { tier: "premium", interval: DEFAULT_BILLING_INTERVAL },
+      body: {
+        tier: "premium",
+        interval: DEFAULT_BILLING_INTERVAL,
+        marketingConsent: false,
+      },
     });
   });
 
@@ -63,15 +84,27 @@ describe("billing API", () => {
 
     expect(request).toHaveBeenNthCalledWith(1, BILLING_CHECKOUT_PATH, {
       method: "POST",
-      body: { tier: "basic", interval: "monthly" },
+      body: {
+        tier: "basic",
+        interval: "monthly",
+        marketingConsent: false,
+      },
     });
     expect(request).toHaveBeenNthCalledWith(2, BILLING_CHECKOUT_PATH, {
       method: "POST",
-      body: { tier: "premium", interval: "yearly" },
+      body: {
+        tier: "premium",
+        interval: "yearly",
+        marketingConsent: false,
+      },
     });
     expect(request).toHaveBeenNthCalledWith(3, BILLING_CHECKOUT_PATH, {
       method: "POST",
-      body: { tier: "basic", interval: "yearly" },
+      body: {
+        tier: "basic",
+        interval: "yearly",
+        marketingConsent: false,
+      },
     });
   });
 
@@ -86,7 +119,7 @@ describe("billing API", () => {
     });
     expect(request).toHaveBeenCalledWith(BILLING_CHECKOUT_PATH, {
       method: "POST",
-      body: { tier: "basic", interval: "monthly" },
+      body: { tier: "basic", interval: "monthly", marketingConsent: false },
     });
     expect(JSON.stringify(request.mock.calls[0])).not.toContain("pk_live");
     expect(JSON.stringify(request.mock.calls[0])).not.toContain("pk_test");
@@ -125,11 +158,16 @@ describe("billing API", () => {
     )?.[1];
 
     expect(checkoutBodies).toEqual([
-      { tier: "basic", interval: "monthly" },
-      { tier: "premium", interval: "yearly" },
+      { tier: "basic", interval: "monthly", marketingConsent: false },
+      { tier: "premium", interval: "yearly", marketingConsent: false },
     ]);
     for (const body of checkoutBodies) {
-      expect(Object.keys(body).sort()).toEqual(["interval", "tier"]);
+      expect(Object.keys(body as object).sort()).toEqual([
+        "interval",
+        "marketingConsent",
+        "tier",
+      ]);
+      expectBooleanMarketingConsent(body, false);
     }
     expect(portalOptions).toEqual({ method: "POST" });
     expect(portalOptions).not.toHaveProperty("body");
@@ -139,6 +177,38 @@ describe("billing API", () => {
     expect(serialized).not.toMatch(/successUrl|cancelUrl|returnUrl/);
     expect(serialized).not.toContain("location.origin");
     expect(serialized).not.toContain("window.location");
+  });
+
+  it("sends marketingConsent true, false, and false when no choice is stored", async () => {
+    const request = vi.fn().mockResolvedValue({
+      url: "https://checkout.example.test/session/cs_consent",
+    });
+    const api = createApi(request);
+
+    await createCheckoutSession(api, "basic");
+    expectBooleanMarketingConsent(request.mock.calls[0]?.[1]?.body, false);
+
+    writeConsent({ analytics: false, marketing: false }, 1);
+    await createCheckoutSession(api, "premium", "yearly");
+    expectBooleanMarketingConsent(request.mock.calls[1]?.[1]?.body, false);
+
+    writeConsent({ analytics: true, marketing: true }, 2);
+    await createCheckoutSession(api, "basic", "monthly");
+    expectBooleanMarketingConsent(request.mock.calls[2]?.[1]?.body, true);
+
+    for (const call of request.mock.calls) {
+      const body = call[1]?.body as {
+        marketingConsent: boolean;
+        interval: string;
+        tier: string;
+      };
+      expect(Object.keys(body).sort()).toEqual([
+        "interval",
+        "marketingConsent",
+        "tier",
+      ]);
+      expect(typeof body.marketingConsent).toBe("boolean");
+    }
   });
 
   it("accepts http(s) billing redirect URLs and rejects others", () => {

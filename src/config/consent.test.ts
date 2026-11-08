@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import {
   CONSENT_STORAGE_KEY,
   CONSENT_VERSION,
+  DENIED_CONSENT_FLAGS,
   clearConsent,
   clearTrackingCookies,
   getConsent,
@@ -11,6 +12,7 @@ import {
   hasMarketingConsent,
   isTrackingCookieName,
   isWithdrawingConsent,
+  normalizeConsentFlags,
   parseConsentChoice,
   readCookieNames,
   writeConsent,
@@ -70,6 +72,31 @@ describe("consent storage", () => {
       JSON.stringify({ analytics: true }),
     );
     expect(getConsent()).toBeNull();
+  });
+});
+
+describe("normalizeConsentFlags", () => {
+  it("treats missing, undefined, and invalid stored consent as denied", () => {
+    expect(normalizeConsentFlags(undefined)).toEqual(DENIED_CONSENT_FLAGS);
+    expect(normalizeConsentFlags(null)).toEqual(DENIED_CONSENT_FLAGS);
+    expect(normalizeConsentFlags("accept")).toEqual(DENIED_CONSENT_FLAGS);
+    expect(normalizeConsentFlags({ analytics: true })).toEqual(DENIED_CONSENT_FLAGS);
+    expect(
+      normalizeConsentFlags({ analytics: "true", marketing: true }),
+    ).toEqual(DENIED_CONSENT_FLAGS);
+    expect(normalizeConsentFlags(getConsent())).toEqual(DENIED_CONSENT_FLAGS);
+  });
+
+  it("keeps explicit boolean flags including a stored choice", () => {
+    const stored = writeConsent({ analytics: true, marketing: false }, 1);
+    expect(normalizeConsentFlags(stored)).toEqual({
+      analytics: true,
+      marketing: false,
+    });
+    expect(
+      normalizeConsentFlags({ analytics: false, marketing: true }),
+    ).toEqual({ analytics: false, marketing: true });
+    clearConsent();
   });
 });
 

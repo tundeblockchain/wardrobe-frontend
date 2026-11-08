@@ -1,5 +1,10 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { clearConsent, writeConsent } from "./consent";
+import {
+  clearConsent,
+  CONSENT_STORAGE_KEY,
+  getConsent,
+  writeConsent,
+} from "./consent";
 import { getPublicAppEnv } from "./env";
 import {
   applyConsentedTracking,
@@ -24,6 +29,12 @@ const serializeSnippets = (snippets: ReturnType<typeof getTrackingSnippets>) => 
 };
 
 const VALID_TIKTOK_PIXEL_ID = "CXXXXXXXXXXXXXXXXX";
+const GRANTED_CONSENT = { analytics: true, marketing: true } as const;
+const ALL_TRACKING_IDS = {
+  gaMeasurementId: "G-XXXXXXXXXX",
+  metaPixelId: "000000000000000",
+  tiktokPixelId: VALID_TIKTOK_PIXEL_ID,
+};
 
 describe("tracking ID guards", () => {
   it("rejects missing, blank, and malformed Google Analytics IDs", () => {
@@ -113,12 +124,43 @@ describe("getTrackingSnippets", () => {
     expect(serialized).not.toContain(TIKTOK_PIXEL_SCRIPT_SRC);
   });
 
+  it("loads nothing when called without a consent argument", () => {
+    const snippets = getTrackingSnippets(ALL_TRACKING_IDS);
+    const serialized = serializeSnippets(snippets);
+
+    expect(snippets).toEqual([]);
+    expect(serialized).not.toContain(GA_SCRIPT_HOST);
+    expect(serialized).not.toContain(META_PIXEL_SCRIPT_SRC);
+    expect(serialized).not.toContain(TIKTOK_PIXEL_SCRIPT_SRC);
+  });
+
+  it("loads nothing when consent is undefined or invalid stored consent", () => {
+    window.localStorage.setItem(CONSENT_STORAGE_KEY, "{not-json");
+    const fromStorage = getTrackingSnippets(ALL_TRACKING_IDS, getConsent());
+    const fromUndefined = getTrackingSnippets(ALL_TRACKING_IDS, undefined);
+    const fromInvalid = getTrackingSnippets(ALL_TRACKING_IDS, {
+      analytics: "true",
+      marketing: true,
+    } as never);
+
+    expect(fromStorage).toEqual([]);
+    expect(fromUndefined).toEqual([]);
+    expect(fromInvalid).toEqual([]);
+    expect(serializeSnippets(fromStorage)).not.toContain(GA_SCRIPT_HOST);
+    expect(serializeSnippets(fromUndefined)).not.toContain(META_PIXEL_SCRIPT_SRC);
+    expect(serializeSnippets(fromInvalid)).not.toContain(TIKTOK_PIXEL_SCRIPT_SRC);
+    clearConsent();
+  });
+
   it("includes only Google Analytics snippets when a valid GA ID is set", () => {
-    const snippets = getTrackingSnippets({
-      gaMeasurementId: "G-XXXXXXXXXX",
-      metaPixelId: undefined,
-      tiktokPixelId: undefined,
-    });
+    const snippets = getTrackingSnippets(
+      {
+        gaMeasurementId: "G-XXXXXXXXXX",
+        metaPixelId: undefined,
+        tiktokPixelId: undefined,
+      },
+      GRANTED_CONSENT,
+    );
     const serialized = serializeSnippets(snippets);
 
     expect(snippets.length).toBeGreaterThan(0);
@@ -136,11 +178,14 @@ describe("getTrackingSnippets", () => {
   });
 
   it("includes only Meta Pixel snippets when a valid pixel ID is set", () => {
-    const snippets = getTrackingSnippets({
-      gaMeasurementId: undefined,
-      metaPixelId: "000000000000000",
-      tiktokPixelId: undefined,
-    });
+    const snippets = getTrackingSnippets(
+      {
+        gaMeasurementId: undefined,
+        metaPixelId: "000000000000000",
+        tiktokPixelId: undefined,
+      },
+      GRANTED_CONSENT,
+    );
     const serialized = serializeSnippets(snippets);
 
     expect(snippets.length).toBeGreaterThan(0);
@@ -156,11 +201,14 @@ describe("getTrackingSnippets", () => {
   });
 
   it("includes only TikTok Pixel snippets when a valid pixel ID is set", () => {
-    const snippets = getTrackingSnippets({
-      gaMeasurementId: undefined,
-      metaPixelId: undefined,
-      tiktokPixelId: VALID_TIKTOK_PIXEL_ID,
-    });
+    const snippets = getTrackingSnippets(
+      {
+        gaMeasurementId: undefined,
+        metaPixelId: undefined,
+        tiktokPixelId: VALID_TIKTOK_PIXEL_ID,
+      },
+      GRANTED_CONSENT,
+    );
     const serialized = serializeSnippets(snippets);
 
     expect(snippets.length).toBeGreaterThan(0);
@@ -333,12 +381,6 @@ describe("installPublicTracking", () => {
 });
 
 describe("commitConsentChoice", () => {
-  const ALL_IDS = {
-    gaMeasurementId: "G-XXXXXXXXXX",
-    metaPixelId: "000000000000000",
-    tiktokPixelId: VALID_TIKTOK_PIXEL_ID,
-  };
-
   afterEach(() => {
     clearConsent();
   });
@@ -349,7 +391,7 @@ describe("commitConsentChoice", () => {
 
     const saved = commitConsentChoice(
       { analytics: true, marketing: true },
-      ALL_IDS,
+      ALL_TRACKING_IDS,
       { doc, reload },
     );
 
@@ -365,11 +407,11 @@ describe("commitConsentChoice", () => {
     const doc = document.implementation.createHTMLDocument("withdraw");
     const reload = vi.fn();
     writeConsent({ analytics: true, marketing: true }, 1);
-    applyConsentedTracking(ALL_IDS, { analytics: true, marketing: true }, doc);
+    applyConsentedTracking(ALL_TRACKING_IDS, { analytics: true, marketing: true }, doc);
 
     commitConsentChoice(
       { analytics: false, marketing: false },
-      ALL_IDS,
+      ALL_TRACKING_IDS,
       { doc, reload },
     );
 
@@ -382,12 +424,65 @@ describe("commitConsentChoice", () => {
 
     commitConsentChoice(
       { analytics: false, marketing: false },
-      ALL_IDS,
+      ALL_TRACKING_IDS,
       { doc, reload },
     );
 
     expect(reload).not.toHaveBeenCalled();
     expect(doc.head.querySelectorAll("script")).toHaveLength(0);
+  });
+
+  it("applies newly granted marketing in the same save that withdraws analytics", () => {
+    const doc = document.implementation.createHTMLDocument("mixed-grant");
+    const reload = vi.fn();
+    writeConsent({ analytics: true, marketing: false }, 1);
+    applyConsentedTracking(
+      ALL_TRACKING_IDS,
+      { analytics: true, marketing: false },
+      doc,
+    );
+    expect(doc.documentElement.outerHTML).toContain(GA_SCRIPT_HOST);
+    expect(doc.documentElement.outerHTML).not.toContain(META_PIXEL_SCRIPT_SRC);
+
+    const saved = commitConsentChoice(
+      { analytics: false, marketing: true },
+      ALL_TRACKING_IDS,
+      { doc, reload },
+    );
+
+    expect(saved).toEqual(
+      expect.objectContaining({ analytics: false, marketing: true }),
+    );
+    expect(getConsent()).toEqual(saved);
+    expect(doc.documentElement.outerHTML).toContain(META_PIXEL_SCRIPT_SRC);
+    expect(doc.documentElement.outerHTML).toContain(TIKTOK_PIXEL_SCRIPT_SRC);
+    expect(reload).toHaveBeenCalledTimes(1);
+
+    const afterReload = document.implementation.createHTMLDocument("after-reload");
+    applyConsentedTracking(ALL_TRACKING_IDS, getConsent(), afterReload);
+    expect(afterReload.documentElement.outerHTML).toContain(META_PIXEL_SCRIPT_SRC);
+    expect(afterReload.documentElement.outerHTML).toContain(TIKTOK_PIXEL_SCRIPT_SRC);
+    expect(afterReload.documentElement.outerHTML).not.toContain(GA_SCRIPT_HOST);
+  });
+
+  it("applies a newly granted category immediately when withdrawing with no scripts loaded", () => {
+    const doc = document.implementation.createHTMLDocument("mixed-no-scripts");
+    const reload = vi.fn();
+    writeConsent({ analytics: true, marketing: false }, 1);
+
+    commitConsentChoice(
+      { analytics: false, marketing: true },
+      ALL_TRACKING_IDS,
+      { doc, reload },
+    );
+
+    expect(reload).not.toHaveBeenCalled();
+    expect(doc.documentElement.outerHTML).toContain(META_PIXEL_SCRIPT_SRC);
+    expect(doc.documentElement.outerHTML).toContain(TIKTOK_PIXEL_SCRIPT_SRC);
+    expect(doc.documentElement.outerHTML).not.toContain(GA_SCRIPT_HOST);
+    expect(getConsent()).toEqual(
+      expect.objectContaining({ analytics: false, marketing: true }),
+    );
   });
 });
 
