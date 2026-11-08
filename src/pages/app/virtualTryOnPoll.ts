@@ -1,5 +1,6 @@
 import { isApiError } from "../../api/httpClient";
 import type { ClothingItem, Outfit, OutfitRender } from "../../api/resourceTypes";
+import type { WishItem } from "../../api/wishlistApi";
 
 export const VIRTUAL_TRY_ON_POLL_INTERVAL_MS = 2_000;
 export const VIRTUAL_TRY_ON_MAX_POLL_ATTEMPTS = 30;
@@ -103,7 +104,7 @@ export const pollVirtualTryOnRender = async (
 };
 
 export const resolveVirtualTryOnImageUrls = async (
-  posted: ClothingItem | Outfit,
+  posted: ClothingItem | Outfit | WishItem,
   getRender: () => Promise<OutfitRender>,
   options: PollVirtualTryOnRenderOptions = {},
 ): Promise<string[]> => {

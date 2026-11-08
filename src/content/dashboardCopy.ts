@@ -192,6 +192,37 @@ export const dashboardCopy = {
     cancelLabel: "Cancel",
     closeLabel: "Close",
     notSetLabel: "Not set",
+    virtualTryOnLabel: "Virtual Try On",
+    virtualTryOnAriaLabel: "Virtual Try On this wish",
+    virtualTryOnNeedsDetailsTitle: "Add a few details first",
+    virtualTryOnNeedsBothDescription:
+      "Virtual Try On needs a photo and a category. Save those, then try again.",
+    virtualTryOnNeedsCategoryDescription:
+      "Virtual Try On needs a category. Pick one, then try again.",
+    virtualTryOnNeedsPhotoDescription:
+      "Virtual Try On needs a photo. Add one, then try again.",
+    virtualTryOnNeedsDetailsAction: "Add details",
+    virtualTryOnNeedsDetailsAriaLabel: "Add the missing photo or category",
+    virtualTryOnNeedsProfileTitle: "Set up a Virtual Profile",
+    virtualTryOnNeedsProfileDescription:
+      "Add a Virtual Profile or choose a preset before starting Virtual Try On.",
+    virtualTryOnNeedsProfileAction: "Set up profile",
+    virtualTryOnNeedsProfileAriaLabel: "Set up a Virtual Profile for Try On",
+    virtualTryOnFailedTitle: "Couldn't create this try-on",
+    virtualTryOnFailedDescription:
+      "Try again in a moment. No new Virtual Try On render was started.",
+    virtualTryOnRetryLabel: "Try again",
+    virtualTryOnRetryAriaLabel: "Retry Virtual Try On",
+    virtualTryOnResultLabel: "Virtual Try On result",
+    virtualTryOnGalleryLabel: "Try On photos",
+    virtualTryOnDeletePhotoLabel: "Delete",
+    virtualTryOnDeletePhotoAriaLabel: "Delete this Try On photo",
+    virtualTryOnDeletePhotoConfirmTitle: "Delete this Try On photo?",
+    virtualTryOnDeletePhotoConfirmDescription:
+      "This permanently removes this Try On photo. This cannot be undone.",
+    virtualTryOnDeletePhotoConfirmLabel: "Delete photo",
+    virtualTryOnDeletePhotoErrorFallback: "Could not delete this Try On photo.",
+    virtualTryOnCreatingLabel: "Creating your try-on…",
   },
   wardrobes: {
     title: "Wardrobes",
