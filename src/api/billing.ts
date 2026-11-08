@@ -1,3 +1,4 @@
+import { hasMarketingConsent } from "../config/consent";
 import {
   alreadySubscribedCopy,
   getStripeAlreadySubscribedMessage,
@@ -31,6 +32,7 @@ export type CheckoutTier = PaidPlanTier;
 export type CheckoutSessionBody = {
   tier: CheckoutTier;
   interval: BillingInterval;
+  marketingConsent: boolean;
 };
 
 export const isNotStripePlanError = (error: unknown): boolean => {
@@ -109,7 +111,8 @@ export const createCheckoutSession = (
   tier: CheckoutTier,
   interval: BillingInterval = DEFAULT_BILLING_INTERVAL,
 ): Promise<BillingSession> => {
-  const body: CheckoutSessionBody = { tier, interval };
+  const marketingConsent = hasMarketingConsent();
+  const body: CheckoutSessionBody = { tier, interval, marketingConsent };
   return api.request<BillingSession>(BILLING_CHECKOUT_PATH, {
     method: "POST",
     body,

@@ -150,17 +150,18 @@ describe("createLiveResourceApi", () => {
     });
     expect(request).toHaveBeenNthCalledWith(1, "/billing/checkout-session", {
       method: "POST",
-      body: { tier: "basic", interval: "monthly" },
+      body: { tier: "basic", interval: "monthly", marketingConsent: false },
     });
     expect(request).toHaveBeenNthCalledWith(2, "/billing/checkout-session", {
       method: "POST",
-      body: { tier: "premium", interval: "yearly" },
+      body: { tier: "premium", interval: "yearly", marketingConsent: false },
     });
     expect(request).toHaveBeenNthCalledWith(3, "/billing/portal-session", {
       method: "POST",
     });
     expect(Object.keys(request.mock.calls[0]?.[1]?.body ?? {}).sort()).toEqual([
       "interval",
+      "marketingConsent",
       "tier",
     ]);
     expect(request.mock.calls[2]?.[1]).not.toHaveProperty("body");

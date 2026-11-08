@@ -146,3 +146,44 @@ export const cookieBanner = (page: Page) => {
 export const preferencesDialog = (page: Page) => {
   return page.getByRole("dialog", { name: "Cookie preferences" });
 };
+
+export type CheckoutRequestCapture = {
+  bodies: () => unknown[];
+  waitForBody: () => Promise<Record<string, unknown>>;
+};
+
+export const captureCheckoutRequests = (page: Page): CheckoutRequestCapture => {
+  const bodies: unknown[] = [];
+
+  page.on("request", (request) => {
+    if (
+      request.method() !== "POST" ||
+      !request.url().includes("/billing/checkout-session")
+    ) {
+      return;
+    }
+
+    bodies.push(request.postDataJSON());
+  });
+
+  return {
+    bodies: () => [...bodies],
+    waitForBody: async () => {
+      await expect.poll(() => bodies.length).toBeGreaterThan(0);
+      const body = bodies[bodies.length - 1];
+      expect(body).toBeTruthy();
+      return body as Record<string, unknown>;
+    },
+  };
+};
+
+export const expectCheckoutMarketingConsent = (
+  body: Record<string, unknown>,
+  expected: boolean,
+): void => {
+  expect(body.marketingConsent).toBe(expected);
+  expect(typeof body.marketingConsent).toBe("boolean");
+  const serialized = JSON.stringify(body);
+  expect(serialized).toContain(`"marketingConsent":${expected}`);
+  expect(serialized).not.toContain(`"marketingConsent":"${expected}"`);
+};

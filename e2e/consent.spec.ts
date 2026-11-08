@@ -224,6 +224,54 @@ test.describe("cookie consent", () => {
     await expect(banner).toBeVisible();
   });
 
+  test("mixed withdraw and grant applies marketing after reload and keeps the choice", async ({
+    page,
+  }) => {
+    const monitor = await setupConsentPage(page);
+    await page.goto("/");
+    await page.getByRole("button", { name: "Manage cookie preferences" }).click();
+    const firstDialog = preferencesDialog(page);
+    await expect(firstDialog).toBeVisible();
+    await firstDialog.getByRole("switch", { name: "Analytics cookies" }).click();
+    await firstDialog.getByRole("button", { name: "Save cookie preferences" }).click();
+    await expect(cookieBanner(page)).toHaveCount(0);
+    await expect.poll(() => monitor.hasGa()).toBe(true);
+    expect(monitor.hasMeta()).toBe(false);
+    expect(monitor.hasTikTok()).toBe(false);
+
+    monitor.clear();
+    await page.getByRole("contentinfo").scrollIntoViewIfNeeded();
+    await page
+      .getByRole("contentinfo")
+      .getByRole("button", { name: "Cookie settings" })
+      .click();
+    const dialog = preferencesDialog(page);
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByRole("switch", { name: "Analytics cookies" })).toBeChecked();
+    await dialog.getByRole("switch", { name: "Analytics cookies" }).click();
+    await dialog.getByRole("switch", { name: "Marketing cookies" }).click();
+
+    const reloaded = page.waitForEvent("load");
+    await dialog.getByRole("button", { name: "Save cookie preferences" }).click();
+    await reloaded;
+
+    await expect(
+      page.getByRole("heading", { level: 1 }),
+    ).toBeVisible();
+    const stored = await readStoredConsent(page);
+    expect(stored).toEqual(
+      expect.objectContaining({
+        analytics: false,
+        marketing: true,
+        version: E2E_CONSENT_VERSION,
+      }),
+    );
+
+    await expect.poll(() => monitor.hasMeta()).toBe(true);
+    await expect.poll(() => monitor.hasTikTok()).toBe(true);
+    expect(monitor.hasGa()).toBe(false);
+  });
+
   test("re-asks after a consent version bump", async ({ page }) => {
     await setupConsentPage(page);
     await page.addInitScript(

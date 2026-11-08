@@ -1,7 +1,9 @@
 import {
   clearTrackingCookies,
+  DENIED_CONSENT_FLAGS,
   getConsent,
   isWithdrawingConsent,
+  normalizeConsentFlags,
   notifyConsentListeners,
   writeConsent,
   type ConsentFlags,
@@ -324,21 +326,22 @@ const getTikTokPixelSnippets = (pixelId: string): TrackingSnippet[] => {
 
 export const getTrackingSnippets = (
   ids: TrackingIds,
-  consent: ConsentFlags = { analytics: true, marketing: true },
+  consent?: ConsentFlags | null,
 ): TrackingSnippet[] => {
+  const flags = normalizeConsentFlags(consent);
   const snippets: TrackingSnippet[] = [];
-  const gaMeasurementId = consent.analytics
+  const gaMeasurementId = flags.analytics
     ? sanitizeGaMeasurementId(ids.gaMeasurementId)
     : undefined;
-  const metaPixelId = consent.marketing
+  const metaPixelId = flags.marketing
     ? sanitizeMetaPixelId(ids.metaPixelId)
     : undefined;
-  const tiktokPixelId = consent.marketing
+  const tiktokPixelId = flags.marketing
     ? sanitizeTikTokPixelId(ids.tiktokPixelId)
     : undefined;
 
   if (gaMeasurementId) {
-    snippets.push(...getGaSnippets(gaMeasurementId, consent.marketing));
+    snippets.push(...getGaSnippets(gaMeasurementId, flags.marketing));
   }
 
   if (metaPixelId) {
@@ -398,7 +401,7 @@ const appendSnippet = (doc: Document, snippet: TrackingSnippet): void => {
 export const installPublicTracking = (
   ids: TrackingIds,
   doc: Document = document,
-  consent: ConsentFlags = { analytics: false, marketing: false },
+  consent: ConsentFlags | null = DENIED_CONSENT_FLAGS,
 ): TrackingInstallResult => {
   const snippets = getTrackingSnippets(ids, consent);
   snippets.forEach((snippet) => {
@@ -459,19 +462,20 @@ export const commitConsentChoice = (
   const saved = writeConsent(flags);
   const doc = options.doc ?? document;
   const withdrawing = isWithdrawingConsent(previous, flags);
+  const scriptsAlreadyLoaded = hasInstalledTrackingScripts(doc);
 
   if (withdrawing) {
     clearTrackingCookies(doc);
-    notifyConsentListeners(saved);
-    if (hasInstalledTrackingScripts(doc)) {
-      const reload = options.reload ?? (() => window.location.reload());
-      reload();
-    }
-    return saved;
   }
 
   applyConsentedTracking(ids, saved, doc);
   notifyConsentListeners(saved);
+
+  if (withdrawing && scriptsAlreadyLoaded) {
+    const reload = options.reload ?? (() => window.location.reload());
+    reload();
+  }
+
   return saved;
 };
 
