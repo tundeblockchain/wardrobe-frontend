@@ -13,6 +13,10 @@ describe("dashboard plan copy", () => {
     expect(dashboardCopy.wishList.capMessage).toBe(
       "Wish list can hold 500 items.",
     );
+    expect(dashboardCopy.wishList.virtualTryOnLabel).toBe("Virtual Try On");
+    expect(dashboardCopy.wishList.virtualTryOnAriaLabel).toBe(
+      "Virtual Try On this wish",
+    );
   });
 
   it("says unlimited for Basic and Premium on the suggested outfits gate", () => {

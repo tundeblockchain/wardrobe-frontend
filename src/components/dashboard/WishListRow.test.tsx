@@ -9,6 +9,7 @@ import {
   mockWardrobes,
 } from "../../api/mockResourceApi";
 import type { ResourceApi } from "../../api/resourceApi";
+import { ENTITLEMENT_AI_REQUIRED_CODE } from "../../api/resourceTypes";
 import {
   createEmptyWishlistApi,
   createErrorWishlistApi,
@@ -16,20 +17,28 @@ import {
   createPendingWishlistApi,
   mockIncompleteWish,
   mockWishes,
+  WISH_CATEGORY_REQUIRED_CODE,
+  WISH_IMAGE_REQUIRED_CODE,
   WISHLIST_LIMIT_MESSAGE,
   wishlistLimitError,
   type WishItem,
   type WishlistApi,
 } from "../../api/wishlistApi";
+import { ApiError } from "../../api/httpClient";
 import { renderWithProviders } from "../../test/renderWithProviders";
 import { WishListRow } from "./WishListRow";
 
 const renderRow = (
   wishlistApi: WishlistApi,
   resourceApi: ResourceApi = createMockResourceApi(),
+  pollIntervalMs = 0,
 ) => {
   return renderWithProviders(
-    <WishListRow wishlistApi={wishlistApi} resourceApi={resourceApi} />,
+    <WishListRow
+      wishlistApi={wishlistApi}
+      resourceApi={resourceApi}
+      pollIntervalMs={pollIntervalMs}
+    />,
     {
       auth: { user: { id: "user-1", email: "user@example.com" } },
     },
@@ -438,6 +447,184 @@ describe("WishListRow", () => {
     expect(
       await screen.findByRole("button", { name: "Mark this wish as owned" }),
     ).toBeInTheDocument();
+  });
+});
+
+describe("WishListRow Virtual Try On", () => {
+  it("shows Virtual Try On on wish detail", async () => {
+    const user = userEvent.setup();
+    renderRow(createMockWishlistApi(), createMockResourceApi(), 0);
+
+    await user.click(
+      await screen.findByRole("button", { name: "Black loafers" }),
+    );
+    expect(
+      screen.getByRole("button", { name: "Virtual Try On this wish" }),
+    ).toBeInTheDocument();
+  });
+
+  it("does not POST when the wish has no photo", async () => {
+    const user = userEvent.setup();
+    const renderWish = vi.fn();
+    renderRow(
+      createMockWishlistApi({ renderWish }),
+      createMockResourceApi(),
+      0,
+    );
+
+    await user.click(
+      await screen.findByRole("button", { name: "Forest scarf" }),
+    );
+    await user.click(
+      screen.getByRole("button", { name: "Virtual Try On this wish" }),
+    );
+
+    expect(
+      screen.getByText("Virtual Try On needs a photo. Add one, then try again."),
+    ).toBeInTheDocument();
+    expect(renderWish).not.toHaveBeenCalled();
+  });
+
+  it("does not POST when the wish has no category", async () => {
+    const user = userEvent.setup();
+    const renderWish = vi.fn();
+    const wish: WishItem = {
+      ...mockIncompleteWish,
+      image: { originalKey: "users/user-1/wishlist/uploads/shirt.jpg" },
+      originalImageUrl: "/screenshots/item-detail-390.jpg",
+    };
+    renderRow(
+      createMockWishlistApi({ renderWish }, { wishes: [wish] }),
+      createMockResourceApi(),
+      0,
+    );
+
+    await user.click(await screen.findByRole("button", { name: "Linen shirt" }));
+    await user.click(
+      screen.getByRole("button", { name: "Virtual Try On this wish" }),
+    );
+
+    expect(
+      screen.getByText(
+        "Virtual Try On needs a category. Pick one, then try again.",
+      ),
+    ).toBeInTheDocument();
+    expect(renderWish).not.toHaveBeenCalled();
+  });
+
+  it("shows the Premium paywall on 403", async () => {
+    const user = userEvent.setup();
+    const renderWish = vi.fn().mockRejectedValue(
+      new ApiError({
+        status: 403,
+        code: ENTITLEMENT_AI_REQUIRED_CODE,
+        message: "Premium is required for Virtual Try On.",
+      }),
+    );
+    renderRow(
+      createMockWishlistApi({ renderWish }),
+      createMockResourceApi(),
+      0,
+    );
+
+    await user.click(
+      await screen.findByRole("button", { name: "Black loafers" }),
+    );
+    await user.click(
+      screen.getByRole("button", { name: "Virtual Try On this wish" }),
+    );
+
+    expect(
+      await screen.findByRole("heading", {
+        name: "Virtual Try On is a Premium feature",
+      }),
+    ).toBeInTheDocument();
+  });
+
+  it("maps server WISH_IMAGE_REQUIRED and WISH_CATEGORY_REQUIRED to the same prompts", async () => {
+    const user = userEvent.setup();
+    const renderWish = vi
+      .fn()
+      .mockRejectedValueOnce(
+        new ApiError({
+          status: 400,
+          code: WISH_IMAGE_REQUIRED_CODE,
+          message: "Wish needs a photo.",
+        }),
+      )
+      .mockRejectedValueOnce(
+        new ApiError({
+          status: 400,
+          code: WISH_CATEGORY_REQUIRED_CODE,
+          message: "Wish needs a category.",
+        }),
+      );
+    renderRow(
+      createMockWishlistApi({ renderWish }),
+      createMockResourceApi(),
+      0,
+    );
+
+    await user.click(
+      await screen.findByRole("button", { name: "Black loafers" }),
+    );
+    await user.click(
+      screen.getByRole("button", { name: "Virtual Try On this wish" }),
+    );
+    expect(
+      await screen.findByText(
+        "Virtual Try On needs a photo. Add one, then try again.",
+      ),
+    ).toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole("button", { name: "Virtual Try On this wish" }),
+    );
+    expect(
+      await screen.findByText(
+        "Virtual Try On needs a category. Pick one, then try again.",
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it("shows history from renderHistory", async () => {
+    const user = userEvent.setup();
+    const wish: WishItem = {
+      ...mockWishes[0]!,
+      renderHistory: [
+        {
+          imageKey: "users/user-1/wishlist/wish_loafers01/renders/a.png",
+          createdAt: "2026-10-13T12:00:00.000Z",
+          aiProfileId: "aip_personal01",
+          imageUrl: "/screenshots/try-on-started.jpg",
+        },
+        {
+          imageKey: "users/user-1/wishlist/wish_loafers01/renders/b.png",
+          createdAt: "2026-10-01T12:00:00.000Z",
+          aiProfileId: "aip_personal01",
+          imageUrl: "/screenshots/try-on-ivory-maxi-390.jpg",
+        },
+      ],
+    };
+    renderRow(
+      createMockWishlistApi({}, { wishes: [wish] }),
+      createMockResourceApi(),
+      0,
+    );
+
+    await user.click(
+      await screen.findByRole("button", { name: "Black loafers" }),
+    );
+    const result = screen.getByRole("region", {
+      name: "Virtual Try On result",
+    });
+    expect(
+      within(result).getByRole("img", { name: "Virtual Try On render 1" }),
+    ).toHaveAttribute("src", "/screenshots/try-on-started.jpg");
+    const gallery = screen.getByRole("region", { name: "Try On photos" });
+    expect(
+      within(gallery).getByRole("img", { name: "Virtual Try On render 1" }),
+    ).toHaveAttribute("src", "/screenshots/try-on-ivory-maxi-390.jpg");
   });
 });
 

@@ -10,7 +10,11 @@ import type {
   ClothingCategory,
   ClothingItem,
   CreateUploadResponse,
+  OutfitRender,
+  OutfitRenderHistoryEntry,
+  RenderStatus,
 } from "./resourceTypes";
+import { RENDER_STATUSES } from "./resourceTypes";
 
 export const WISHLIST_API_PATH = "/wishlist";
 export const WISHLIST_COLLECTION_PATH = WISHLIST_API_PATH;
@@ -28,6 +32,11 @@ export const WISH_NOT_FOUND_CODE = "WISH_NOT_FOUND";
 export const WARDROBE_NOT_FOUND_CODE = "WARDROBE_NOT_FOUND";
 export const VALIDATION_ERROR_CODE = "VALIDATION_ERROR";
 export const UPLOAD_INVALID_CODE = "UPLOAD_INVALID";
+export const WISH_IMAGE_REQUIRED_CODE = "WISH_IMAGE_REQUIRED";
+export const WISH_CATEGORY_REQUIRED_CODE = "WISH_CATEGORY_REQUIRED";
+export const TRYON_SOURCE_INVALID_CODE = "TRYON_SOURCE_INVALID";
+export const RENDER_NOT_FOUND_CODE = "RENDER_NOT_FOUND";
+export const AI_PROFILE_NOT_FOUND_CODE = "AI_PROFILE_NOT_FOUND";
 export const WISH_CURRENCIES = ["GBP", "USD", "EUR"] as const;
 
 export type WishCurrency = (typeof WISH_CURRENCIES)[number];
@@ -51,8 +60,21 @@ export type WishItem = {
   link?: string;
   price?: WishPrice;
   notes?: string;
+  render?: OutfitRender;
+  /** Successful try-ons. Soft-omitted. Entries may omit imageUrl. */
+  renderHistory?: OutfitRenderHistoryEntry[];
+  /** Signed GET URLs, newest first when present. Soft-omitted. */
+  renderImageUrls?: string[];
   createdAt: string;
   updatedAt: string;
+};
+
+export type CreateWishRenderRequest = {
+  aiProfileId: string;
+};
+
+export type DeleteWishRenderRequest = {
+  imageKey: string;
 };
 
 export type WishList = {
@@ -134,6 +156,15 @@ export type WishlistApi = {
   createUpload: (
     body: CreateWishlistUploadRequest,
   ) => Promise<CreateUploadResponse>;
+  renderWish: (
+    wishId: string,
+    body: CreateWishRenderRequest,
+  ) => Promise<WishItem>;
+  getWishRender: (wishId: string) => Promise<OutfitRender>;
+  deleteWishRender: (
+    wishId: string,
+    body: DeleteWishRenderRequest,
+  ) => Promise<void>;
 };
 
 const isRecord = (value: unknown): value is Record<string, unknown> => {
@@ -165,6 +196,14 @@ export const getAcquireWishApiPath = (wishId: string): string => {
 };
 
 export const getWishAcquireApiPath = getAcquireWishApiPath;
+
+export const getWishRenderApiPath = (wishId: string): string => {
+  return `${getWishApiPath(wishId)}/render`;
+};
+
+export const getWishRendersApiPath = (wishId: string): string => {
+  return `${getWishApiPath(wishId)}/renders`;
+};
 
 export const getWishImageUrl = (wish: WishItem): string | undefined => {
   const imageUrl = wish.originalImageUrl?.trim();
@@ -267,6 +306,89 @@ const toWishImage = (value: unknown): WishImage | undefined => {
   return { originalKey };
 };
 
+const isRenderStatus = (value: string): value is RenderStatus => {
+  return (RENDER_STATUSES as readonly string[]).includes(value);
+};
+
+const toOutfitRender = (value: unknown): OutfitRender | undefined => {
+  if (!isRecord(value) || typeof value.status !== "string") {
+    return undefined;
+  }
+  if (!isRenderStatus(value.status)) {
+    return undefined;
+  }
+
+  const aiProfileId = optionalString(value.aiProfileId);
+  if (!aiProfileId) {
+    return undefined;
+  }
+
+  const render: OutfitRender = {
+    status: value.status,
+    aiProfileId,
+  };
+  const imageKey = optionalString(value.imageKey);
+  if (imageKey) {
+    render.imageKey = imageKey;
+  }
+  const imageUrl = optionalString(value.imageUrl);
+  if (imageUrl) {
+    render.imageUrl = imageUrl;
+  }
+  const error = optionalString(value.error);
+  if (error) {
+    render.error = error;
+  }
+  return render;
+};
+
+const toRenderHistory = (
+  value: unknown,
+): OutfitRenderHistoryEntry[] | undefined => {
+  if (!Array.isArray(value)) {
+    return undefined;
+  }
+
+  const entries: OutfitRenderHistoryEntry[] = [];
+  for (const entry of value) {
+    if (!isRecord(entry)) {
+      continue;
+    }
+
+    const imageKey = optionalString(entry.imageKey);
+    const createdAt = optionalString(entry.createdAt);
+    const aiProfileId = optionalString(entry.aiProfileId);
+    if (!imageKey || !createdAt || !aiProfileId) {
+      continue;
+    }
+
+    const historyEntry: OutfitRenderHistoryEntry = {
+      imageKey,
+      createdAt,
+      aiProfileId,
+    };
+    const imageUrl = optionalString(entry.imageUrl);
+    if (imageUrl) {
+      historyEntry.imageUrl = imageUrl;
+    }
+    entries.push(historyEntry);
+  }
+
+  return entries.length > 0 ? entries : undefined;
+};
+
+const toRenderImageUrls = (value: unknown): string[] | undefined => {
+  if (!Array.isArray(value)) {
+    return undefined;
+  }
+
+  const urls = value
+    .map((entry) => (typeof entry === "string" ? entry.trim() : ""))
+    .filter((url) => url.length > 0);
+
+  return urls.length > 0 ? urls : undefined;
+};
+
 const optionalString = (value: unknown): string | undefined => {
   if (typeof value !== "string") {
     return undefined;
@@ -326,6 +448,21 @@ export const toWishItem = (body: unknown): WishItem => {
   const notes = optionalString(body.notes);
   if (notes) {
     wish.notes = notes;
+  }
+
+  const render = toOutfitRender(body.render);
+  if (render) {
+    wish.render = render;
+  }
+
+  const renderHistory = toRenderHistory(body.renderHistory);
+  if (renderHistory) {
+    wish.renderHistory = renderHistory;
+  }
+
+  const renderImageUrls = toRenderImageUrls(body.renderImageUrls);
+  if (renderImageUrls) {
+    wish.renderImageUrls = renderImageUrls;
   }
 
   return wish;
@@ -543,6 +680,48 @@ export const isUploadInvalidError = (error: unknown): error is ApiError => {
   return isApiError(error) && error.code === UPLOAD_INVALID_CODE;
 };
 
+export const isWishImageRequiredError = (error: unknown): error is ApiError => {
+  return isApiError(error) && error.code === WISH_IMAGE_REQUIRED_CODE;
+};
+
+export const isWishCategoryRequiredError = (
+  error: unknown,
+): error is ApiError => {
+  return isApiError(error) && error.code === WISH_CATEGORY_REQUIRED_CODE;
+};
+
+export const isAiProfileNotFoundError = (error: unknown): error is ApiError => {
+  return (
+    isApiError(error) &&
+    error.status === 404 &&
+    error.code === AI_PROFILE_NOT_FOUND_CODE
+  );
+};
+
+export const wishImageRequiredError = (): ApiError => {
+  return new ApiError({
+    status: 400,
+    code: WISH_IMAGE_REQUIRED_CODE,
+    message: "Wish needs a photo before Virtual Try On can start.",
+  });
+};
+
+export const wishCategoryRequiredError = (): ApiError => {
+  return new ApiError({
+    status: 400,
+    code: WISH_CATEGORY_REQUIRED_CODE,
+    message: "Wish needs a category before Virtual Try On can start.",
+  });
+};
+
+export const wishRenderNotFoundError = (): ApiError => {
+  return new ApiError({
+    status: 404,
+    code: RENDER_NOT_FOUND_CODE,
+    message: "Virtual Try On is not ready yet.",
+  });
+};
+
 const WISH_IMAGE = "/screenshots/item-detail-390.jpg";
 const WISH_IMAGE_ALT = "/screenshots/try-on-ivory-maxi-390.jpg";
 
@@ -594,6 +773,11 @@ const cloneWish = (wish: WishItem): WishItem => {
     ...wish,
     image: wish.image ? { ...wish.image } : undefined,
     price: wish.price ? { ...wish.price } : undefined,
+    render: wish.render ? { ...wish.render } : undefined,
+    renderHistory: wish.renderHistory?.map((entry) => ({ ...entry })),
+    renderImageUrls: wish.renderImageUrls
+      ? [...wish.renderImageUrls]
+      : undefined,
   };
 };
 
@@ -708,7 +892,7 @@ const applyUpdateBody = (
 
 const toAcquiredItem = (wish: WishItem, wardrobeId: string): ClothingItem => {
   const now = new Date().toISOString();
-  return {
+  const item: ClothingItem = {
     itemId: `item_${wish.wishId}`,
     wardrobeId,
     name: wish.name,
@@ -721,6 +905,16 @@ const toAcquiredItem = (wish: WishItem, wardrobeId: string): ClothingItem => {
     createdAt: now,
     updatedAt: now,
   };
+  if (wish.render?.status === "READY") {
+    item.render = { ...wish.render };
+  }
+  if (wish.renderHistory && wish.renderHistory.length > 0) {
+    item.renderHistory = wish.renderHistory.map((entry) => ({ ...entry }));
+  }
+  if (wish.renderImageUrls && wish.renderImageUrls.length > 0) {
+    item.renderImageUrls = [...wish.renderImageUrls];
+  }
+  return item;
 };
 
 type MockWishlistState = {
@@ -827,6 +1021,88 @@ export const createMockWishlistApi = (
       state.wishes.splice(index, 1);
       return item;
     },
+    renderWish: async (wishId, body) => {
+      await delay();
+      const index = findWishIndex(state.wishes, wishId);
+      if (index < 0) {
+        throw wishNotFoundError();
+      }
+
+      const wish = cloneWish(state.wishes[index]!);
+      if (!hasWishImage(wish)) {
+        throw wishImageRequiredError();
+      }
+      if (!wish.category) {
+        throw wishCategoryRequiredError();
+      }
+
+      const aiProfileId = body.aiProfileId.trim();
+      const timestamp = new Date().toISOString();
+      const imageKey = `users/user-1/wishlist/${wish.wishId}/renders/rend_${timestamp}.png`;
+      const imageUrl = `${WISH_IMAGE_ALT}?render=${encodeURIComponent(wish.wishId)}`;
+      const historyEntry: OutfitRenderHistoryEntry = {
+        imageKey,
+        createdAt: timestamp,
+        aiProfileId,
+        imageUrl,
+      };
+      wish.render = {
+        status: "READY",
+        aiProfileId,
+        imageKey,
+        imageUrl,
+      };
+      wish.renderHistory = [historyEntry, ...(wish.renderHistory ?? [])];
+      wish.renderImageUrls = [imageUrl, ...(wish.renderImageUrls ?? [])];
+      wish.updatedAt = timestamp;
+      state.wishes[index] = wish;
+      return cloneWish(wish);
+    },
+    getWishRender: async (wishId) => {
+      await delay();
+      const wish = state.wishes.find((entry) => entry.wishId === wishId);
+      if (!wish) {
+        throw wishNotFoundError();
+      }
+      if (!wish.render) {
+        throw wishRenderNotFoundError();
+      }
+
+      return { ...wish.render };
+    },
+    deleteWishRender: async (wishId, body) => {
+      await delay();
+      const index = findWishIndex(state.wishes, wishId);
+      if (index < 0) {
+        throw wishNotFoundError();
+      }
+
+      const imageKey = body.imageKey.trim();
+      const wish = cloneWish(state.wishes[index]!);
+      const history = wish.renderHistory ?? [];
+      const removed = history.find((entry) => entry.imageKey === imageKey);
+      if (!removed && wish.render?.imageKey !== imageKey) {
+        throw wishRenderNotFoundError();
+      }
+
+      wish.renderHistory = history.filter((entry) => entry.imageKey !== imageKey);
+      if (wish.renderHistory.length === 0) {
+        delete wish.renderHistory;
+      }
+      if (removed?.imageUrl && wish.renderImageUrls) {
+        wish.renderImageUrls = wish.renderImageUrls.filter(
+          (url) => url !== removed.imageUrl,
+        );
+        if (wish.renderImageUrls.length === 0) {
+          delete wish.renderImageUrls;
+        }
+      }
+      if (wish.render?.imageKey === imageKey) {
+        delete wish.render;
+      }
+      wish.updatedAt = new Date().toISOString();
+      state.wishes[index] = wish;
+    },
     createUpload: async (body) => {
       await delay();
       const allowedTypes = [
@@ -898,6 +1174,9 @@ export const createErrorWishlistApi = (
     deleteWish: reject,
     acquireWish: reject,
     createUpload: reject,
+    renderWish: reject,
+    getWishRender: reject,
+    deleteWishRender: reject,
   };
 };
 
@@ -969,6 +1248,28 @@ export const createLiveWishlistApi = (api: AuthenticatedApi): WishlistApi => {
           contentLength: body.contentLength,
           purpose: UPLOAD_PURPOSE_WISHLIST,
         },
+      });
+    },
+    renderWish: async (wishId, body) => {
+      const response = await api.request<unknown>(getWishRenderApiPath(wishId), {
+        method: "POST",
+        body: { aiProfileId: body.aiProfileId },
+      });
+      return toWishItem(response);
+    },
+    getWishRender: async (wishId) => {
+      const response = await api.request<unknown>(getWishRenderApiPath(wishId));
+      const render = toOutfitRender(response);
+      if (!render) {
+        throw new Error("Wish render response is invalid.");
+      }
+
+      return render;
+    },
+    deleteWishRender: async (wishId, body) => {
+      await api.request(getWishRendersApiPath(wishId), {
+        method: "DELETE",
+        body: { imageKey: body.imageKey },
       });
     },
   };

@@ -10,22 +10,32 @@ import {
   Typography,
 } from "@mui/material";
 import { getClothingCategoryLabel } from "../../api/resourceDisplay";
+import type { ResourceApi } from "../../api/resourceApi";
 import {
   formatWishPrice,
   getSafeWishLinkUrl,
   getWishImageUrl,
   type WishItem,
+  type WishlistApi,
 } from "../../api/wishlistApi";
 import { dashboardCopy } from "../../content/dashboardCopy";
+import { useWishTryOn } from "../../hooks/useWishTryOn";
+import { VIRTUAL_TRY_ON_POLL_INTERVAL_MS } from "../../pages/app/virtualTryOnPoll";
 import { ResourceImage } from "./ResourceImage";
+import { WishTryOnAction } from "./WishTryOnAction";
+import { WishTryOnPanel } from "./WishTryOnPanel";
 
 export type WishListDetailDialogProps = {
   wish: WishItem;
+  wishlistApi: WishlistApi;
+  resourceApi: ResourceApi;
   isBusy?: boolean;
+  pollIntervalMs?: number;
   onClose: () => void;
   onEdit: (wish: WishItem) => void;
   onDelete: (wish: WishItem) => void;
   onAcquire: (wish: WishItem) => void;
+  onWishUpdated?: (wish: WishItem) => void;
 };
 
 const DetailRow = ({
@@ -51,11 +61,15 @@ const DetailRow = ({
 
 export const WishListDetailDialog = ({
   wish,
+  wishlistApi,
+  resourceApi,
   isBusy = false,
+  pollIntervalMs = VIRTUAL_TRY_ON_POLL_INTERVAL_MS,
   onClose,
   onEdit,
   onDelete,
   onAcquire,
+  onWishUpdated,
 }: WishListDetailDialogProps) => {
   const copy = dashboardCopy.wishList;
   const titleId = `wish-detail-${wish.wishId}-title`;
@@ -64,9 +78,17 @@ export const WishListDetailDialog = ({
   const categoryLabel = wish.category
     ? getClothingCategoryLabel(wish.category)
     : undefined;
+  const tryOn = useWishTryOn({
+    wish,
+    wishlistApi,
+    resourceApi,
+    pollIntervalMs,
+    onWishUpdated,
+  });
+  const dialogBusy = isBusy || tryOn.isBusy;
 
   const handleClose = () => {
-    if (isBusy) {
+    if (dialogBusy) {
       return;
     }
 
@@ -83,6 +105,18 @@ export const WishListDetailDialog = ({
 
   const handleAcquire = () => {
     onAcquire(wish);
+  };
+
+  const handleTryOn = () => {
+    void tryOn.handleTryOn();
+  };
+
+  const handleRetry = () => {
+    tryOn.handleRetry();
+  };
+
+  const handleDeletePhoto = (imageKey: string) => {
+    void tryOn.handleDeletePhoto(imageKey);
   };
 
   return (
@@ -115,6 +149,18 @@ export const WishListDetailDialog = ({
           <DetailRow label={copy.categoryLabel} value={categoryLabel} />
           <DetailRow label={copy.subcategoryLabel} value={wish.subcategory} />
           <DetailRow label={copy.notesLabel} value={wish.notes} />
+          <WishTryOnPanel
+            wish={wish}
+            prompt={tryOn.prompt}
+            isSubmitting={tryOn.isSubmitting}
+            failedMessage={tryOn.failedMessage}
+            entitlement={tryOn.entitlement}
+            deletingImageKey={tryOn.deletingImageKey}
+            deleteError={tryOn.deleteError}
+            onEdit={handleEdit}
+            onRetry={handleRetry}
+            onDeletePhoto={handleDeletePhoto}
+          />
         </Stack>
       </DialogContent>
       <DialogActions sx={{ flexWrap: "wrap", gap: 1, px: 3, pb: 2 }}>
@@ -124,7 +170,7 @@ export const WishListDetailDialog = ({
           onClick={handleClose}
           tabIndex={0}
           aria-label={copy.closeLabel}
-          disabled={isBusy}
+          disabled={dialogBusy}
         >
           {copy.closeLabel}
         </Button>
@@ -147,7 +193,7 @@ export const WishListDetailDialog = ({
           onClick={handleEdit}
           tabIndex={0}
           aria-label={copy.editAriaLabel}
-          disabled={isBusy}
+          disabled={dialogBusy}
         >
           {copy.editLabel}
         </Button>
@@ -157,10 +203,11 @@ export const WishListDetailDialog = ({
           onClick={handleDelete}
           tabIndex={0}
           aria-label={copy.deleteAriaLabel}
-          disabled={isBusy}
+          disabled={dialogBusy}
         >
           {copy.deleteLabel}
         </Button>
+        <WishTryOnAction isBusy={dialogBusy} onClick={handleTryOn} />
         <Button
           type="button"
           variant="contained"
@@ -170,7 +217,7 @@ export const WishListDetailDialog = ({
           aria-label={
             isBusy ? copy.acquireSubmittingLabel : copy.acquireAriaLabel
           }
-          disabled={isBusy}
+          disabled={dialogBusy}
         >
           {isBusy ? copy.acquireSubmittingLabel : copy.acquireLabel}
         </Button>

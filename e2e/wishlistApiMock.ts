@@ -17,6 +17,21 @@ export type E2EWishPrice = {
   currency: string;
 };
 
+export type E2EOutfitRender = {
+  status: "PENDING" | "PROCESSING" | "READY" | "FAILED";
+  aiProfileId: string;
+  imageKey?: string;
+  imageUrl?: string;
+  error?: string;
+};
+
+export type E2ERenderHistoryEntry = {
+  imageKey: string;
+  createdAt: string;
+  aiProfileId: string;
+  imageUrl?: string;
+};
+
 export type E2EWish = {
   wishId: string;
   name: string;
@@ -27,8 +42,21 @@ export type E2EWish = {
   link?: string;
   price?: E2EWishPrice;
   notes?: string;
+  render?: E2EOutfitRender;
+  renderHistory?: E2ERenderHistoryEntry[];
+  renderImageUrls?: string[];
   createdAt: string;
   updatedAt: string;
+};
+
+export type E2EAiProfile = {
+  aiProfileId: string;
+  type: "PERSONAL" | "GENERIC_MODEL";
+  referenceImages: string[];
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  label?: string;
 };
 
 export type E2EWardrobe = {
@@ -47,6 +75,11 @@ export type WishlistMockOptions = {
   acquireItemCap?: boolean;
   rejectCreateAtLimit?: boolean;
   pagedWishlist?: boolean;
+  entitlement?: Record<string, unknown>;
+  aiProfiles?: E2EAiProfile[];
+  genericAiProfiles?: E2EAiProfile[];
+  tryOnGenerateError?: { status: number; code: string; message: string };
+  tryOnPoll?: Array<E2EOutfitRender | { notFound: true }>;
 };
 
 const nowIso = "2026-10-13T12:00:00.000Z";
@@ -121,6 +154,88 @@ export const workWardrobe: E2EWardrobe = {
   imageUrl: "/screenshots/try-on-blue-mini-390.jpg",
 };
 
+export const catalogModelProfile: E2EAiProfile = {
+  aiProfileId: "aip_model01",
+  type: "GENERIC_MODEL",
+  referenceImages: ["shared/models/catalog-front.jpg"],
+  status: "READY",
+  createdAt: "2026-08-01T00:00:00.000Z",
+  updatedAt: "2026-08-01T00:00:00.000Z",
+  label: "Catalog model",
+};
+
+export const premiumEntitlement = {
+  userId: E2E_USER_ID,
+  tier: "PREMIUM",
+  status: "ACTIVE",
+  features: {
+    unlimitedCatalog: true,
+    aiTryOn: true,
+    otherAi: true,
+  },
+  limits: null,
+  usage: {
+    wardrobes: 1,
+    items: 1,
+    outfits: 0,
+  },
+  paidTier: {
+    tier: "premium",
+    source: "stripe",
+    expiresAt: "2027-10-01T09:12:00.000Z",
+  },
+  updatedAt: nowIso,
+};
+
+export const categoryOnlyWish: E2EWish = {
+  wishId: "wish_photo_missing",
+  name: "Forest scarf",
+  category: "ACCESSORY",
+  notes: "Needs a photo.",
+  createdAt: "2026-10-10T18:30:00.000Z",
+  updatedAt: "2026-10-10T18:30:00.000Z",
+};
+
+export const imageOnlyWish: E2EWish = {
+  wishId: "wish_category_missing",
+  name: "Linen shirt",
+  image: { originalKey: "users/e2e/wishlist/uploads/linen.jpg" },
+  originalImageUrl: "/screenshots/item-detail-390.jpg",
+  notes: "Needs a category.",
+  createdAt: "2026-10-09T12:00:00.000Z",
+  updatedAt: "2026-10-09T12:00:00.000Z",
+};
+
+export const tryOnHistoryWish: E2EWish = {
+  ...httpsWish,
+  wishId: "wish_history01",
+  name: "History loafers",
+  render: {
+    status: "READY",
+    aiProfileId: "aip_model01",
+    imageKey: "users/e2e/wishlist/wish_history01/renders/newest.png",
+    imageUrl: "/screenshots/try-on-rust-floral-390.jpg",
+  },
+  renderHistory: [
+    {
+      imageKey: "users/e2e/wishlist/wish_history01/renders/newest.png",
+      createdAt: "2026-10-13T12:00:00.000Z",
+      aiProfileId: "aip_model01",
+      imageUrl: "/screenshots/try-on-rust-floral-390.jpg",
+    },
+    {
+      imageKey: "users/e2e/wishlist/wish_history01/renders/older.png",
+      createdAt: "2026-10-01T12:00:00.000Z",
+      aiProfileId: "aip_model01",
+      imageUrl: "/screenshots/try-on-ivory-maxi-390.jpg",
+    },
+  ],
+  renderImageUrls: [
+    "/screenshots/try-on-rust-floral-390.jpg",
+    "/screenshots/try-on-ivory-maxi-390.jpg",
+  ],
+};
+
 export const freeEntitlement = {
   userId: E2E_USER_ID,
   tier: "FREE",
@@ -157,6 +272,12 @@ const billingPlans = {
   ],
 };
 
+const CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET,POST,PUT,PATCH,DELETE,OPTIONS",
+  "Access-Control-Allow-Headers": "Authorization,Content-Type,Accept",
+};
+
 const fulfillJson = async (
   route: Route,
   status: number,
@@ -165,6 +286,7 @@ const fulfillJson = async (
   await route.fulfill({
     status,
     contentType: "application/json",
+    headers: CORS_HEADERS,
     body: JSON.stringify(body),
   });
 };
@@ -183,6 +305,9 @@ const cloneWish = (wish: E2EWish): E2EWish => {
     ...wish,
     image: wish.image ? { ...wish.image } : undefined,
     price: wish.price ? { ...wish.price } : undefined,
+    render: wish.render ? { ...wish.render } : undefined,
+    renderHistory: wish.renderHistory?.map((entry) => ({ ...entry })),
+    renderImageUrls: wish.renderImageUrls ? [...wish.renderImageUrls] : undefined,
   };
 };
 
@@ -208,6 +333,15 @@ const omitEmpty = (wish: E2EWish): E2EWish => {
   }
   if (!cloned.notes) {
     delete cloned.notes;
+  }
+  if (!cloned.render) {
+    delete cloned.render;
+  }
+  if (!cloned.renderHistory || cloned.renderHistory.length === 0) {
+    delete cloned.renderHistory;
+  }
+  if (!cloned.renderImageUrls || cloned.renderImageUrls.length === 0) {
+    delete cloned.renderImageUrls;
   }
   return cloned;
 };
@@ -309,7 +443,32 @@ export const installWishlistApiMocks = async (
 ): Promise<void> => {
   const wishes = (options.wishes ?? populatedWishes).map(cloneWish);
   const wardrobes = options.wardrobes ?? [weekendWardrobe, workWardrobe];
+  const personalProfiles = options.aiProfiles ?? [];
+  const genericProfiles = options.genericAiProfiles ?? [catalogModelProfile];
+  const pollCounts = new Map<string, number>();
   let nextWishNumber = wishes.length + 1;
+
+  const applyReadyRender = (wish: E2EWish, aiProfileId: string): void => {
+    const imageKey = `users/${E2E_USER_ID}/wishlist/${wish.wishId}/renders/rend_ready.png`;
+    const imageUrl = "/screenshots/try-on-rust-floral-390.jpg";
+    wish.render = {
+      status: "READY",
+      aiProfileId,
+      imageKey,
+      imageUrl,
+    };
+    wish.renderHistory = [
+      {
+        imageKey,
+        createdAt: nowIso,
+        aiProfileId,
+        imageUrl,
+      },
+      ...(wish.renderHistory ?? []),
+    ];
+    wish.renderImageUrls = [imageUrl, ...(wish.renderImageUrls ?? [])];
+    wish.updatedAt = nowIso;
+  };
 
   await page.route(
     (url) => url.origin === E2E_API_ORIGIN,
@@ -318,11 +477,31 @@ export const installWishlistApiMocks = async (
       const url = new URL(request.url());
       const method = request.method();
       const path = url.pathname;
+      if (method === "OPTIONS") {
+        await route.fulfill({
+          status: 204,
+          headers: CORS_HEADERS,
+        });
+        return;
+      }
+
       const acquireMatch = path.match(/^\/wishlist\/([^/]+)\/acquire$/);
+      const rendersMatch = path.match(/^\/wishlist\/([^/]+)\/renders$/);
+      const renderMatch = path.match(/^\/wishlist\/([^/]+)\/render$/);
       const wishMatch = path.match(/^\/wishlist\/([^/]+)$/);
 
       if (method === "GET" && path === "/me") {
-        await fulfillJson(route, 200, freeEntitlement);
+        await fulfillJson(route, 200, options.entitlement ?? freeEntitlement);
+        return;
+      }
+
+      if (method === "GET" && path === "/ai-profiles") {
+        await fulfillJson(route, 200, { aiProfiles: personalProfiles });
+        return;
+      }
+
+      if (method === "GET" && path === "/ai-profiles/models") {
+        await fulfillJson(route, 200, { aiProfiles: genericProfiles });
         return;
       }
 
@@ -479,7 +658,188 @@ export const installWishlistApiMocks = async (
         return;
       }
 
-      if (method === "GET" && wishMatch && !acquireMatch) {
+      if (method === "POST" && renderMatch) {
+        const wishId = decodeURIComponent(renderMatch[1] ?? "");
+        const index = wishes.findIndex((wish) => wish.wishId === wishId);
+        if (index < 0) {
+          await fulfillError(route, 404, "WISH_NOT_FOUND", "Wish not found.");
+          return;
+        }
+
+        if (options.tryOnGenerateError) {
+          await fulfillError(
+            route,
+            options.tryOnGenerateError.status,
+            options.tryOnGenerateError.code,
+            options.tryOnGenerateError.message,
+          );
+          return;
+        }
+
+        const body = readJsonBody(request);
+        const aiProfileId = readString(body, "aiProfileId")?.trim() ?? "";
+        if (!aiProfileId || readString(body, "imageUrl") || Object.keys(body).some((key) => key !== "aiProfileId")) {
+          if (!aiProfileId) {
+            await fulfillError(
+              route,
+              400,
+              "VALIDATION_ERROR",
+              "aiProfileId is required.",
+            );
+            return;
+          }
+        }
+
+        const wish = cloneWish(wishes[index]!);
+        wish.render = {
+          status: "PENDING",
+          aiProfileId,
+        };
+        wish.updatedAt = nowIso;
+        wishes[index] = wish;
+        await fulfillJson(route, 202, omitEmpty(wish));
+        return;
+      }
+
+      if (method === "GET" && renderMatch) {
+        const wishId = decodeURIComponent(renderMatch[1] ?? "");
+        const wish = wishes.find((entry) => entry.wishId === wishId);
+        if (!wish) {
+          await fulfillError(route, 404, "WISH_NOT_FOUND", "Wish not found.");
+          return;
+        }
+
+        if (options.tryOnPoll && options.tryOnPoll.length > 0) {
+          const index = pollCounts.get(wishId) ?? 0;
+          pollCounts.set(wishId, index + 1);
+          const entry =
+            options.tryOnPoll[Math.min(index, options.tryOnPoll.length - 1)]!;
+          if ("notFound" in entry) {
+            await fulfillError(
+              route,
+              404,
+              "RENDER_NOT_FOUND",
+              "Virtual Try On is not ready yet.",
+            );
+            return;
+          }
+
+          if (entry.status === "READY" && entry.imageUrl) {
+            wish.render = { ...entry };
+            const imageKey =
+              entry.imageKey ??
+              `users/${E2E_USER_ID}/wishlist/${wishId}/renders/rend_ready.png`;
+            wish.renderHistory = [
+              {
+                imageKey,
+                createdAt: nowIso,
+                aiProfileId: entry.aiProfileId,
+                imageUrl: entry.imageUrl,
+              },
+              ...(wish.renderHistory ?? []).filter(
+                (history) => history.imageKey !== imageKey,
+              ),
+            ];
+            wish.renderImageUrls = [
+              entry.imageUrl,
+              ...(wish.renderImageUrls ?? []).filter(
+                (url) => url !== entry.imageUrl,
+              ),
+            ];
+          } else {
+            wish.render = { ...entry };
+          }
+
+          await fulfillJson(route, 200, entry);
+          return;
+        }
+
+        if (!wish.render) {
+          await fulfillError(
+            route,
+            404,
+            "RENDER_NOT_FOUND",
+            "Virtual Try On is not ready yet.",
+          );
+          return;
+        }
+
+        if (wish.render.status === "PENDING" || wish.render.status === "PROCESSING") {
+          applyReadyRender(wish, wish.render.aiProfileId);
+        }
+
+        await fulfillJson(route, 200, wish.render);
+        return;
+      }
+
+      if (method === "DELETE" && rendersMatch) {
+        const wishId = decodeURIComponent(rendersMatch[1] ?? "");
+        const index = wishes.findIndex((wish) => wish.wishId === wishId);
+        if (index < 0) {
+          await fulfillError(route, 404, "WISH_NOT_FOUND", "Wish not found.");
+          return;
+        }
+
+        let imageKey = "";
+        try {
+          const parsed = request.postDataJSON() as { imageKey?: unknown };
+          if (typeof parsed?.imageKey === "string") {
+            imageKey = parsed.imageKey.trim();
+          }
+        } catch {
+          imageKey = readString(readJsonBody(request), "imageKey")?.trim() ?? "";
+        }
+        const wish = cloneWish(wishes[index]!);
+        const removed = wish.renderHistory?.find(
+          (entry) => entry.imageKey === imageKey,
+        );
+        if (!removed && wish.render?.imageKey !== imageKey) {
+          await fulfillError(
+            route,
+            404,
+            "RENDER_NOT_FOUND",
+            "Virtual Try On photo not found.",
+          );
+          return;
+        }
+
+        wish.renderHistory = (wish.renderHistory ?? []).filter(
+          (entry) => entry.imageKey !== imageKey,
+        );
+        if (removed?.imageUrl) {
+          wish.renderImageUrls = (wish.renderImageUrls ?? []).filter(
+            (url) => url !== removed.imageUrl,
+          );
+        }
+        if (wish.render?.imageKey === imageKey) {
+          const nextLatest = wish.renderHistory?.[0];
+          if (nextLatest) {
+            wish.render = {
+              status: "READY",
+              aiProfileId: nextLatest.aiProfileId,
+              imageKey: nextLatest.imageKey,
+              imageUrl: nextLatest.imageUrl,
+            };
+          } else {
+            delete wish.render;
+          }
+        }
+        if (!wish.renderHistory || wish.renderHistory.length === 0) {
+          delete wish.renderHistory;
+        }
+        if (!wish.renderImageUrls || wish.renderImageUrls.length === 0) {
+          delete wish.renderImageUrls;
+        }
+        wishes[index] = wish;
+        await route.fulfill({
+          status: 204,
+          headers: CORS_HEADERS,
+          body: "",
+        });
+        return;
+      }
+
+      if (method === "GET" && wishMatch && !acquireMatch && !renderMatch && !rendersMatch) {
         const wishId = decodeURIComponent(wishMatch[1] ?? "");
         const wish = wishes.find((entry) => entry.wishId === wishId);
         if (!wish) {

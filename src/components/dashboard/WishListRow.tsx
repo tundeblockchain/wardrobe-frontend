@@ -51,6 +51,7 @@ export type WishListRowProps = {
   wishlistApi?: WishlistApi;
   resourceApi?: ResourceApi;
   putFile?: typeof putFileToPresignedUrl;
+  pollIntervalMs?: number;
 };
 
 type FormState =
@@ -62,6 +63,7 @@ export const WishListRow = ({
   wishlistApi: wishlistApiProp,
   resourceApi: resourceApiProp,
   putFile = putFileToPresignedUrl,
+  pollIntervalMs,
 }: WishListRowProps) => {
   const defaultWishlistApi = useWishlistApi();
   const defaultResourceApi = useResourceApi();
@@ -356,13 +358,17 @@ export const WishListRow = ({
       {selectedWish ? (
         <WishListDetailDialog
           wish={selectedWish}
+          wishlistApi={wishlistApi}
+          resourceApi={resourceApi}
           isBusy={isAcquiring}
+          pollIntervalMs={pollIntervalMs}
           onClose={handleCloseDetail}
           onEdit={handleEditWish}
           onDelete={handleAskDelete}
           onAcquire={() => {
             void handleAcquireWish(selectedWish);
           }}
+          onWishUpdated={setSelectedWish}
         />
       ) : null}
       {deleteWish ? (

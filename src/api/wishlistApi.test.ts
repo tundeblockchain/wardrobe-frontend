@@ -7,6 +7,7 @@ import {
   createFreeAtLimitResourceApi,
 } from "./mockResourceApi";
 import {
+  AI_PROFILE_NOT_FOUND_CODE,
   createEmptyWishlistApi,
   createErrorWishlistApi,
   createLiveWishlistApi,
@@ -17,18 +18,27 @@ import {
   getSafeWishLinkUrl,
   getWishAcquireApiPath,
   getWishApiPath,
+  getWishRenderApiPath,
+  getWishRendersApiPath,
   getWishlistApiPath,
+  isAiProfileNotFoundError,
   isAllowedWishLink,
   isHttpsUrl,
+  isWishCategoryRequiredError,
+  isWishImageRequiredError,
   isWishReadyToAcquire,
   isWishlistLimitError,
   loadAllWishes,
   mockIncompleteWish,
   mockWishes,
+  RENDER_NOT_FOUND_CODE,
   toCreateWishRequest,
+  toWishItem,
   toWishList,
   UPLOAD_PURPOSE_WISHLIST,
   validateWishForm,
+  WISH_CATEGORY_REQUIRED_CODE,
+  WISH_IMAGE_REQUIRED_CODE,
   WISH_LINK_MAX_LENGTH,
   WISH_NOTES_MAX_LENGTH,
   WISHLIST_COLLECTION_PATH,
@@ -37,6 +47,8 @@ import {
   WISHLIST_MAX_ITEMS,
   WISHLIST_PAGE_SIZE,
   WISHLIST_UPLOADS_PATH,
+  wishCategoryRequiredError,
+  wishImageRequiredError,
   wishlistLimitError,
   type WishItem,
 } from "./wishlistApi";
@@ -70,8 +82,43 @@ describe("wishlist URL helpers", () => {
     ).toBe("/wishlist?limit=20&cursor=abc&category=TOP");
     expect(getWishApiPath("wish 1")).toBe("/wishlist/wish%201");
     expect(getWishAcquireApiPath("wish_1")).toBe("/wishlist/wish_1/acquire");
+    expect(getWishRenderApiPath("wish_1")).toBe("/wishlist/wish_1/render");
+    expect(getWishRendersApiPath("wish 1")).toBe("/wishlist/wish%201/renders");
     expect(WISHLIST_UPLOADS_PATH).toBe("/wishlist/uploads");
     expect(WISHLIST_PAGE_SIZE).toBe(20);
+  });
+
+  it("parses optional Virtual Try On fields on a wish", () => {
+    expect(
+      toWishItem({
+        ...completeWish({
+          render: {
+            status: "READY",
+            aiProfileId: "aip_1",
+            imageKey: "users/user-1/wishlist/wish_1/renders/a.png",
+            imageUrl: "/screenshots/try-on-started.jpg",
+          },
+          renderHistory: [
+            {
+              imageKey: "users/user-1/wishlist/wish_1/renders/a.png",
+              createdAt: "2026-10-13T12:00:00.000Z",
+              aiProfileId: "aip_1",
+              imageUrl: "/screenshots/try-on-started.jpg",
+            },
+          ],
+          renderImageUrls: ["/screenshots/try-on-started.jpg"],
+        }),
+      }),
+    ).toMatchObject({
+      render: {
+        status: "READY",
+        imageUrl: "/screenshots/try-on-started.jpg",
+      },
+      renderHistory: [
+        { imageKey: "users/user-1/wishlist/wish_1/renders/a.png" },
+      ],
+      renderImageUrls: ["/screenshots/try-on-started.jpg"],
+    });
   });
 
   it("reads the wishes key only and drops an items fallback", () => {
@@ -306,6 +353,85 @@ describe("createMockWishlistApi", () => {
     );
   });
 
+  it("starts Virtual Try On on the nested wish render route without an image URL", async () => {
+    const api = createMockWishlistApi();
+    const rendered = await api.renderWish("wish_loafers01", {
+      aiProfileId: "aip_model01",
+    });
+    expect(rendered.render?.status).toBe("READY");
+    expect(rendered.render?.aiProfileId).toBe("aip_model01");
+    expect(rendered.render?.imageUrl).toBeTruthy();
+    expect(rendered.renderHistory?.[0]?.imageKey).toMatch(
+      /wishlist\/wish_loafers01\/renders/,
+    );
+    await expect(api.getWishRender("wish_loafers01")).resolves.toMatchObject({
+      status: "READY",
+      aiProfileId: "aip_model01",
+    });
+  });
+
+  it("rejects generate when the wish has no photo or category", async () => {
+    const api = createMockWishlistApi({}, { wishes: [mockIncompleteWish] });
+    await expect(
+      api.renderWish(mockIncompleteWish.wishId, { aiProfileId: "aip_1" }),
+    ).rejects.toMatchObject({
+      status: 400,
+      code: WISH_IMAGE_REQUIRED_CODE,
+    });
+    expect(isWishImageRequiredError(wishImageRequiredError())).toBe(true);
+
+    const photoOnly: WishItem = {
+      ...mockIncompleteWish,
+      wishId: "wish_photo_only",
+      originalImageUrl: "/screenshots/item-detail-390.jpg",
+      image: { originalKey: "users/user-1/wishlist/uploads/shirt.jpg" },
+    };
+    const categoryApi = createMockWishlistApi({}, { wishes: [photoOnly] });
+    await expect(
+      categoryApi.renderWish(photoOnly.wishId, { aiProfileId: "aip_1" }),
+    ).rejects.toMatchObject({
+      status: 400,
+      code: WISH_CATEGORY_REQUIRED_CODE,
+    });
+    expect(isWishCategoryRequiredError(wishCategoryRequiredError())).toBe(true);
+  });
+
+  it("treats GET /render without a current render as RENDER_NOT_FOUND", async () => {
+    const api = createMockWishlistApi();
+    await expect(api.getWishRender("wish_scarf01")).rejects.toMatchObject({
+      status: 404,
+      code: RENDER_NOT_FOUND_CODE,
+    });
+  });
+
+  it("deletes one Try On photo by imageKey", async () => {
+    const api = createMockWishlistApi();
+    const rendered = await api.renderWish("wish_loafers01", {
+      aiProfileId: "aip_model01",
+    });
+    const imageKey = rendered.renderHistory?.[0]?.imageKey;
+    expect(imageKey).toBeTruthy();
+    await api.deleteWishRender("wish_loafers01", { imageKey: imageKey! });
+    const wish = await api.getWish("wish_loafers01");
+    expect(wish.renderHistory).toBeUndefined();
+    expect(wish.render).toBeUndefined();
+    await expect(api.getWishRender("wish_loafers01")).rejects.toMatchObject({
+      code: RENDER_NOT_FOUND_CODE,
+    });
+  });
+
+  it("maps AI_PROFILE_NOT_FOUND", () => {
+    expect(
+      isAiProfileNotFoundError(
+        new ApiError({
+          status: 404,
+          code: AI_PROFILE_NOT_FOUND_CODE,
+          message: "Virtual Profile not found.",
+        }),
+      ),
+    ).toBe(true);
+  });
+
   it("rejects acquire when the wish is missing a category or photo", async () => {
     const api = createMockWishlistApi({}, { wishes: [mockIncompleteWish] });
     await expect(
@@ -409,6 +535,27 @@ describe("createLiveWishlistApi", () => {
             expiresIn: 900,
           };
         }
+        if (path === "/wishlist/wish_loafers01/render" && options?.method === "POST") {
+          expect(options.body).toEqual({ aiProfileId: "aip_1" });
+          expect(JSON.stringify(options.body)).not.toMatch(/imageUrl|originalImageUrl/);
+          return {
+            ...mockWishes[0],
+            render: { status: "PENDING", aiProfileId: "aip_1" },
+          };
+        }
+        if (path === "/wishlist/wish_loafers01/render") {
+          return {
+            status: "READY",
+            aiProfileId: "aip_1",
+            imageUrl: "/screenshots/try-on-started.jpg",
+          };
+        }
+        if (path === "/wishlist/wish_loafers01/renders" && options?.method === "DELETE") {
+          expect(options.body).toEqual({
+            imageKey: "users/user-1/wishlist/wish_loafers01/renders/a.png",
+          });
+          return undefined;
+        }
         throw new Error(`unexpected path ${path}`);
       },
     );
@@ -440,6 +587,20 @@ describe("createLiveWishlistApi", () => {
     ).resolves.toMatchObject({
       objectKey: "users/user-1/wishlist/uploads/upl_wish.jpg",
     });
+    await expect(
+      api.renderWish("wish_loafers01", { aiProfileId: "aip_1" }),
+    ).resolves.toMatchObject({
+      render: { status: "PENDING", aiProfileId: "aip_1" },
+    });
+    await expect(api.getWishRender("wish_loafers01")).resolves.toMatchObject({
+      status: "READY",
+      imageUrl: "/screenshots/try-on-started.jpg",
+    });
+    await expect(
+      api.deleteWishRender("wish_loafers01", {
+        imageKey: "users/user-1/wishlist/wish_loafers01/renders/a.png",
+      }),
+    ).resolves.toBeUndefined();
 
     expect(request).toHaveBeenCalledWith("/wishlist?limit=20");
     expect(request).toHaveBeenCalledWith("/wishlist", {
@@ -465,6 +626,15 @@ describe("createLiveWishlistApi", () => {
         purpose: UPLOAD_PURPOSE_WISHLIST,
       },
     });
+    expect(request).toHaveBeenCalledWith("/wishlist/wish_loafers01/render", {
+      method: "POST",
+      body: { aiProfileId: "aip_1" },
+    });
+    expect(request).toHaveBeenCalledWith("/wishlist/wish_loafers01/render");
+    expect(request).toHaveBeenCalledWith("/wishlist/wish_loafers01/renders", {
+      method: "DELETE",
+      body: { imageKey: "users/user-1/wishlist/wish_loafers01/renders/a.png" },
+    });
   });
 
   it("uses the mock client when mock mode is on", () => {
@@ -477,6 +647,13 @@ describe("createErrorWishlistApi", () => {
   it("rejects every method", async () => {
     const api = createErrorWishlistApi();
     await expect(api.listWishes()).rejects.toBeInstanceOf(ApiError);
+    await expect(
+      api.renderWish("wish_1", { aiProfileId: "aip_1" }),
+    ).rejects.toBeInstanceOf(ApiError);
+    await expect(api.getWishRender("wish_1")).rejects.toBeInstanceOf(ApiError);
+    await expect(
+      api.deleteWishRender("wish_1", { imageKey: "key" }),
+    ).rejects.toBeInstanceOf(ApiError);
   });
 });
 
