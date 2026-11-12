@@ -112,7 +112,7 @@ export const getPrivacyPolicyContent = (
         title: "App Tracking Transparency",
         paragraphs: [
           "On iOS, the app uses Apple’s App Tracking Transparency framework. A single permission prompt is shown. No tracking events are sent to TikTok or Meta before you answer that prompt.",
-          "The Identifier for Advertisers (IDFA) is shared only if you allow tracking. You can change this later in iOS Settings > Privacy & Security > Tracking.",
+          "The Identifier for Advertisers (IDFA) is shared only if you allow tracking. On iOS this is governed by Apple’s App Tracking Transparency choice, managed in iOS Settings > Privacy & Security > Tracking, not by an in-app switch.",
         ],
       },
       {
@@ -126,7 +126,11 @@ export const getPrivacyPolicyContent = (
         id: "android-advertising-id",
         title: "Android advertising identifier",
         paragraphs: [
-          "On Android, the apps may use the Google advertising ID. You can reset that identifier or opt out of ads personalization in Android settings, typically under Settings > Privacy > Ads or Settings > Google > Ads, depending on the device and Android version.",
+          "On Android, the apps may use the Google advertising ID. You can reset that identifier or opt out of ads personalisation in Android settings, typically under Settings > Privacy > Ads or Settings > Google > Ads, depending on the device and Android version.",
+          "In the Android app, the setting is called “Personalised ads” and lives under Account > Privacy. It is off by default and you can change it at any time. The app may ask once, with equal Allow and Don’t allow choices, but the Account > Privacy switch is what counts.",
+          "While Personalised ads is off, the app does not share the Google advertising ID with Meta or TikTok, and the operator’s server does not send subscription events to TikTok. App events can still be sent without the advertising ID.",
+          "If you switch Personalised ads off, Meta stops using the advertising ID immediately. TikTok pauses until the next app launch, then runs without the advertising ID.",
+          "On iOS, advertising identifiers are governed by Apple’s App Tracking Transparency choice, managed in iOS Settings, not by an in-app switch. See App Tracking Transparency.",
         ],
       },
       {

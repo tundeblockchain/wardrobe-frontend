@@ -37,7 +37,7 @@ describe("PrivacyPolicyPage", () => {
     expect(
       screen.getByText(/This Privacy Policy explains how the operator of Pocket Closet/),
     ).toBeInTheDocument();
-    expect(screen.getByText("Last updated 7 November 2026")).toBeInTheDocument();
+    expect(screen.getByText("Last updated 12 November 2026")).toBeInTheDocument();
     expect(
       screen.getByRole("heading", { name: "Cookies and similar technologies" }),
     ).toBeInTheDocument();
@@ -88,6 +88,58 @@ describe("PrivacyPolicyPage", () => {
     ).toHaveAttribute("href", "https://www.facebook.com/privacy/policy/");
   });
 
+  it("renders the Android Personalised ads choice and iOS Settings contrast", () => {
+    renderWithProviders(<PrivacyPolicyPage />);
+
+    expect(
+      screen.getByRole("heading", { name: "Android advertising identifier" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/the setting is called “Personalised ads”/),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/lives under Account > Privacy/),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/It is off by default and you can change it at any time/),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/equal Allow and Don’t allow choices/),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/the Account > Privacy switch is what counts/),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /does not share the Google advertising ID with Meta or TikTok/,
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /the operator’s server does not send subscription events to TikTok/,
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/App events can still be sent without the advertising ID/),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Meta stops using the advertising ID immediately/),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /TikTok pauses until the next app launch, then runs without the advertising ID/,
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /managed in iOS Settings > Privacy & Security > Tracking, not by an in-app switch/,
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(/stops sending all events/i),
+    ).not.toBeInTheDocument();
+  });
+
   it("keeps attribution copy readable in dark mode", () => {
     stubMatchMedia(true);
     writeThemePreference("dark");
@@ -108,6 +160,12 @@ describe("PrivacyPolicyPage", () => {
     expect(
       screen.getByRole("heading", { name: "SKAdNetwork" }),
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Android advertising identifier" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/the setting is called “Personalised ads”/),
+    ).toBeVisible();
     expect(tiktokLink).toBeVisible();
     expect(metaLink).toBeVisible();
     expect(

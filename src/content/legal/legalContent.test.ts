@@ -92,6 +92,32 @@ describe("legal content", () => {
     const skan = content.sections.find((section) => section.id === "skadnetwork");
     expect(skan?.paragraphs.join(" ")).toMatch(/SKAdNetwork/);
     expect(skan?.title).toBe("SKAdNetwork");
+
+    const androidAdvertising = content.sections.find(
+      (section) => section.id === "android-advertising-id",
+    );
+    const androidCopy = androidAdvertising?.paragraphs.join(" ") ?? "";
+    expect(androidAdvertising?.title).toBe("Android advertising identifier");
+    expect(androidCopy).toMatch(/“Personalised ads”/);
+    expect(androidCopy).toMatch(/Account > Privacy/);
+    expect(androidCopy).toMatch(/off by default/);
+    expect(androidCopy).toMatch(/Allow and Don’t allow/);
+    expect(androidCopy).toMatch(/does not share the Google advertising ID/);
+    expect(androidCopy).toMatch(/does not send subscription events to TikTok/);
+    expect(androidCopy).toMatch(
+      /App events can still be sent without the advertising ID/,
+    );
+    expect(androidCopy).toMatch(/Meta stops using the advertising ID immediately/);
+    expect(androidCopy).toMatch(/TikTok pauses until the next app launch/);
+    expect(androidCopy).not.toMatch(/stop sending all events/i);
+    expect(androidCopy).toMatch(
+      /managed in iOS Settings, not by an in-app switch/,
+    );
+
+    const attCopy = att?.paragraphs.join(" ") ?? "";
+    expect(attCopy).toMatch(
+      /managed in iOS Settings > Privacy & Security > Tracking, not by an in-app switch/,
+    );
   });
 
   it("describes operator contact without requiring a configured email", () => {
