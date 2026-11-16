@@ -18,6 +18,8 @@ import {
   type WishItem,
   type WishlistApi,
 } from "../../api/wishlistApi";
+import { toViewTrackingParams } from "../../config/trackingEvents";
+import { useTrackOnce } from "../../config/useTrackOnce";
 import { dashboardCopy } from "../../content/dashboardCopy";
 import { useWishTryOn } from "../../hooks/useWishTryOn";
 import { VIRTUAL_TRY_ON_POLL_INTERVAL_MS } from "../../pages/app/virtualTryOnPoll";
@@ -72,6 +74,7 @@ export const WishListDetailDialog = ({
   onWishUpdated,
 }: WishListDetailDialogProps) => {
   const copy = dashboardCopy.wishList;
+  useTrackOnce("view_wish", true, toViewTrackingParams("wish", wish.category));
   const titleId = `wish-detail-${wish.wishId}-title`;
   const safeLink = getSafeWishLinkUrl(wish.link);
   const priceLabel = formatWishPrice(wish.price);

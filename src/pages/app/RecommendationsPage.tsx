@@ -53,6 +53,18 @@ export const RecommendationsPage = ({
     `recommendations:${wardrobeId}`,
     loadPage,
   );
+  const recommendationsSucceeded =
+    query.status === "ready" && canUseOutfitSuggestions(query.data.entitlement);
+  useTrackOnce(
+    "view_recommendations",
+    recommendationsSucceeded,
+    recommendationsSucceeded
+      ? {
+          content_type: "recommendations",
+          result_count: query.data.recommendations.length,
+        }
+      : undefined,
+  );
 
   const backLink = (
     <Button
@@ -219,10 +231,6 @@ const RecommendationsReady = ({
 }: RecommendationsReadyProps) => {
   const copy = dashboardCopy.recommendations;
   const navigate = useNavigate();
-  useTrackOnce("view_recommendations", true, {
-    content_type: "recommendations",
-    result_count: views.length,
-  });
 
   const handleOpenSuggestion = (view: SuggestedOutfitView) => {
     navigate(getAppWardrobeRecommendationDetailPath(wardrobeId), {

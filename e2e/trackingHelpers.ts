@@ -212,6 +212,34 @@ export const findTrackingEvent = (
   return calls.ttq.find((call) => call[0] === eventName);
 };
 
+export const findGtagEvents = (
+  calls: TrackingCallLog,
+  eventName: string,
+): unknown[][] => {
+  return calls.gtag.filter(
+    (call) => call[0] === "event" && call[1] === eventName,
+  );
+};
+
+export const findFbqEvents = (
+  calls: TrackingCallLog,
+  eventName: string,
+): unknown[][] => {
+  return calls.fbq.filter((call) => call[1] === eventName);
+};
+
+export const expectNoTrackingPii = (value: unknown): void => {
+  const serialized = JSON.stringify(value);
+  expect(serialized).not.toMatch(/[^"\s]+@[^"\s]+\.[^"\s]+/);
+  expect(serialized).not.toMatch(/https?:\/\/(?!www\.googletagmanager)/i);
+  expect(serialized).not.toContain("Black loafers");
+  expect(serialized).not.toContain("Sunday brunch");
+  expect(serialized).not.toContain("Navy tee");
+  expect(serialized).not.toMatch(
+    /(?:wish_loafers01|outfit_brunch01|item_navytee01|wd_weekend01|item_ivorymaxi01)/,
+  );
+};
+
 export const countTrackingEvent = (
   calls: TrackingCallLog,
   vendor: "gtag" | "fbq" | "ttq",

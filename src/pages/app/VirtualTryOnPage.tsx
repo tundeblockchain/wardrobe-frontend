@@ -51,6 +51,8 @@ import {
 import { ResourceErrorState } from "../../components/dashboard/ResourceErrorState";
 import { ResourceLoadingState } from "../../components/dashboard/ResourceLoadingState";
 import { SelectableResourceCard } from "../../components/dashboard/SelectableResourceCard";
+import { toViewTrackingParams } from "../../config/trackingEvents";
+import { useTrackOnce } from "../../config/useTrackOnce";
 import { dashboardCopy } from "../../content/dashboardCopy";
 import { useResourceQuery } from "../../hooks/useResourceQuery";
 import { appPaths } from "../../routes/paths";
@@ -122,6 +124,13 @@ export const VirtualTryOnPage = ({
     [resourceApi],
   );
   const query = useResourceQuery("virtual-try-on", loadPage);
+  const canViewTryOn =
+    query.status === "ready" && canUseAiTryOn(query.data.entitlement);
+  useTrackOnce(
+    "view_try_on",
+    canViewTryOn,
+    canViewTryOn ? toViewTrackingParams("try_on") : undefined,
+  );
 
   if (query.status === "loading") {
     return (

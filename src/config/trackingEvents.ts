@@ -57,6 +57,9 @@ export type TrackingEventName =
   | "delete_item"
   | "item_image_uploaded"
   | "view_item"
+  | "view_outfit"
+  | "view_wish"
+  | "view_try_on"
   | "save_outfit"
   | "delete_outfit"
   | "view_recommendations"
@@ -161,6 +164,21 @@ export const TRACKING_EVENT_MAP: Record<
     meta: { name: "ViewContent", standard: true },
     tiktok: { name: "ViewContent", standard: true },
   },
+  view_outfit: {
+    ga: "view_outfit",
+    meta: { name: "ViewContent", standard: true },
+    tiktok: { name: "ViewContent", standard: true },
+  },
+  view_wish: {
+    ga: "view_wish",
+    meta: { name: "ViewContent", standard: true },
+    tiktok: { name: "ViewContent", standard: true },
+  },
+  view_try_on: {
+    ga: "view_try_on",
+    meta: { name: "ViewContent", standard: true },
+    tiktok: { name: "ViewContent", standard: true },
+  },
   save_outfit: {
     ga: "save_outfit",
     meta: { name: "SaveOutfit", standard: false },
@@ -231,6 +249,24 @@ export const TRACKING_EVENT_MAP: Record<
 export type TrackingParamValue = string | number | boolean;
 
 export type TrackingParams = Record<string, TrackingParamValue>;
+
+export const VIEW_CONTENT_TYPES = ["item", "outfit", "wish", "try_on"] as const;
+
+export type ViewContentType = (typeof VIEW_CONTENT_TYPES)[number];
+
+export const toViewTrackingParams = (
+  contentType: ViewContentType,
+  category?: string,
+): TrackingParams => {
+  const params: TrackingParams = { content_type: contentType };
+  const trimmedCategory = category?.trim();
+  if (!trimmedCategory) {
+    return params;
+  }
+
+  params.category = trimmedCategory;
+  return params;
+};
 
 export type TrackEventOptions = {
   ids?: Partial<TrackingIds>;

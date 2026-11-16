@@ -1,6 +1,6 @@
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { catalogLimitError } from "../../api/catalogLimits";
 import { ApiError } from "../../api/httpClient";
 import {
@@ -21,6 +21,19 @@ import {
 import { expectFormInsideSharedCard } from "../../test/formCardTest";
 import { renderWithProviders } from "../../test/renderWithProviders";
 import { OutfitsPage } from "./OutfitsPage";
+
+vi.mock("../../config/trackingEvents", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("../../config/trackingEvents")>();
+  return {
+    ...actual,
+    trackEvent: vi.fn(),
+  };
+});
+
+import { trackEvent } from "../../config/trackingEvents";
+
+const mockedTrackEvent = vi.mocked(trackEvent);
 
 const renderPage = (
   resourceApi: ReturnType<typeof createMockResourceApi>,
@@ -395,5 +408,30 @@ describe("OutfitsPage", () => {
       await screen.findByRole("heading", { name: "Navy + cream look" }),
     ).toBeInTheDocument();
     expect(listRecommendations).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("OutfitsPage view event isolation", () => {
+  beforeEach(() => {
+    mockedTrackEvent.mockClear();
+  });
+
+  it("does not fire view_outfit, view_try_on, or view_recommendations when the list loads outfits and suggestions", async () => {
+    renderPage(createMockResourceApi());
+
+    expect(
+      await screen.findByRole("heading", { name: "Sunday brunch" }),
+    ).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", { name: "Navy + cream look" }),
+    ).toBeInTheDocument();
+    await Promise.resolve();
+    expect(
+      mockedTrackEvent.mock.calls.filter((call) =>
+        ["view_outfit", "view_try_on", "view_recommendations", "view_wish"].includes(
+          String(call[0]),
+        ),
+      ),
+    ).toHaveLength(0);
   });
 });

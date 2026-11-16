@@ -1,7 +1,7 @@
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Route, Routes } from "react-router-dom";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { catalogLimitError } from "../../api/catalogLimits";
 import {
   createErrorResourceApi,
@@ -21,6 +21,20 @@ import {
   expectBoundedGetMeFetches,
 } from "../../test/unstableGetMeApi";
 import { OutfitFormPage } from "./OutfitFormPage";
+import { invalidateResourceQueries } from "../../hooks/resourceQueryCache";
+
+vi.mock("../../config/trackingEvents", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("../../config/trackingEvents")>();
+  return {
+    ...actual,
+    trackEvent: vi.fn(),
+  };
+});
+
+import { trackEvent } from "../../config/trackingEvents";
+
+const mockedTrackEvent = vi.mocked(trackEvent);
 
 const renderCreate = (resourceApi: ResourceApi) => {
   return renderWithProviders(
@@ -226,5 +240,72 @@ describe("OutfitFormPage", () => {
       }),
     ).toBeInTheDocument();
     await expectBoundedGetMeFetches(getMe);
+  });
+});
+
+describe("OutfitFormPage view_outfit tracking", () => {
+  beforeEach(() => {
+    mockedTrackEvent.mockClear();
+  });
+
+  afterEach(() => {
+    mockedTrackEvent.mockClear();
+  });
+
+  const viewOutfitCalls = () => {
+    return mockedTrackEvent.mock.calls.filter((call) => call[0] === "view_outfit");
+  };
+
+  it("fires view_outfit once on the edit screen with content_type only", async () => {
+    renderEdit("outfit_brunch01", createMockResourceApi());
+
+    await expectFormInsideSharedCard("Save changes");
+    await vi.waitFor(() => {
+      expect(viewOutfitCalls()).toHaveLength(1);
+    });
+    expect(viewOutfitCalls()[0]?.[1]).toEqual({ content_type: "outfit" });
+    expect(JSON.stringify(viewOutfitCalls())).not.toMatch(
+      /Sunday brunch|outfit_brunch01|wd_weekend01|@/,
+    );
+  });
+
+  it("does not fire view_outfit on the create screen", async () => {
+    renderCreate(createMockResourceApi());
+
+    await expectFormInsideSharedCard("Save outfit");
+    await Promise.resolve();
+    expect(viewOutfitCalls()).toHaveLength(0);
+  });
+
+  it("fires a second view_outfit after leaving and opening the same outfit again", async () => {
+    const first = renderEdit("outfit_brunch01", createMockResourceApi());
+    await expectFormInsideSharedCard("Save changes");
+    await vi.waitFor(() => {
+      expect(viewOutfitCalls()).toHaveLength(1);
+    });
+    first.unmount();
+
+    renderEdit("outfit_brunch01", createMockResourceApi());
+    await expectFormInsideSharedCard("Save changes");
+    await vi.waitFor(() => {
+      expect(viewOutfitCalls()).toHaveLength(2);
+    });
+  });
+
+  it("does not fire again when the outfit is refetched while the screen stays mounted", async () => {
+    const getOutfit = vi.fn().mockImplementation(createMockResourceApi().getOutfit);
+    renderEdit("outfit_brunch01", createMockResourceApi({ getOutfit }));
+
+    await expectFormInsideSharedCard("Save changes");
+    await vi.waitFor(() => {
+      expect(viewOutfitCalls()).toHaveLength(1);
+    });
+
+    invalidateResourceQueries(["outfit"]);
+    await waitFor(() => {
+      expect(getOutfit.mock.calls.length).toBeGreaterThan(1);
+    });
+    await expectFormInsideSharedCard("Save changes");
+    expect(viewOutfitCalls()).toHaveLength(1);
   });
 });

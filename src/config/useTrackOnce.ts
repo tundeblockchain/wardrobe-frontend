@@ -10,15 +10,26 @@ export const useTrackOnce = (
   enabled: boolean,
   params?: TrackingParams,
 ): void => {
-  const fired = useRef(false);
+  const firedForThisMount = useRef(false);
   const paramsKey = JSON.stringify(params ?? {});
 
   useEffect(() => {
-    if (!enabled || fired.current) {
+    if (!enabled || firedForThisMount.current) {
       return;
     }
 
-    fired.current = true;
-    trackEvent(name, params);
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (cancelled || firedForThisMount.current) {
+        return;
+      }
+
+      firedForThisMount.current = true;
+      trackEvent(name, params);
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [enabled, name, params, paramsKey]);
 };
