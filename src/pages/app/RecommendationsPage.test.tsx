@@ -1,7 +1,7 @@
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Route, Routes } from "react-router-dom";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "../../api/httpClient";
 import {
   createBasicResourceApi,
@@ -30,6 +30,20 @@ import {
 import { renderWithProviders } from "../../test/renderWithProviders";
 import { RecommendationDetailPage } from "./RecommendationDetailPage";
 import { RecommendationsPage } from "./RecommendationsPage";
+import { invalidateResourceQueries } from "../../hooks/resourceQueryCache";
+
+vi.mock("../../config/trackingEvents", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("../../config/trackingEvents")>();
+  return {
+    ...actual,
+    trackEvent: vi.fn(),
+  };
+});
+
+import { trackEvent } from "../../config/trackingEvents";
+
+const mockedTrackEvent = vi.mocked(trackEvent);
 
 const envelopeRecommendations: OutfitRecommendation[] = [
   {
@@ -333,5 +347,180 @@ describe("RecommendationsPage", () => {
 
     unmount();
     expect(signal?.aborted).toBe(true);
+  });
+});
+
+describe("RecommendationsPage view_recommendations tracking", () => {
+  beforeEach(() => {
+    mockedTrackEvent.mockClear();
+  });
+
+  const viewRecommendationsCalls = () => {
+    return mockedTrackEvent.mock.calls.filter(
+      (call) => call[0] === "view_recommendations",
+    );
+  };
+
+  it("fires after a successful load with the real result_count", async () => {
+    renderList("wd_weekend01", createMockResourceApi());
+
+    expect(
+      await screen.findByRole("heading", { name: "Navy + cream look" }),
+    ).toBeInTheDocument();
+    await vi.waitFor(() => {
+      expect(viewRecommendationsCalls()).toHaveLength(1);
+    });
+    expect(viewRecommendationsCalls()[0]?.[1]).toEqual({
+      content_type: "recommendations",
+      result_count: 2,
+    });
+    expect(JSON.stringify(viewRecommendationsCalls())).not.toMatch(
+      /Navy tee|wd_weekend01|item_|@/,
+    );
+  });
+
+  it("fires with result_count 0 when the request succeeds with no suggestions", async () => {
+    renderList("wd_work02", createEmptyResourceApi());
+
+    expect(
+      await screen.findByRole("heading", { name: "No suggestions yet" }),
+    ).toBeInTheDocument();
+    await vi.waitFor(() => {
+      expect(viewRecommendationsCalls()).toHaveLength(1);
+    });
+    expect(viewRecommendationsCalls()[0]?.[1]).toEqual({
+      content_type: "recommendations",
+      result_count: 0,
+    });
+  });
+
+  it("does not fire while recommendations are loading", () => {
+    renderList(
+      "wd_weekend01",
+      createMockResourceApi({
+        listRecommendations: () => new Promise(() => undefined),
+      }),
+    );
+
+    expect(
+      screen.getByRole("status", { name: "Loading suggested outfits" }),
+    ).toBeInTheDocument();
+    expect(viewRecommendationsCalls()).toHaveLength(0);
+  });
+
+  it("does not fire when the request fails with a generic error", async () => {
+    renderList("wd_weekend01", createErrorResourceApi());
+
+    expect(
+      await screen.findByRole("heading", {
+        name: "Couldn't load suggested outfits",
+      }),
+    ).toBeInTheDocument();
+    await Promise.resolve();
+    expect(viewRecommendationsCalls()).toHaveLength(0);
+  });
+
+  it("does not fire when suggestions stay locked for Free", async () => {
+    renderList("wd_weekend01", createFreeResourceApi());
+
+    expect(
+      await screen.findByRole("heading", {
+        name: "Suggested outfits need a paid plan",
+      }),
+    ).toBeInTheDocument();
+    await Promise.resolve();
+    expect(viewRecommendationsCalls()).toHaveLength(0);
+  });
+
+  it("does not fire on a 403 paywall", async () => {
+    renderList("wd_weekend01", createEntitlementAiRequiredResourceApi());
+
+    expect(
+      await screen.findByRole("heading", {
+        name: "Suggested outfits need a paid plan",
+      }),
+    ).toBeInTheDocument();
+    await Promise.resolve();
+    expect(viewRecommendationsCalls()).toHaveLength(0);
+  });
+
+  it("does not fire on a 429", async () => {
+    renderList(
+      "wd_weekend01",
+      createMockResourceApi({
+        listRecommendations: async () => {
+          throw new ApiError({
+            status: 429,
+            code: "RATE_LIMITED",
+            message: "Too many requests.",
+          });
+        },
+      }),
+    );
+
+    expect(
+      await screen.findByRole("heading", {
+        name: "Couldn't load suggested outfits",
+      }),
+    ).toBeInTheDocument();
+    await Promise.resolve();
+    expect(viewRecommendationsCalls()).toHaveLength(0);
+  });
+
+  it("does not fire again when recommendations are refetched while the page stays mounted", async () => {
+    const user = userEvent.setup();
+    const listRecommendations = vi
+      .fn()
+      .mockResolvedValueOnce({ recommendations: envelopeRecommendations })
+      .mockResolvedValueOnce({
+        recommendations: [titleOnlyRecommendation],
+      });
+    renderList(
+      "wd_weekend01",
+      createMockResourceApi({ listRecommendations }),
+    );
+
+    expect(
+      await screen.findByRole("heading", { name: "Navy + cream look" }),
+    ).toBeInTheDocument();
+    await vi.waitFor(() => {
+      expect(viewRecommendationsCalls()).toHaveLength(1);
+    });
+    expect(viewRecommendationsCalls()[0]?.[1]).toEqual({
+      content_type: "recommendations",
+      result_count: 1,
+    });
+
+    await user.click(
+      screen.getByRole("button", { name: "Refresh suggested outfits" }),
+    );
+    expect(
+      await screen.findByRole("heading", { name: "Ivory maxi evening" }),
+    ).toBeInTheDocument();
+    expect(listRecommendations).toHaveBeenCalledTimes(2);
+    expect(viewRecommendationsCalls()).toHaveLength(1);
+  });
+
+  it("does not fire again after a keyed invalidation while the page stays mounted", async () => {
+    const listRecommendations = vi.fn().mockResolvedValue({
+      recommendations: envelopeRecommendations,
+    });
+    renderList(
+      "wd_weekend01",
+      createMockResourceApi({ listRecommendations }),
+    );
+
+    expect(
+      await screen.findByRole("heading", { name: "Navy + cream look" }),
+    ).toBeInTheDocument();
+    await vi.waitFor(() => {
+      expect(viewRecommendationsCalls()).toHaveLength(1);
+    });
+
+    invalidateResourceQueries(["recommendations"]);
+    await waitFor(() => {
+      expect(listRecommendations).toHaveBeenCalledTimes(2);
+    });
+    expect(viewRecommendationsCalls()).toHaveLength(1);
   });
 });

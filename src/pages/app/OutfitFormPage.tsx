@@ -19,7 +19,8 @@ import { OutfitForm } from "../../components/dashboard/OutfitForm";
 import { ResourceEmptyState } from "../../components/dashboard/ResourceEmptyState";
 import { ResourceErrorState } from "../../components/dashboard/ResourceErrorState";
 import { ResourceLoadingState } from "../../components/dashboard/ResourceLoadingState";
-import { trackEvent } from "../../config/trackingEvents";
+import { toViewTrackingParams, trackEvent } from "../../config/trackingEvents";
+import { useTrackOnce } from "../../config/useTrackOnce";
 import { dashboardCopy } from "../../content/dashboardCopy";
 import {
   loadUnusedResource,
@@ -83,6 +84,12 @@ export const OutfitFormPage = ({
   const outfitQuery = useResourceQuery(
     mode === "edit" ? `outfit:${outfitId}:${wardrobeIdFromQuery}` : "outfit:new",
     mode === "edit" ? loadSelectedOutfit : loadUnusedResource,
+  );
+  const canViewOutfit = mode === "edit" && outfitQuery.status === "ready";
+  useTrackOnce(
+    "view_outfit",
+    canViewOutfit,
+    canViewOutfit ? toViewTrackingParams("outfit") : undefined,
   );
 
   if (

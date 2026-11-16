@@ -10,6 +10,7 @@ import {
   readCheckoutSessionId,
   sanitizeTrackingParams,
   TRACKING_EVENT_MAP,
+  toViewTrackingParams,
   trackCheckoutSuccess,
   trackEvent,
   trackSpaPageView,
@@ -77,7 +78,50 @@ describe("event mapping", () => {
     );
     expect(TRACKING_EVENT_MAP.subscribe.meta.name).toBe("Subscribe");
     expect(TRACKING_EVENT_MAP.subscribe.tiktok.name).toBe("Subscribe");
+    expect(TRACKING_EVENT_MAP.view_item).toEqual({
+      ga: "view_item",
+      meta: { name: "ViewContent", standard: true },
+      tiktok: { name: "ViewContent", standard: true },
+    });
+    expect(TRACKING_EVENT_MAP.view_outfit).toEqual({
+      ga: "view_outfit",
+      meta: { name: "ViewContent", standard: true },
+      tiktok: { name: "ViewContent", standard: true },
+    });
+    expect(TRACKING_EVENT_MAP.view_wish).toEqual({
+      ga: "view_wish",
+      meta: { name: "ViewContent", standard: true },
+      tiktok: { name: "ViewContent", standard: true },
+    });
+    expect(TRACKING_EVENT_MAP.view_try_on).toEqual({
+      ga: "view_try_on",
+      meta: { name: "ViewContent", standard: true },
+      tiktok: { name: "ViewContent", standard: true },
+    });
+    expect(TRACKING_EVENT_MAP.view_recommendations).toEqual({
+      ga: "view_recommendations",
+      meta: { name: "ViewContent", standard: true },
+      tiktok: { name: "ViewContent", standard: true },
+    });
     expect(TRACKING_EVENT_MAP).not.toHaveProperty("start_trial");
+  });
+});
+
+describe("toViewTrackingParams", () => {
+  it("includes category only when the entity has one", () => {
+    expect(toViewTrackingParams("item", "TOP")).toEqual({
+      content_type: "item",
+      category: "TOP",
+    });
+    expect(toViewTrackingParams("wish", "SHOES")).toEqual({
+      content_type: "wish",
+      category: "SHOES",
+    });
+    expect(toViewTrackingParams("outfit")).toEqual({ content_type: "outfit" });
+    expect(toViewTrackingParams("try_on")).toEqual({ content_type: "try_on" });
+    expect(toViewTrackingParams("wish", "  ")).toEqual({
+      content_type: "wish",
+    });
   });
 });
 
@@ -317,6 +361,75 @@ describe("trackEvent", () => {
     expect(JSON.stringify([gaPayload, metaPayload, tiktokPayload])).not.toMatch(
       /Navy tee|@|item_navytee01/,
     );
+  });
+
+  it("sends wish, outfit, and try-on view params without PII or raw IDs", () => {
+    installVendors();
+
+    trackEvent(
+      "view_wish",
+      {
+        ...toViewTrackingParams("wish", "SHOES"),
+        name: "Black loafers",
+        email: "person@example.com",
+        wish_id: "wish_loafers01",
+        url: "https://example.com/black-loafers",
+      },
+      { ids: ALL_IDS, eventId: "evt_wish" },
+    );
+    trackEvent(
+      "view_outfit",
+      {
+        ...toViewTrackingParams("outfit"),
+        name: "Sunday brunch",
+        outfit_id: "outfit_brunch01",
+      },
+      { ids: ALL_IDS, eventId: "evt_outfit" },
+    );
+    trackEvent(
+      "view_try_on",
+      toViewTrackingParams("try_on"),
+      { ids: ALL_IDS, eventId: "evt_try_on" },
+    );
+
+    const gtag = window.gtag as ReturnType<typeof vi.fn>;
+    const fbq = window.fbq as ReturnType<typeof vi.fn>;
+    const ttqTrack = window.ttq?.track as ReturnType<typeof vi.fn>;
+
+    expect(gtag).toHaveBeenCalledWith("event", "view_wish", {
+      content_type: "wish",
+      category: "SHOES",
+    });
+    expect(gtag).toHaveBeenCalledWith("event", "view_outfit", {
+      content_type: "outfit",
+    });
+    expect(gtag).toHaveBeenCalledWith("event", "view_try_on", {
+      content_type: "try_on",
+    });
+    expect(fbq).toHaveBeenCalledWith(
+      "track",
+      "ViewContent",
+      { content_type: "wish", category: "SHOES" },
+      { eventID: "evt_wish" },
+    );
+    expect(fbq).toHaveBeenCalledWith(
+      "track",
+      "ViewContent",
+      { content_type: "outfit" },
+      { eventID: "evt_outfit" },
+    );
+    expect(ttqTrack).toHaveBeenCalledWith(
+      "ViewContent",
+      { content_type: "try_on" },
+      { event_id: "evt_try_on" },
+    );
+
+    const serialized = JSON.stringify([
+      gtag.mock.calls,
+      fbq.mock.calls,
+      ttqTrack.mock.calls,
+    ]);
+    expect(serialized).not.toMatch(/Black loafers|Sunday brunch|@|wish_loafers01|outfit_brunch01|https:\/\//);
   });
 
   it("drops events when no consent choice has been saved", () => {

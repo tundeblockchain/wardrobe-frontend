@@ -1,6 +1,6 @@
 import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MOCK_BILLING_PLANS } from "../../api/billingPlans";
 import {
   createAiTryOnOffResourceApi,
@@ -30,6 +30,20 @@ import { appPaths, getAppVirtualTryOnPath } from "../../routes/paths";
 import { renderWithProviders } from "../../test/renderWithProviders";
 import { VIRTUAL_TRY_ON_RESULT_TEST_ID } from "./VirtualTryOnResultCard";
 import { VirtualTryOnPage } from "./VirtualTryOnPage";
+import { invalidateResourceQueries } from "../../hooks/resourceQueryCache";
+
+vi.mock("../../config/trackingEvents", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("../../config/trackingEvents")>();
+  return {
+    ...actual,
+    trackEvent: vi.fn(),
+  };
+});
+
+import { trackEvent } from "../../config/trackingEvents";
+
+const mockedTrackEvent = vi.mocked(trackEvent);
 
 const renderPage = (
   resourceApi: ReturnType<typeof createMockResourceApi>,
@@ -755,6 +769,91 @@ describe("VirtualTryOnPage", () => {
       await screen.findByRole("img", { name: "Virtual Try On render 1" }),
     ).toHaveAttribute("src", "/screenshots/try-on-started.jpg");
     expect(getItemRender).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("VirtualTryOnPage view_try_on tracking", () => {
+  beforeEach(() => {
+    mockedTrackEvent.mockClear();
+  });
+
+  afterEach(() => {
+    mockedTrackEvent.mockClear();
+  });
+
+  const viewTryOnCalls = () => {
+    return mockedTrackEvent.mock.calls.filter((call) => call[0] === "view_try_on");
+  };
+
+  it("fires view_try_on once after the screen is ready, with no PII", async () => {
+    renderPage(createMockResourceApi());
+
+    await expectFormInsideSharedCard("Start Virtual Try On");
+    await vi.waitFor(() => {
+      expect(viewTryOnCalls()).toHaveLength(1);
+    });
+    expect(viewTryOnCalls()[0]?.[1]).toEqual({ content_type: "try_on" });
+    expect(JSON.stringify(viewTryOnCalls())).not.toMatch(
+      /Navy tee|aip_|item_|outfit_|wd_|@|\/screenshots\//,
+    );
+  });
+
+  it("does not fire while Virtual Try On is loading", () => {
+    renderPage(
+      createMockResourceApi({
+        getMe: () => new Promise(() => undefined),
+      }),
+    );
+
+    expect(
+      screen.getByRole("status", { name: "Loading Virtual Try On" }),
+    ).toBeInTheDocument();
+    expect(viewTryOnCalls()).toHaveLength(0);
+  });
+
+  it("does not fire on the upgrade prompt", async () => {
+    renderPage(createAiTryOnOffResourceApi());
+
+    expect(
+      await screen.findByRole("heading", {
+        name: "Virtual Try On is a Premium feature",
+      }),
+    ).toBeInTheDocument();
+    await Promise.resolve();
+    expect(viewTryOnCalls()).toHaveLength(0);
+  });
+
+  it("fires a second view_try_on after leaving and opening Try On again", async () => {
+    const first = renderPage(createMockResourceApi());
+    await expectFormInsideSharedCard("Start Virtual Try On");
+    await vi.waitFor(() => {
+      expect(viewTryOnCalls()).toHaveLength(1);
+    });
+    first.unmount();
+
+    renderPage(createMockResourceApi());
+    await expectFormInsideSharedCard("Start Virtual Try On");
+    await vi.waitFor(() => {
+      expect(viewTryOnCalls()).toHaveLength(2);
+    });
+  });
+
+  it("does not fire again when Try On data is refetched while the screen stays mounted", async () => {
+    const getMe = vi.fn().mockImplementation(createMockResourceApi().getMe);
+    renderPage(createMockResourceApi({ getMe }));
+
+    await expectFormInsideSharedCard("Start Virtual Try On");
+    await vi.waitFor(() => {
+      expect(viewTryOnCalls()).toHaveLength(1);
+    });
+    const callsAfterOpen = getMe.mock.calls.length;
+
+    invalidateResourceQueries(["virtual-try-on"]);
+    await vi.waitFor(() => {
+      expect(getMe.mock.calls.length).toBeGreaterThan(callsAfterOpen);
+    });
+    await expectFormInsideSharedCard("Start Virtual Try On");
+    expect(viewTryOnCalls()).toHaveLength(1);
   });
 });
 

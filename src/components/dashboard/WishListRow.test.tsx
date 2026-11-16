@@ -1,6 +1,6 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { catalogLimitError } from "../../api/catalogLimits";
 import {
   createFreeAtLimitResourceApi,
@@ -27,6 +27,19 @@ import {
 import { ApiError } from "../../api/httpClient";
 import { renderWithProviders } from "../../test/renderWithProviders";
 import { WishListRow } from "./WishListRow";
+
+vi.mock("../../config/trackingEvents", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("../../config/trackingEvents")>();
+  return {
+    ...actual,
+    trackEvent: vi.fn(),
+  };
+});
+
+import { trackEvent } from "../../config/trackingEvents";
+
+const mockedTrackEvent = vi.mocked(trackEvent);
 
 const renderRow = (
   wishlistApi: WishlistApi,
@@ -625,6 +638,59 @@ describe("WishListRow Virtual Try On", () => {
     expect(
       within(gallery).getByRole("img", { name: "Virtual Try On render 1" }),
     ).toHaveAttribute("src", "/screenshots/try-on-ivory-maxi-390.jpg");
+  });
+});
+
+describe("WishListRow view_wish tracking", () => {
+  beforeEach(() => {
+    mockedTrackEvent.mockClear();
+  });
+
+  it("does not fire view_wish when the wish list loads outside the detail dialog", async () => {
+    renderRow(createMockWishlistApi());
+
+    expect(
+      await screen.findByRole("button", { name: "Black loafers" }),
+    ).toBeInTheDocument();
+    await Promise.resolve();
+    expect(
+      mockedTrackEvent.mock.calls.filter((call) =>
+        ["view_wish", "view_try_on", "view_outfit", "view_recommendations"].includes(
+          String(call[0]),
+        ),
+      ),
+    ).toHaveLength(0);
+  });
+
+  it("fires view_wish twice when the same wish is opened, closed, and opened again", async () => {
+    const user = userEvent.setup();
+    renderRow(createMockWishlistApi());
+
+    await user.click(
+      await screen.findByRole("button", { name: "Black loafers" }),
+    );
+    const firstDetail = screen.getByRole("dialog", { name: "Black loafers" });
+    expect(firstDetail).toBeInTheDocument();
+    await vi.waitFor(() => {
+      expect(
+        mockedTrackEvent.mock.calls.filter((call) => call[0] === "view_wish"),
+      ).toHaveLength(1);
+    });
+
+    await user.click(within(firstDetail).getByRole("button", { name: "Close" }));
+    expect(
+      screen.queryByRole("dialog", { name: "Black loafers" }),
+    ).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Black loafers" }));
+    expect(
+      screen.getByRole("dialog", { name: "Black loafers" }),
+    ).toBeInTheDocument();
+    await vi.waitFor(() => {
+      expect(
+        mockedTrackEvent.mock.calls.filter((call) => call[0] === "view_wish"),
+      ).toHaveLength(2);
+    });
   });
 });
 

@@ -5,35 +5,120 @@ import { weekendWardrobe, type E2EWardrobe } from "./wishlistApiMock";
 const nowIso = "2026-11-06T12:00:00.000Z";
 const UPLOAD_ORIGIN = "https://uploads.pocketcloset.test";
 
+export type TrackingApiItem = {
+  itemId: string;
+  wardrobeId: string;
+  name: string;
+  category: string;
+  processingStatus: string;
+  originalImageUrl?: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type TrackingApiOutfit = {
+  outfitId: string;
+  wardrobeId: string;
+  name: string;
+  items: Array<{ itemId: string; slot: string }>;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type TrackingApiWish = {
+  wishId: string;
+  name: string;
+  category?: string;
+  originalImageUrl?: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type TrackingRecommendation = {
+  name?: string;
+  title?: string;
+  reason?: string;
+  items: Array<{ itemId: string; slot: string }>;
+};
+
 export type TrackingApiState = {
   subscribed: boolean;
   wardrobes: E2EWardrobe[];
-  items: Array<{
-    itemId: string;
-    wardrobeId: string;
-    name: string;
-    category: string;
-    processingStatus: string;
-    originalImageUrl?: string;
-    createdAt: string;
-    updatedAt: string;
-  }>;
-  outfits: Array<{
-    outfitId: string;
-    wardrobeId: string;
-    name: string;
-    items: Array<{ itemId: string; slot: string }>;
-    createdAt: string;
-    updatedAt: string;
-  }>;
-  wishes: Array<{
-    wishId: string;
-    name: string;
-    category?: string;
-    originalImageUrl?: string;
-    createdAt: string;
-    updatedAt: string;
-  }>;
+  items: TrackingApiItem[];
+  outfits: TrackingApiOutfit[];
+  wishes: TrackingApiWish[];
+};
+
+export const trackingNavyTee: TrackingApiItem = {
+  itemId: "item_navytee01",
+  wardrobeId: weekendWardrobe.wardrobeId,
+  name: "Navy tee",
+  category: "TOP",
+  processingStatus: "READY",
+  originalImageUrl: "/screenshots/item-detail-390.jpg",
+  createdAt: nowIso,
+  updatedAt: nowIso,
+};
+
+export const trackingIvoryMaxi: TrackingApiItem = {
+  itemId: "item_ivorymaxi01",
+  wardrobeId: weekendWardrobe.wardrobeId,
+  name: "Ivory maxi",
+  category: "DRESS",
+  processingStatus: "READY",
+  originalImageUrl: "/screenshots/try-on-ivory-maxi-390.jpg",
+  createdAt: nowIso,
+  updatedAt: nowIso,
+};
+
+export const trackingBrunchOutfit: TrackingApiOutfit = {
+  outfitId: "outfit_brunch01",
+  wardrobeId: weekendWardrobe.wardrobeId,
+  name: "Sunday brunch",
+  items: [
+    { itemId: "item_navytee01", slot: "TOP" },
+    { itemId: "item_ivorymaxi01", slot: "DRESS" },
+  ],
+  createdAt: nowIso,
+  updatedAt: nowIso,
+};
+
+export const trackingLoafersWish: TrackingApiWish = {
+  wishId: "wish_loafers01",
+  name: "Black loafers",
+  category: "SHOES",
+  originalImageUrl: "/screenshots/item-detail-390.jpg",
+  createdAt: nowIso,
+  updatedAt: nowIso,
+};
+
+export const trackingRecommendations: TrackingRecommendation[] = [
+  {
+    name: "Navy + cream look",
+    reason: "A weekend look from pieces you already own.",
+    items: [
+      { itemId: "item_navytee01", slot: "TOP" },
+      { itemId: "item_ivorymaxi01", slot: "DRESS" },
+    ],
+  },
+  {
+    title: "Ivory maxi evening",
+    items: [{ itemId: "item_ivorymaxi01", slot: "DRESS" }],
+  },
+];
+
+const trackingProfiles = {
+  aiProfiles: [
+    {
+      aiProfileId: "aip_model01",
+      type: "GENERIC_MODEL",
+      referenceImages: ["shared/models/catalog-front.jpg"],
+      status: "READY",
+      createdAt: nowIso,
+      updatedAt: nowIso,
+      label: "Catalog model",
+    },
+  ],
 };
 
 const premiumEntitlement = {
@@ -122,26 +207,22 @@ export const installTrackingApiMocks = async (
   options: {
     checkoutSuccessUrl?: string;
     startSubscribed?: boolean;
+    recommendations?: TrackingRecommendation[];
+    recommendationsStatus?: number;
+    holdRecommendations?: boolean;
+    seedWish?: boolean;
+    seedOutfit?: boolean;
   } = {},
 ): Promise<TrackingApiState> => {
   const state: TrackingApiState = {
     subscribed: Boolean(options.startSubscribed),
     wardrobes: [{ ...weekendWardrobe }],
-    items: [
-      {
-        itemId: "item_navytee01",
-        wardrobeId: weekendWardrobe.wardrobeId,
-        name: "Navy tee",
-        category: "TOP",
-        processingStatus: "READY",
-        originalImageUrl: "/screenshots/item-detail-390.jpg",
-        createdAt: nowIso,
-        updatedAt: nowIso,
-      },
-    ],
-    outfits: [],
-    wishes: [],
+    items: [{ ...trackingNavyTee }, { ...trackingIvoryMaxi }],
+    outfits: options.seedOutfit ? [{ ...trackingBrunchOutfit }] : [],
+    wishes: options.seedWish ? [{ ...trackingLoafersWish }] : [],
   };
+  const recommendations =
+    options.recommendations ?? trackingRecommendations;
 
   await page.route(`${UPLOAD_ORIGIN}/**`, async (route) => {
     await route.fulfill({ status: 200, body: "" });
@@ -268,8 +349,65 @@ export const installTrackingApiMocks = async (
         return;
       }
 
+      if (method === "GET" && path === "/ai-profiles") {
+        await fulfillJson(route, 200, { aiProfiles: [] });
+        return;
+      }
+
+      if (method === "GET" && path === "/ai-profiles/models") {
+        await fulfillJson(route, 200, trackingProfiles);
+        return;
+      }
+
       if (method === "GET" && path === "/outfits") {
         await fulfillJson(route, 200, { outfits: state.outfits });
+        return;
+      }
+
+      const wardrobeOutfitMatch = path.match(
+        /^\/wardrobes\/([^/]+)\/outfits\/([^/]+)$/,
+      );
+      if (method === "GET" && wardrobeOutfitMatch) {
+        const wardrobeId = decodeURIComponent(wardrobeOutfitMatch[1] ?? "");
+        const outfitId = decodeURIComponent(wardrobeOutfitMatch[2] ?? "");
+        const outfit = state.outfits.find(
+          (entry) =>
+            entry.wardrobeId === wardrobeId && entry.outfitId === outfitId,
+        );
+        if (!outfit) {
+          await fulfillJson(route, 404, {
+            error: { code: "OUTFIT_NOT_FOUND", message: "Not found." },
+          });
+          return;
+        }
+        await fulfillJson(route, 200, outfit);
+        return;
+      }
+
+      const recommendationsMatch = path.match(
+        /^\/wardrobes\/([^/]+)\/recommendations$/,
+      );
+      if (method === "GET" && recommendationsMatch) {
+        if (options.holdRecommendations) {
+          return;
+        }
+        const status = options.recommendationsStatus ?? 200;
+        if (status === 403) {
+          await fulfillJson(route, 403, {
+            error: {
+              code: "ENTITLEMENT_AI_REQUIRED",
+              message: "A paid plan is required for suggested outfits.",
+            },
+          });
+          return;
+        }
+        if (status === 429) {
+          await fulfillJson(route, 429, {
+            error: { code: "RATE_LIMITED", message: "Too many requests." },
+          });
+          return;
+        }
+        await fulfillJson(route, 200, { recommendations });
         return;
       }
 

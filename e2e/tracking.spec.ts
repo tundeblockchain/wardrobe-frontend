@@ -5,20 +5,40 @@ import {
   clickStoreCta,
   countTrackingEvent,
   expectNoPixelScripts,
+  findGtagEvents,
   findTrackingEvent,
   expectHashedExternalIdOnly,
   installTrackingStubs,
   mockFirebaseEmailAuth,
   openTrackedSignedInHome,
   readTrackingCalls,
+  seedConsent,
   waitForTrackingEvent,
 } from "./trackingHelpers";
 import { E2E_USER_EMAIL } from "./env";
 
-const setupTrackedApp = async (page: Page): Promise<void> => {
+const setupTrackedApp = async (
+  page: Page,
+  options: Parameters<typeof installTrackingApiMocks>[1] = {},
+): Promise<void> => {
   await blockPixelNetwork(page);
   await installTrackingStubs(page);
-  await installTrackingApiMocks(page);
+  await installTrackingApiMocks(page, options);
+};
+
+const expectViewPayload = (
+  payload: unknown,
+  expected: Record<string, unknown>,
+): void => {
+  expect(payload).toEqual(expected);
+  const serialized = JSON.stringify(payload);
+  expect(serialized).not.toMatch(/@/);
+  expect(serialized).not.toContain("Black loafers");
+  expect(serialized).not.toContain("Sunday brunch");
+  expect(serialized).not.toContain("Navy tee");
+  expect(serialized).not.toMatch(
+    /wish_loafers01|outfit_brunch01|item_navytee01|wd_weekend01/,
+  );
 };
 
 test.describe("tracking pixels", () => {
@@ -316,5 +336,224 @@ test.describe("tracking pixels", () => {
     const calls = await readTrackingCalls(page);
     expect(countTrackingEvent(calls, "fbq", "Subscribe")).toBe(1);
     expect(countTrackingEvent(calls, "ttq", "Subscribe")).toBe(1);
+  });
+});
+
+test.describe("view events", () => {
+  test("records view_wish once per open and twice after reopen", async ({
+    page,
+  }) => {
+    await setupTrackedApp(page, { seedWish: true, startSubscribed: true });
+    await openTrackedSignedInHome(page);
+
+    await page.getByRole("button", { name: "Black loafers" }).click();
+    const firstDetail = page.getByRole("dialog", { name: "Black loafers" });
+    await expect(firstDetail).toBeVisible();
+
+    const firstWish = await waitForTrackingEvent(page, "gtag", "view_wish");
+    expectViewPayload(firstWish[2], {
+      content_type: "wish",
+      category: "SHOES",
+    });
+    await waitForTrackingEvent(page, "fbq", "ViewContent");
+    await waitForTrackingEvent(page, "ttq", "ViewContent");
+
+    await firstDetail.getByRole("button", { name: "Close" }).click();
+    await expect(
+      page.getByRole("dialog", { name: "Black loafers" }),
+    ).toHaveCount(0);
+
+    await page.getByRole("button", { name: "Black loafers" }).click();
+    await expect(
+      page.getByRole("dialog", { name: "Black loafers" }),
+    ).toBeVisible();
+    await expect
+      .poll(async () => {
+        const calls = await readTrackingCalls(page);
+        return findGtagEvents(calls, "view_wish").length;
+      })
+      .toBe(2);
+
+    const calls = await readTrackingCalls(page);
+    const wishEvents = findGtagEvents(calls, "view_wish");
+    expect(wishEvents).toHaveLength(2);
+    expectViewPayload(wishEvents[1]?.[2], {
+      content_type: "wish",
+      category: "SHOES",
+    });
+  });
+
+  test("records view_outfit on the outfit detail screen", async ({ page }) => {
+    await setupTrackedApp(page, { seedOutfit: true, startSubscribed: true });
+    await openTrackedSignedInHome(page);
+
+    await page.goto("/app/outfits/outfit_brunch01/edit?wardrobeId=wd_weekend01");
+    await expect(
+      page.getByRole("heading", { level: 1, name: "Edit outfit" }),
+    ).toBeVisible();
+
+    const outfit = await waitForTrackingEvent(page, "gtag", "view_outfit");
+    expectViewPayload(outfit[2], { content_type: "outfit" });
+    const calls = await readTrackingCalls(page);
+    expect(findGtagEvents(calls, "view_outfit")).toHaveLength(1);
+  });
+
+  test("records view_try_on on the Virtual Try On screen", async ({ page }) => {
+    await setupTrackedApp(page, { seedOutfit: true, startSubscribed: true });
+    await openTrackedSignedInHome(page);
+
+    await page.goto("/app/virtual-try-on");
+    await expect(
+      page.getByRole("heading", { level: 1, name: "Virtual Try On" }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Start Virtual Try On" }),
+    ).toBeVisible();
+
+    const tryOn = await waitForTrackingEvent(page, "gtag", "view_try_on");
+    expectViewPayload(tryOn[2], { content_type: "try_on" });
+    const calls = await readTrackingCalls(page);
+    expect(findGtagEvents(calls, "view_try_on")).toHaveLength(1);
+    expect(JSON.stringify(tryOn)).not.toMatch(/AI/i);
+  });
+
+  test("records view_recommendations only after a successful load", async ({
+    page,
+  }) => {
+    await setupTrackedApp(page, { startSubscribed: true });
+    await openTrackedSignedInHome(page);
+
+    await page.goto("/app/wardrobes/wd_weekend01/recommendations");
+    await expect(
+      page.getByRole("heading", { level: 1, name: "Suggested outfits" }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Navy + cream look" }),
+    ).toBeVisible();
+
+    const recommendations = await waitForTrackingEvent(
+      page,
+      "gtag",
+      "view_recommendations",
+    );
+    expectViewPayload(recommendations[2], {
+      content_type: "recommendations",
+      result_count: 2,
+    });
+  });
+
+  test("does not record view_recommendations on a 403 paywall", async ({
+    page,
+  }) => {
+    await setupTrackedApp(page, {
+      startSubscribed: true,
+      recommendationsStatus: 403,
+    });
+    await openTrackedSignedInHome(page);
+    await page.goto("/app/wardrobes/wd_weekend01/recommendations");
+    await expect(
+      page.getByRole("heading", {
+        name: "Suggested outfits need a paid plan",
+      }),
+    ).toBeVisible();
+    const calls = await readTrackingCalls(page);
+    expect(findGtagEvents(calls, "view_recommendations")).toHaveLength(0);
+  });
+
+  test("does not record view_recommendations on a 429", async ({ page }) => {
+    await setupTrackedApp(page, {
+      startSubscribed: true,
+      recommendationsStatus: 429,
+    });
+    await openTrackedSignedInHome(page);
+    await page.goto("/app/wardrobes/wd_weekend01/recommendations");
+    await expect(
+      page.getByRole("heading", { name: "Couldn't load suggested outfits" }),
+    ).toBeVisible();
+    const calls = await readTrackingCalls(page);
+    expect(findGtagEvents(calls, "view_recommendations")).toHaveLength(0);
+  });
+
+  test("does not record view_recommendations while the request is loading", async ({
+    page,
+  }) => {
+    await setupTrackedApp(page, {
+      startSubscribed: true,
+      holdRecommendations: true,
+    });
+    await openTrackedSignedInHome(page);
+    await page.goto("/app/wardrobes/wd_weekend01/recommendations");
+    await expect(
+      page.getByRole("status", { name: "Loading suggested outfits" }),
+    ).toBeVisible();
+    const calls = await readTrackingCalls(page);
+    expect(findGtagEvents(calls, "view_recommendations")).toHaveLength(0);
+  });
+
+  test("does not record view events when consent is denied", async ({
+    page,
+  }) => {
+    await blockPixelNetwork(page);
+    await installTrackingStubs(page);
+    await seedConsent(page, { analytics: false, marketing: false });
+    await installTrackingApiMocks(page, {
+      seedWish: true,
+      seedOutfit: true,
+      startSubscribed: true,
+    });
+    await openTrackedSignedInHome(page);
+
+    await page.getByRole("button", { name: "Black loafers" }).click();
+    await expect(
+      page.getByRole("dialog", { name: "Black loafers" }),
+    ).toBeVisible();
+    await page.goto("/app/outfits/outfit_brunch01/edit?wardrobeId=wd_weekend01");
+    await expect(
+      page.getByRole("heading", { level: 1, name: "Edit outfit" }),
+    ).toBeVisible();
+    await page.goto("/app/virtual-try-on");
+    await expect(
+      page.getByRole("heading", { level: 1, name: "Virtual Try On" }),
+    ).toBeVisible();
+    await page.goto("/app/wardrobes/wd_weekend01/recommendations");
+    await expect(
+      page.getByRole("heading", { level: 1, name: "Suggested outfits" }),
+    ).toBeVisible();
+
+    const calls = await readTrackingCalls(page);
+    expect(findGtagEvents(calls, "view_wish")).toHaveLength(0);
+    expect(findGtagEvents(calls, "view_outfit")).toHaveLength(0);
+    expect(findGtagEvents(calls, "view_try_on")).toHaveLength(0);
+    expect(findGtagEvents(calls, "view_recommendations")).toHaveLength(0);
+    expect(countTrackingEvent(calls, "fbq", "ViewContent")).toBe(0);
+  });
+
+  test("does not record view events when tracking IDs are blank", async ({
+    page,
+  }) => {
+    await blockPixelNetwork(page);
+    await seedConsent(page);
+    await installTrackingApiMocks(page, {
+      seedWish: true,
+      seedOutfit: true,
+      startSubscribed: true,
+    });
+    await openTrackedSignedInHome(page);
+
+    await page.getByRole("button", { name: "Black loafers" }).click();
+    await expect(
+      page.getByRole("dialog", { name: "Black loafers" }),
+    ).toBeVisible();
+    await page.goto("/app/virtual-try-on");
+    await expect(
+      page.getByRole("heading", { level: 1, name: "Virtual Try On" }),
+    ).toBeVisible();
+
+    expect(await page.evaluate(() => typeof window.gtag)).toBe("undefined");
+    expect(await page.evaluate(() => typeof window.fbq)).toBe("undefined");
+    const calls = await readTrackingCalls(page);
+    expect(calls.gtag).toEqual([]);
+    expect(calls.fbq).toEqual([]);
+    expect(calls.ttq).toEqual([]);
   });
 });

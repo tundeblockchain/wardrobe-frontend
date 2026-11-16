@@ -42,7 +42,7 @@ import { ResourceEmptyState } from "../../components/dashboard/ResourceEmptyStat
 import { ResourceErrorState } from "../../components/dashboard/ResourceErrorState";
 import { ResourceImage } from "../../components/dashboard/ResourceImage";
 import { ResourceLoadingState } from "../../components/dashboard/ResourceLoadingState";
-import { trackEvent } from "../../config/trackingEvents";
+import { toViewTrackingParams, trackEvent } from "../../config/trackingEvents";
 import { useTrackOnce } from "../../config/useTrackOnce";
 import { dashboardCopy } from "../../content/dashboardCopy";
 import { useResourceQuery } from "../../hooks/useResourceQuery";
@@ -212,7 +212,7 @@ export const ItemDetailPage = ({
     "view_item",
     query.status === "ready",
     query.status === "ready"
-      ? { content_type: "item", category: query.data.item.category }
+      ? toViewTrackingParams("item", query.data.item.category)
       : undefined,
   );
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
