@@ -35,13 +35,20 @@ describe("ContactPage", () => {
     expect(
       screen.getByRole("button", { name: "Send contact message" }),
     ).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Question" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
   });
 
   it("stays usable and disables submit when the API base is unset", () => {
-    const sendMessage = vi.fn();
+    const submitFeedback = vi.fn();
 
     renderWithProviders(
-      <ContactPage env={getPublicAppEnv({})} sendMessage={sendMessage} />,
+      <ContactPage
+        env={getPublicAppEnv({})}
+        submitFeedback={submitFeedback}
+      />,
     );
 
     expect(
@@ -53,10 +60,10 @@ describe("ContactPage", () => {
     expect(
       screen.getByRole("button", { name: "Send contact message" }),
     ).toBeDisabled();
-    expect(sendMessage).not.toHaveBeenCalled();
+    expect(submitFeedback).not.toHaveBeenCalled();
   });
 
-  it("presets the subject when opened as a bug report", () => {
+  it("presets Bug report when opened as a bug report", () => {
     renderWithProviders(
       <ContactPage
         env={getPublicAppEnv({
@@ -70,8 +77,9 @@ describe("ContactPage", () => {
     expect(
       screen.getByRole("heading", { level: 1, name: "Report a bug" }),
     ).toBeInTheDocument();
-    expect(screen.getByRole("textbox", { name: "Subject" })).toHaveValue(
-      "Report a bug",
+    expect(screen.getByRole("button", { name: "Bug report" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
     );
   });
 });

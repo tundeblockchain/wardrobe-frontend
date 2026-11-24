@@ -16,7 +16,7 @@ export const ContactHoneypotField = ({
 
   return (
     <Box
-      data-honeypot="company"
+      data-honeypot="website"
       aria-hidden="true"
       sx={{
         position: "absolute",
@@ -28,8 +28,8 @@ export const ContactHoneypotField = ({
       }}
     >
       <TextField
-        name="company"
-        label="Company"
+        name="website"
+        label="Website"
         value={value}
         onChange={handleChange}
         autoComplete="off"

@@ -7,6 +7,7 @@ export class ApiError extends Error {
   readonly code?: string;
   readonly retryAfterSeconds?: number;
   readonly source?: string | null;
+  readonly fields?: Record<string, string>;
 
   constructor({
     status,
@@ -14,12 +15,14 @@ export class ApiError extends Error {
     message,
     retryAfterSeconds,
     source,
+    fields,
   }: {
     status: number;
     code?: string;
     message?: string;
     retryAfterSeconds?: number;
     source?: string | null;
+    fields?: Record<string, string>;
   }) {
     super(message ?? `Request failed with status ${status}`);
     this.name = "ApiError";
@@ -27,6 +30,7 @@ export class ApiError extends Error {
     this.code = code;
     this.retryAfterSeconds = retryAfterSeconds;
     this.source = source;
+    this.fields = fields;
   }
 }
 
@@ -66,16 +70,79 @@ const isAbsoluteUrl = (value: string): boolean => {
   return /^https?:\/\//i.test(value);
 };
 
+const readValidationFields = (
+  value: unknown,
+): Record<string, string> | undefined => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return undefined;
+  }
+
+  const fieldErrors: Record<string, string> = {};
+  Object.entries(value as Record<string, unknown>).forEach(([name, reason]) => {
+    if (typeof reason === "string" && reason.trim().length > 0) {
+      fieldErrors[name] = reason;
+    }
+  });
+
+  if (Object.keys(fieldErrors).length === 0) {
+    return undefined;
+  }
+
+  return fieldErrors;
+};
+
+const readOptionalRetryAfterSeconds = (
+  value: unknown,
+): number | undefined => {
+  if (typeof value === "number" && Number.isFinite(value) && value >= 0) {
+    return value;
+  }
+
+  if (typeof value !== "string") {
+    return undefined;
+  }
+
+  const seconds = Number.parseInt(value.trim(), 10);
+  if (!Number.isFinite(seconds) || seconds < 0) {
+    return undefined;
+  }
+
+  return seconds;
+};
+
 const readBackendError = (
   value: unknown,
-): { code?: string; message?: string; source?: string | null } => {
+): {
+  code?: string;
+  message?: string;
+  source?: string | null;
+  fields?: Record<string, string>;
+  retryAfterSeconds?: number;
+} => {
   if (!value || typeof value !== "object") {
     return {};
   }
 
-  const record = value as { error?: unknown };
+  const record = value as {
+    error?: unknown;
+    fields?: unknown;
+    retryAfterSeconds?: unknown;
+  };
+  const fields = readValidationFields(record.fields);
+  const retryAfterSeconds = readOptionalRetryAfterSeconds(
+    record.retryAfterSeconds,
+  );
+
+  if (typeof record.error === "string") {
+    return {
+      code: record.error,
+      fields,
+      retryAfterSeconds,
+    };
+  }
+
   if (!record.error || typeof record.error !== "object") {
-    return {};
+    return { fields, retryAfterSeconds };
   }
 
   const errorRecord = record.error as {
@@ -88,6 +155,8 @@ const readBackendError = (
     message:
       typeof errorRecord.message === "string" ? errorRecord.message : undefined,
     source: readBackendErrorSource(errorRecord.source),
+    fields,
+    retryAfterSeconds,
   };
 };
 
@@ -241,8 +310,11 @@ export const request = async <T>(
         status: response.status,
         code: backendError.code,
         message: backendError.message,
-        retryAfterSeconds: parseRetryAfterSeconds(response.headers),
+        retryAfterSeconds:
+          parseRetryAfterSeconds(response.headers) ??
+          backendError.retryAfterSeconds,
         source: backendError.source,
+        fields: backendError.fields,
       });
     }
 
