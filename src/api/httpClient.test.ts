@@ -122,7 +122,7 @@ describe("request", () => {
       }),
     );
 
-    const error = await request("/support/contact", {
+    const error = await request("/support/feedback", {
       baseUrl: API_BASE_URL,
       fetchImpl,
     }).catch((caught: unknown) => caught);
@@ -164,6 +164,51 @@ describe("request", () => {
     });
   });
 
+  it("maps a string validation error and fields onto ApiError", async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(
+      createJsonResponse({
+        status: 400,
+        body: {
+          error: "validation",
+          fields: { email: "Enter a valid email address." },
+        },
+      }),
+    );
+
+    await expect(
+      request("/support/feedback", {
+        baseUrl: API_BASE_URL,
+        method: "POST",
+        fetchImpl,
+      }),
+    ).rejects.toMatchObject({
+      status: 400,
+      code: "validation",
+      fields: { email: "Enter a valid email address." },
+    });
+  });
+
+  it("reads retryAfterSeconds from a rate_limited body when the header is missing", async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(
+      createJsonResponse({
+        status: 429,
+        body: { error: "rate_limited", retryAfterSeconds: 90 },
+      }),
+    );
+
+    await expect(
+      request("/support/feedback", {
+        baseUrl: API_BASE_URL,
+        method: "POST",
+        fetchImpl,
+      }),
+    ).rejects.toMatchObject({
+      status: 429,
+      code: "rate_limited",
+      retryAfterSeconds: 90,
+    });
+  });
+
   it("includes Retry-After seconds on ApiError", async () => {
     const fetchImpl = vi.fn().mockResolvedValue(
       createJsonResponse({
@@ -174,7 +219,7 @@ describe("request", () => {
     );
 
     await expect(
-      request("/support/contact", { baseUrl: API_BASE_URL, fetchImpl }),
+      request("/support/feedback", { baseUrl: API_BASE_URL, fetchImpl }),
     ).rejects.toMatchObject({
       status: 429,
       code: "RATE_LIMITED",

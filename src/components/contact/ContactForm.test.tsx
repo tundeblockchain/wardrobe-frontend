@@ -1,19 +1,16 @@
-import { screen } from "@testing-library/react";
+import { fireEvent, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { CONTACT_STATUS_MESSAGES } from "../../api/contact";
 import { renderWithProviders } from "../../test/renderWithProviders";
 import { ContactForm } from "./ContactForm";
 
-const getNameField = () => screen.getByRole("textbox", { name: "Name" });
 const getEmailField = () => screen.getByRole("textbox", { name: "Email" });
-const getSubjectField = () => screen.getByRole("textbox", { name: "Subject" });
 const getMessageField = () => screen.getByRole("textbox", { name: "Message" });
 
 const fillRequiredFields = async (
   user: ReturnType<typeof userEvent.setup>,
 ) => {
-  await user.type(getNameField(), "Ada Lovelace");
   await user.type(getEmailField(), "ada@example.com");
   await user.type(getMessageField(), "How do I catalog coats?");
 };
@@ -21,13 +18,13 @@ const fillRequiredFields = async (
 describe("ContactForm", () => {
   it("validates required fields and a basic email before submitting", async () => {
     const user = userEvent.setup();
-    const sendMessage = vi.fn();
+    const submitFeedback = vi.fn();
 
     renderWithProviders(
       <ContactForm
         appName="Pocket Closet"
         apiBaseUrl="https://api.example.com"
-        sendMessage={sendMessage}
+        submitFeedback={submitFeedback}
       />,
     );
 
@@ -35,15 +32,13 @@ describe("ContactForm", () => {
       screen.getByRole("button", { name: "Send contact message" }),
     );
 
-    expect(screen.getByText("Enter your name.")).toBeInTheDocument();
     expect(screen.getByText("Enter your email address.")).toBeInTheDocument();
-    expect(screen.getByText("Enter a message.")).toBeInTheDocument();
+    expect(screen.getByText(/Enter a message/)).toBeInTheDocument();
     expect(
       screen.getByText(CONTACT_STATUS_MESSAGES.validation),
     ).toBeInTheDocument();
-    expect(sendMessage).not.toHaveBeenCalled();
+    expect(submitFeedback).not.toHaveBeenCalled();
 
-    await user.type(getNameField(), "Ada");
     await user.type(getEmailField(), "not-an-email");
     await user.type(getMessageField(), "Hello");
     await user.click(
@@ -51,26 +46,26 @@ describe("ContactForm", () => {
     );
 
     expect(screen.getByText("Enter a valid email address.")).toBeInTheDocument();
-    expect(sendMessage).not.toHaveBeenCalled();
+    expect(submitFeedback).not.toHaveBeenCalled();
   });
 
-  it("shows a thank-you state after a successful submit", async () => {
+  it("shows a thank-you state after a successful submit and resets the form", async () => {
     const user = userEvent.setup();
-    const sendMessage = vi.fn().mockResolvedValue({
+    const submitFeedback = vi.fn().mockResolvedValue({
       status: "success",
-      id: "msg_abc123",
+      conversationId: "conv_abc123",
     });
 
     renderWithProviders(
       <ContactForm
         appName="Pocket Closet"
         apiBaseUrl="https://api.example.com"
-        sendMessage={sendMessage}
+        submitFeedback={submitFeedback}
       />,
     );
 
     await fillRequiredFields(user);
-    await user.type(getSubjectField(), "Store listing");
+    await user.click(screen.getByRole("button", { name: "Bug report" }));
     await user.click(
       screen.getByRole("button", { name: "Send contact message" }),
     );
@@ -83,15 +78,16 @@ describe("ContactForm", () => {
     expect(
       screen.queryByRole("form", { name: "Contact form" }),
     ).not.toBeInTheDocument();
-    expect(sendMessage).toHaveBeenCalledWith({
+    expect(submitFeedback).toHaveBeenCalledWith({
       apiBaseUrl: "https://api.example.com",
       fields: {
-        name: "Ada Lovelace",
+        type: "bug",
         email: "ada@example.com",
-        subject: "Store listing",
         message: "How do I catalog coats?",
-        company: "",
+        website: "",
       },
+      screenshotFile: undefined,
+      userAgent: expect.any(String),
     });
 
     await user.click(
@@ -101,41 +97,12 @@ describe("ContactForm", () => {
     expect(
       screen.getByRole("form", { name: "Contact form" }),
     ).toBeInTheDocument();
-    expect(getNameField()).toHaveValue("");
-  });
-
-  it("treats a 413 VALIDATION_ERROR result as a check-fields alert", async () => {
-    const user = userEvent.setup();
-    const sendMessage = vi.fn().mockResolvedValue({
-      status: "validation",
-      message: CONTACT_STATUS_MESSAGES.validation,
-      fieldErrors: {},
-    });
-
-    renderWithProviders(
-      <ContactForm
-        appName="Pocket Closet"
-        apiBaseUrl="https://api.example.com"
-        sendMessage={sendMessage}
-      />,
-    );
-
-    await fillRequiredFields(user);
-    await user.click(
-      screen.getByRole("button", { name: "Send contact message" }),
-    );
-
-    expect(
-      await screen.findByText(CONTACT_STATUS_MESSAGES.validation),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: "Send contact message" }),
-    ).toBeEnabled();
+    expect(getEmailField()).toHaveValue("");
   });
 
   it("maps a 400 validation result onto fields and an error alert", async () => {
     const user = userEvent.setup();
-    const sendMessage = vi.fn().mockResolvedValue({
+    const submitFeedback = vi.fn().mockResolvedValue({
       status: "validation",
       message: CONTACT_STATUS_MESSAGES.validation,
       fieldErrors: { email: "Please check this field." },
@@ -145,7 +112,7 @@ describe("ContactForm", () => {
       <ContactForm
         appName="Pocket Closet"
         apiBaseUrl="https://api.example.com"
-        sendMessage={sendMessage}
+        submitFeedback={submitFeedback}
       />,
     );
 
@@ -163,9 +130,9 @@ describe("ContactForm", () => {
     ).toBeEnabled();
   });
 
-  it("explains a 429 rate limit using Retry-After minutes", async () => {
+  it("explains a 429 rate limit using retry minutes", async () => {
     const user = userEvent.setup();
-    const sendMessage = vi.fn().mockResolvedValue({
+    const submitFeedback = vi.fn().mockResolvedValue({
       status: "rateLimited",
       retryAfterSeconds: 180,
     });
@@ -174,7 +141,7 @@ describe("ContactForm", () => {
       <ContactForm
         appName="Pocket Closet"
         apiBaseUrl="https://api.example.com"
-        sendMessage={sendMessage}
+        submitFeedback={submitFeedback}
       />,
     );
 
@@ -185,14 +152,14 @@ describe("ContactForm", () => {
 
     expect(
       await screen.findByText(
-        "You've sent too many messages. Please try again in about 3 minutes.",
+        "Too many requests. Please try again in 3 minutes.",
       ),
     ).toBeInTheDocument();
   });
 
   it("shows a generic error for 5xx or network failures", async () => {
     const user = userEvent.setup();
-    const sendMessage = vi.fn().mockResolvedValue({
+    const submitFeedback = vi.fn().mockResolvedValue({
       status: "error",
       message: CONTACT_STATUS_MESSAGES.generic,
     });
@@ -201,7 +168,7 @@ describe("ContactForm", () => {
       <ContactForm
         appName="Pocket Closet"
         apiBaseUrl="https://api.example.com"
-        sendMessage={sendMessage}
+        submitFeedback={submitFeedback}
       />,
     );
 
@@ -215,7 +182,7 @@ describe("ContactForm", () => {
     ).toBeInTheDocument();
   });
 
-  it("renders a hidden honeypot field that is not in the tab order", () => {
+  it("renders a hidden website honeypot that is not in the tab order", () => {
     renderWithProviders(
       <ContactForm
         appName="Pocket Closet"
@@ -223,15 +190,15 @@ describe("ContactForm", () => {
       />,
     );
 
-    const honeypot = document.querySelector('input[name="company"]');
+    const honeypot = document.querySelector('input[name="website"]');
     expect(honeypot).toBeTruthy();
     expect(honeypot).toHaveAttribute("tabindex", "-1");
     expect(honeypot).toHaveAttribute("autocomplete", "off");
     expect(honeypot).toHaveAttribute("aria-hidden", "true");
     expect(
-      screen.queryByRole("textbox", { name: "Company" }),
+      screen.queryByRole("textbox", { name: "Website" }),
     ).not.toBeInTheDocument();
-    expect(document.querySelector('[data-honeypot="company"]')).toHaveAttribute(
+    expect(document.querySelector('[data-honeypot="website"]')).toHaveAttribute(
       "aria-hidden",
       "true",
     );
@@ -239,13 +206,13 @@ describe("ContactForm", () => {
 
   it("renders a non-crashing notice and disables submit when the API base is unset", async () => {
     const user = userEvent.setup();
-    const sendMessage = vi.fn();
+    const submitFeedback = vi.fn();
 
     renderWithProviders(
       <ContactForm
         appName="Pocket Closet"
         apiBaseUrl={undefined}
-        sendMessage={sendMessage}
+        submitFeedback={submitFeedback}
       />,
     );
 
@@ -255,21 +222,47 @@ describe("ContactForm", () => {
     expect(
       screen.getByRole("button", { name: "Send contact message" }),
     ).toBeDisabled();
-    expect(getNameField()).toBeInTheDocument();
+    expect(getEmailField()).toBeInTheDocument();
 
-    await user.type(getNameField(), "Ada");
-    expect(sendMessage).not.toHaveBeenCalled();
+    await user.type(getEmailField(), "Ada");
+    expect(submitFeedback).not.toHaveBeenCalled();
   });
 
-  it("prefills the subject when an initial subject is provided", () => {
+  it("prefills Bug report when the initial type is bug", () => {
     renderWithProviders(
       <ContactForm
         appName="Pocket Closet"
         apiBaseUrl="https://api.example.com"
-        initialSubject="Report a bug"
+        initialType="bug"
       />,
     );
 
-    expect(getSubjectField()).toHaveValue("Report a bug");
+    expect(screen.getByRole("button", { name: "Bug report" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+  });
+
+  it("rejects the wrong screenshot type on the client before submit", () => {
+    const submitFeedback = vi.fn();
+
+    renderWithProviders(
+      <ContactForm
+        appName="Pocket Closet"
+        apiBaseUrl="https://api.example.com"
+        submitFeedback={submitFeedback}
+      />,
+    );
+
+    const fileInput = document.querySelector(
+      'input[name="screenshot"]',
+    ) as HTMLInputElement;
+    const gif = new File(["gif"], "notes.gif", { type: "image/gif" });
+    fireEvent.change(fileInput, { target: { files: [gif] } });
+
+    expect(
+      screen.getByText(CONTACT_STATUS_MESSAGES.screenshotType),
+    ).toBeInTheDocument();
+    expect(submitFeedback).not.toHaveBeenCalled();
   });
 });

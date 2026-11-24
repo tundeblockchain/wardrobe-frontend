@@ -655,8 +655,9 @@ describe("SettingsPage", () => {
     expect(
       await screen.findByRole("heading", { level: 1, name: "Report a bug" }),
     ).toBeInTheDocument();
-    expect(screen.getByRole("textbox", { name: "Subject" })).toHaveValue(
-      "Report a bug",
+    expect(screen.getByRole("button", { name: "Bug report" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
     );
     expect(screen.getByTestId("route-location")).toHaveTextContent(
       getContactPath("bug"),

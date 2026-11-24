@@ -14,7 +14,7 @@ Never commit secrets, tokens, or private keys.
 | `VITE_APP_STORE_URL` | No (defaults to the live App Store listing) | Public App Store URL for landing download CTAs. Empty or unset values use `https://apps.apple.com/gb/app/my-pocket-closet/id6809181010`. A Netlify value overrides this default and must be updated to the live URL if the key is set. | `https://apps.apple.com/gb/app/my-pocket-closet/id6809181010` |
 | `VITE_PLAY_STORE_URL` | No | Public Play Store URL for landing download CTAs. Empty values render a disabled button. | `https://play.google.com/store/apps/details?id=com.example.wardrobe` |
 | `VITE_PUBLIC_SITE_URL` | No | Public origin for canonical, Open Graph, and Twitter URLs (no trailing slash). When unset, the current origin is used in the browser. | `https://example.com` |
-| `VITE_API_BASE_URL` | No | Public backend API origin (no trailing slash) for public routes (`GET /public/shares/{token}`, `POST /support/contact`, `GET /billing/plans`) and signed-in app calls (including `GET /me`). Empty values keep public pages rendering with a clear unavailable state. | `https://api.example.com` |
+| `VITE_API_BASE_URL` | No | Public backend API origin (no trailing slash) for public routes (`GET /public/shares/{token}`, `POST /support/upload-url`, `POST /support/feedback`, `GET /billing/plans`) and signed-in app calls (including `GET /me`). Empty values keep public pages rendering with a clear unavailable state. | `https://api.example.com` |
 | `VITE_GA_MEASUREMENT_ID` | No | Google Analytics 4 measurement ID. Scripts are injected only when this value is a `G-` ID. | `G-XXXXXXXXXX` |
 | `VITE_META_PIXEL_ID` | No | Meta Pixel ID. The pixel is injected only when this value is a numeric ID. Sends PageView on route changes plus in-app/website action events. | `000000000000000` |
 | `VITE_TIKTOK_PIXEL_ID` | No | TikTok Pixel ID. The pixel is injected only when this value is an alphanumeric ID (`ttq.load(id)` + `ttq.page()`). Never commit a real ID. | `CXXXXXXXXXXXXXXXXX` |
@@ -79,14 +79,9 @@ Legal pages always refer to **the operator** (no personal names). Set `VITE_LEGA
 
 ## Contact form
 
-The Contact Us page (`/contact`) POSTs JSON to `{VITE_API_BASE_URL}/support/contact` with `Content-Type: application/json`. The request is unauthenticated: no `Authorization` header and no cookies (`credentials: "omit"`).
+The Contact Us page (`/contact`) POSTs JSON to `{VITE_API_BASE_URL}/support/feedback` with `Content-Type: application/json`. Optional screenshots first POST `{ contentType }` to `{VITE_API_BASE_URL}/support/upload-url`, then upload the file as a presigned S3 POST (`fields` first, `file` last). Both API routes are unauthenticated: no `Authorization` header and no cookies (`credentials: "omit"`).
 
 If `VITE_API_BASE_URL` is unset, the page still renders and the submit button stays disabled.
-
-The backend must allowlist this site’s origin(s) via `SUPPORT_CONTACT_ALLOWED_ORIGINS`:
-
-- Production public site origin (the same origin as `VITE_PUBLIC_SITE_URL`)
-- Netlify deploy-preview origins, using the deploy-preview pattern (for example `https://deploy-preview-*--<site>.netlify.app`)
 
 This frontend never calls an email provider. Delivery is owned by the backend.
 
