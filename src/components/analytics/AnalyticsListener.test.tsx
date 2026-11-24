@@ -97,6 +97,27 @@ describe("AnalyticsListener", () => {
     expect(window.fbq).toBeUndefined();
   });
 
+  it("does not fire page views on the operator inbox", () => {
+    writeConsent({ analytics: true, marketing: true }, 1);
+    window.gtag = vi.fn();
+    window.fbq = vi.fn();
+    window.ttq = Object.assign(vi.fn(), { track: vi.fn() });
+
+    render(
+      <MemoryRouter initialEntries={["/admin/support"]}>
+        <AnalyticsListener
+          gaMeasurementId="G-XXXXXXXXXX"
+          metaPixelId="000000000000000"
+          tiktokPixelId="CXXXXXXXXXXXXXXXXX"
+        />
+      </MemoryRouter>,
+    );
+
+    expect(window.gtag).not.toHaveBeenCalled();
+    expect(window.fbq).not.toHaveBeenCalled();
+    expect(window.ttq?.track).not.toHaveBeenCalled();
+  });
+
   it("fires Meta and TikTok page views when those IDs are provided", () => {
     writeConsent({ analytics: false, marketing: true }, 1);
     window.fbq = vi.fn();

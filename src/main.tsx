@@ -5,8 +5,11 @@ import { App } from "./App";
 import { getConsent } from "./config/consent";
 import { applyConsentedTracking } from "./config/tracking";
 import { resolveTrackingIds } from "./config/trackingEvents";
+import { isAdminPath } from "./routes/paths";
 
-applyConsentedTracking(resolveTrackingIds(), getConsent());
+if (!isAdminPath(window.location.pathname)) {
+  applyConsentedTracking(resolveTrackingIds(), getConsent());
+}
 
 const rootElement = document.getElementById("root");
 if (!rootElement) {

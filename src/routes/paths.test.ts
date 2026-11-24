@@ -26,6 +26,9 @@ import {
   getSafeInternalPath,
   getSharePath,
   getContactPath,
+  getAdminSupportConversationPath,
+  getAdminSupportPath,
+  isAdminPath,
   isAppPath,
   isContactBugType,
   isSharePreviewPath,
@@ -101,6 +104,21 @@ describe("login and app paths", () => {
     expect(getPricingPath("/app/settings")).toBe("/app/pricing");
     expect(appPaths.appBillingSuccess).toBe("/app/billing/success");
     expect(appPaths.appBillingCancel).toBe("/app/billing/cancel");
+    expect(appPaths.admin).toBe("/admin");
+    expect(appPaths.adminSupport).toBe("/admin/support");
+    expect(appPaths.adminSupportConversation).toBe(
+      "/admin/support/:conversationId",
+    );
+    expect(getAdminSupportPath()).toBe("/admin/support");
+    expect(getAdminSupportConversationPath("conv_1")).toBe(
+      "/admin/support/conv_1",
+    );
+    expect(isAdminPath("/admin")).toBe(true);
+    expect(isAdminPath("/admin/support")).toBe(true);
+    expect(isAdminPath("/admin/support/conv_1")).toBe(true);
+    expect(isAdminPath("/")).toBe(false);
+    expect(isAdminPath("/app")).toBe(false);
+    expect(isAdminPath("/contact")).toBe(false);
     expect(getContactPath()).toBe("/contact");
     expect(getContactPath("bug")).toBe("/contact?type=bug");
     expect(isContactBugType("bug")).toBe(true);

@@ -5,6 +5,8 @@ import {
   DEFAULT_LANDING_DESCRIPTION,
   DEFAULT_LANDING_TITLE,
   getDocumentMetaTags,
+  upsertCanonicalLink,
+  upsertDocumentMetaTag,
   getPageSeo,
   upsertJsonLdScript,
 } from "./seo";
@@ -115,6 +117,26 @@ describe("getPageSeo", () => {
     expect(jsonLdText(pricingSeo.jsonLd)).not.toContain("Offer");
   });
 
+  it("marks the operator support inbox as noindex,nofollow", () => {
+    const pageSeo = getPageSeo({
+      pathname: "/admin/support",
+      env: exampleEnv,
+    });
+    const nestedSeo = getPageSeo({
+      pathname: "/admin/support/conv_1",
+      env: exampleEnv,
+    });
+    const tags = getDocumentMetaTags(pageSeo);
+    const byKey = Object.fromEntries(tags.map((tag) => [tag.key, tag.content]));
+
+    expect(pageSeo.title).toBe("Support inbox — Pocket Closet");
+    expect(pageSeo.robots).toBe("noindex,nofollow");
+    expect(pageSeo.canonicalUrl).toBeUndefined();
+    expect(nestedSeo.robots).toBe("noindex,nofollow");
+    expect(byKey.robots).toBe("noindex,nofollow");
+    expect(pageSeo.description.toLowerCase()).not.toContain("ai");
+  });
+
   it("uses share-friendly title and OG image when a preview is loaded", () => {
     const pageSeo = getPageSeo({
       pathname: "/share/shr_abcdefghijklmnopqrstu",
@@ -193,6 +215,39 @@ describe("getDocumentMetaTags", () => {
     expect(keys).not.toContain("twitter:image");
     expect(keys).toContain("og:title");
     expect(keys).toContain("twitter:card");
+  });
+});
+
+describe("upsertDocumentMetaTag", () => {
+  it("updates an existing robots tag instead of appending a second one", () => {
+    const doc = document.implementation.createHTMLDocument("robots");
+    const existing = doc.createElement("meta");
+    existing.setAttribute("name", "robots");
+    existing.setAttribute("content", "index,follow");
+    doc.head.appendChild(existing);
+
+    upsertDocumentMetaTag(doc, {
+      key: "robots",
+      name: "robots",
+      content: "noindex,nofollow",
+    });
+
+    const tags = doc.head.querySelectorAll('meta[name="robots"]');
+    expect(tags).toHaveLength(1);
+    expect(tags[0]?.getAttribute("content")).toBe("noindex,nofollow");
+  });
+});
+
+describe("upsertCanonicalLink", () => {
+  it("removes the canonical link when the page should not be indexed as canonical", () => {
+    const doc = document.implementation.createHTMLDocument("canonical");
+    upsertCanonicalLink(doc, "https://example.com/");
+    expect(doc.head.querySelector('link[rel="canonical"]')?.getAttribute("href")).toBe(
+      "https://example.com/",
+    );
+
+    upsertCanonicalLink(doc, undefined);
+    expect(doc.head.querySelector('link[rel="canonical"]')).toBeNull();
   });
 });
 

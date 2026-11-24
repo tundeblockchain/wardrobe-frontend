@@ -1,7 +1,7 @@
 import type { SharePreview, SharePreviewErrorKind } from "../api/sharePreview";
 import { getShareResourceTypeLabel } from "../api/sharePreview";
 import type { PublicAppEnv } from "../config/env";
-import { appPaths, parseShareTokenFromPath } from "../routes/paths";
+import { appPaths, isAdminPath, parseShareTokenFromPath } from "../routes/paths";
 import { wardrobePalette } from "../theme/wardrobePalette";
 import { OG_IMAGE_PATH } from "./brandAssets";
 import { featureItems } from "./featureItems";
@@ -119,6 +119,14 @@ export const getPricingTitle = (appName: string): string => {
 
 export const getPricingDescription = (appName: string): string => {
   return `Compare Free, Basic, and Premium ${appName} plans. Paid prices come from the live billing catalog.`;
+};
+
+export const getAdminSupportTitle = (appName: string): string => {
+  return `Support inbox — ${appName}`;
+};
+
+export const getAdminSupportDescription = (): string => {
+  return "Operator support inbox. This page is not listed in search results.";
 };
 
 export const getShareFallbackTitle = (appName: string): string => {
@@ -542,6 +550,30 @@ export const getPageSeo = ({
     };
   }
 
+  if (isAdminPath(path)) {
+    const title = getAdminSupportTitle(env.appName);
+    const description = getAdminSupportDescription();
+
+    return {
+      title,
+      description,
+      path,
+      siteName: env.appName,
+      canonicalUrl: undefined,
+      ogType: "website",
+      ogImageUrl: undefined,
+      ogImageAlt,
+      robots: "noindex,nofollow",
+      jsonLd: getWebPageJsonLd({
+        name: title,
+        description,
+        url: undefined,
+        siteName: env.appName,
+        siteUrl,
+      }),
+    };
+  }
+
   const title = getLandingTitle(env.appName);
   const description = getLandingDescription(env.appName);
   const landingUrl = toAbsoluteUrl(siteUrl, appPaths.home);
@@ -659,6 +691,56 @@ export const getDocumentMetaTags = (pageSeo: PageSeo): DocumentMetaTag[] => {
   }
 
   return tags;
+};
+
+export const upsertDocumentMetaTag = (
+  doc: Document,
+  tag: DocumentMetaTag,
+): void => {
+  const selector = tag.property
+    ? `meta[property="${tag.property}"]`
+    : `meta[name="${tag.name ?? ""}"]`;
+  const matches = [...doc.head.querySelectorAll(selector)];
+  const element =
+    matches[0] instanceof HTMLMetaElement
+      ? matches[0]
+      : doc.createElement("meta");
+
+  if (tag.property) {
+    element.setAttribute("property", tag.property);
+  }
+
+  if (tag.name) {
+    element.setAttribute("name", tag.name);
+  }
+
+  element.setAttribute("content", tag.content);
+
+  if (!element.isConnected) {
+    doc.head.appendChild(element);
+  }
+
+  matches.slice(1).forEach((extra) => extra.remove());
+};
+
+export const upsertCanonicalLink = (
+  doc: Document,
+  canonicalUrl: string | undefined,
+): void => {
+  const existing = doc.head.querySelector('link[rel="canonical"]');
+  if (!canonicalUrl) {
+    existing?.remove();
+    return;
+  }
+
+  const link =
+    existing instanceof HTMLLinkElement ? existing : doc.createElement("link");
+  link.setAttribute("rel", "canonical");
+  link.setAttribute("href", canonicalUrl);
+
+  if (!link.isConnected) {
+    doc.head.appendChild(link);
+  }
 };
 
 export const upsertJsonLdScript = (

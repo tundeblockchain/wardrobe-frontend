@@ -68,6 +68,25 @@ export const FIREBASE_WEB_ENV_KEYS = [
 export const MISSING_FIREBASE_WEB_CONFIG_MESSAGE =
   "Missing Firebase web config. Set VITE_FIREBASE_API_KEY, VITE_FIREBASE_AUTH_DOMAIN, VITE_FIREBASE_PROJECT_ID, VITE_FIREBASE_STORAGE_BUCKET, VITE_FIREBASE_MESSAGING_SENDER_ID, and VITE_FIREBASE_APP_ID.";
 
+export const ADMIN_FIREBASE_WEB_ENV_KEYS = [
+  "VITE_FIREBASE_API_KEY",
+  "VITE_FIREBASE_AUTH_DOMAIN",
+  "VITE_FIREBASE_PROJECT_ID",
+  "VITE_FIREBASE_APP_ID",
+] as const;
+
+export type AdminFirebaseWebConfig = {
+  apiKey: string;
+  authDomain: string;
+  projectId: string;
+  appId: string;
+  storageBucket?: string;
+  messagingSenderId?: string;
+};
+
+export const MISSING_ADMIN_FIREBASE_WEB_CONFIG_MESSAGE =
+  "Admin is not configured. Set VITE_FIREBASE_API_KEY, VITE_FIREBASE_AUTH_DOMAIN, VITE_FIREBASE_PROJECT_ID, and VITE_FIREBASE_APP_ID.";
+
 const DEFAULT_APP_NAME = "Pocket Closet";
 
 export const resolveAppStoreUrl = (
@@ -184,6 +203,43 @@ export const hasFirebaseWebConfig = (
 ): boolean => {
   try {
     getFirebaseWebConfig(source);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+export const getAdminFirebaseWebConfig = (
+  source: EnvSource = import.meta.env,
+): AdminFirebaseWebConfig => {
+  const apiKey = readOptionalEnv(source.VITE_FIREBASE_API_KEY);
+  const authDomain = readOptionalEnv(source.VITE_FIREBASE_AUTH_DOMAIN);
+  const projectId = readOptionalEnv(source.VITE_FIREBASE_PROJECT_ID);
+  const appId = readOptionalEnv(source.VITE_FIREBASE_APP_ID);
+  const storageBucket = readOptionalEnv(source.VITE_FIREBASE_STORAGE_BUCKET);
+  const messagingSenderId = readOptionalEnv(
+    source.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  );
+
+  if (!apiKey || !authDomain || !projectId || !appId) {
+    throw new Error(MISSING_ADMIN_FIREBASE_WEB_CONFIG_MESSAGE);
+  }
+
+  return {
+    apiKey,
+    authDomain,
+    projectId,
+    appId,
+    storageBucket,
+    messagingSenderId,
+  };
+};
+
+export const hasAdminFirebaseWebConfig = (
+  source: EnvSource = import.meta.env,
+): boolean => {
+  try {
+    getAdminFirebaseWebConfig(source);
     return true;
   } catch {
     return false;

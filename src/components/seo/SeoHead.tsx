@@ -1,6 +1,8 @@
 import { useEffect } from "react";
 import {
   getDocumentMetaTags,
+  upsertCanonicalLink,
+  upsertDocumentMetaTag,
   upsertJsonLdScript,
   type PageSeo,
 } from "../../content/seo";
@@ -11,28 +13,18 @@ export type SeoHeadProps = {
 
 export const SeoHead = ({ pageSeo }: SeoHeadProps) => {
   const jsonLdText = JSON.stringify(pageSeo.jsonLd);
-  const metaTags = getDocumentMetaTags(pageSeo);
+  const metaSignature = getDocumentMetaTags(pageSeo)
+    .map((tag) => `${tag.key}:${tag.content}`)
+    .join("|");
 
   useEffect(() => {
     document.title = pageSeo.title;
     upsertJsonLdScript(document, JSON.parse(jsonLdText) as PageSeo["jsonLd"]);
-  }, [jsonLdText, pageSeo.title]);
+    upsertCanonicalLink(document, pageSeo.canonicalUrl);
+    getDocumentMetaTags(pageSeo).forEach((tag) => {
+      upsertDocumentMetaTag(document, tag);
+    });
+  }, [jsonLdText, metaSignature, pageSeo, pageSeo.canonicalUrl, pageSeo.title]);
 
-  return (
-    <>
-      <title>{pageSeo.title}</title>
-      {pageSeo.canonicalUrl ? (
-        <link rel="canonical" href={pageSeo.canonicalUrl} />
-      ) : null}
-      {metaTags.map((tag) => {
-        if (tag.property) {
-          return (
-            <meta key={tag.key} property={tag.property} content={tag.content} />
-          );
-        }
-
-        return <meta key={tag.key} name={tag.name} content={tag.content} />;
-      })}
-    </>
-  );
+  return <title>{pageSeo.title}</title>;
 };

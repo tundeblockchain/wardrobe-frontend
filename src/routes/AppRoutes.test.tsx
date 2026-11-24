@@ -531,6 +531,34 @@ describe("AppRoutes", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("renders the unlinked operator support inbox at /admin/support", async () => {
+    renderAppRoutes(appPaths.adminSupport);
+
+    expect(
+      await screen.findByRole("heading", {
+        level: 1,
+        name: /Admin is not configured|Sign in|Support inbox/,
+      }),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId("route-location")).toHaveTextContent(
+      appPaths.adminSupport,
+    );
+    expect(
+      screen.queryByRole("navigation", { name: "Primary" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("does not link the public home page to the operator inbox", () => {
+    renderAppRoutes(appPaths.home);
+
+    expect(
+      screen.queryByRole("link", { name: /support inbox/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: /admin/i }),
+    ).not.toBeInTheDocument();
+  });
+
   it("waits on a loading auth state instead of redirecting /app", () => {
     renderAppRoutes(appPaths.app, { loading: true });
 
