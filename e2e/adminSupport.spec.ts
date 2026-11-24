@@ -59,6 +59,56 @@ test.describe("Admin support inbox", () => {
     ).toBeVisible();
   });
 
+  test("renders a list row when lastMessagePreview is empty", async ({
+    page,
+  }) => {
+    await openInbox(page, {
+      listStatus: {
+        open: {
+          items: [
+            {
+              conversationId: "conv_1",
+              status: "open",
+              type: "bug",
+              email: "user@example.com",
+              platform: "ios",
+              uid: "user-1",
+              createdAt: "2026-11-24T10:00:00.000Z",
+              lastMessageAt: "2026-11-24T11:00:00.000Z",
+              lastMessagePreview: "The upload failed",
+              lastMessageAuthor: "user",
+              lastEmailStatus: null,
+            },
+            {
+              conversationId: "conv_legacy",
+              status: "open",
+              type: "bug",
+              email: "legacy@example.com",
+              platform: "ios",
+              uid: null,
+              createdAt: "2026-10-01T10:00:00.000Z",
+              lastMessageAt: "2026-10-01T10:00:00.000Z",
+              lastMessagePreview: "",
+              lastMessageAuthor: "user",
+              lastEmailStatus: "",
+            },
+          ],
+          nextCursor: null,
+        },
+        replied: { items: [], nextCursor: null },
+        closed: { items: [], nextCursor: null },
+      },
+    });
+
+    await expect(
+      page.getByRole("button", { name: "Bug from user@example.com" }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Bug from legacy@example.com" }),
+    ).toBeVisible();
+    await expect(page.getByText("No preview")).toBeVisible();
+  });
+
   test("opens a thread, replies with a failed email, retries, and closes", async ({
     page,
   }) => {

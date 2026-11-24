@@ -3,6 +3,8 @@ import {
   buildConversationsQuery,
   createAdminSupportApi,
   DEFAULT_CONVERSATION_LIMIT,
+  parseConversationDetailResponse,
+  parseConversationListResponse,
   validateReplyMessage,
 } from "./adminSupport";
 import { isApiError } from "./httpClient";
@@ -119,6 +121,94 @@ describe("validateReplyMessage", () => {
     expect(validateReplyMessage("x".repeat(5001))).toBe(
       "Reply must be 5000 characters or fewer.",
     );
+  });
+});
+
+describe("parseConversationListResponse", () => {
+  it("defaults a missing, null, or empty lastMessagePreview to an empty string", () => {
+    const missingPreview = parseConversationListResponse({
+      items: [{ ...listItem, lastMessagePreview: undefined }],
+      nextCursor: null,
+    });
+    const nullPreview = parseConversationListResponse({
+      items: [{ ...listItem, lastMessagePreview: null }],
+      nextCursor: null,
+    });
+    const emptyPreview = parseConversationListResponse({
+      items: [{ ...listItem, lastMessagePreview: "" }],
+      nextCursor: null,
+    });
+
+    expect(missingPreview.items[0]?.lastMessagePreview).toBe("");
+    expect(nullPreview.items[0]?.lastMessagePreview).toBe("");
+    expect(emptyPreview.items[0]?.lastMessagePreview).toBe("");
+  });
+
+  it("defaults display-only list fields instead of failing the list", () => {
+    const parsed = parseConversationListResponse({
+      items: [
+        {
+          conversationId: "conv_legacy",
+          status: "open",
+          lastMessagePreview: "",
+          lastEmailStatus: "",
+          uid: "",
+        },
+      ],
+      nextCursor: null,
+    });
+
+    expect(parsed.items).toEqual([
+      {
+        conversationId: "conv_legacy",
+        status: "open",
+        type: "query",
+        email: "",
+        platform: "",
+        uid: null,
+        createdAt: "",
+        lastMessageAt: "",
+        lastMessagePreview: "",
+        lastMessageAuthor: "user",
+        lastEmailStatus: null,
+      },
+    ]);
+  });
+
+  it("skips a row missing conversationId or status without failing siblings", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+
+    const parsed = parseConversationListResponse({
+      items: [
+        { ...listItem, conversationId: "" },
+        { ...listItem, status: "unknown" },
+        listItem,
+        { email: "broken@example.com" },
+      ],
+      nextCursor: "next_1",
+    });
+
+    expect(parsed).toEqual({ items: [listItem], nextCursor: "next_1" });
+    expect(warn).toHaveBeenCalled();
+    warn.mockRestore();
+  });
+});
+
+describe("parseConversationDetailResponse", () => {
+  it("defaults empty or missing appVersion, device, and uid to null", () => {
+    const parsed = parseConversationDetailResponse({
+      conversation: {
+        ...threadBody.conversation,
+        uid: "",
+        appVersion: "",
+        device: null,
+      },
+      messages: threadBody.messages,
+    });
+
+    expect(parsed.conversation.uid).toBeNull();
+    expect(parsed.conversation.appVersion).toBeNull();
+    expect(parsed.conversation.device).toBeNull();
   });
 });
 

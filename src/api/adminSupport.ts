@@ -220,16 +220,32 @@ export const validateReplyMessage = (message: string): string | undefined => {
 };
 
 const readOptionalString = (value: unknown): string | null => {
-  if (value === null) {
-    return null;
-  }
-
   if (typeof value !== "string") {
     return null;
   }
 
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : null;
+};
+
+const readDisplayString = (value: unknown): string => {
+  if (typeof value !== "string") {
+    return "";
+  }
+
+  return value.trim();
+};
+
+const readOptionalEnum = <T extends string>(
+  value: unknown,
+  allowed: readonly T[],
+): T | null => {
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  return allowed.includes(trimmed as T) ? (trimmed as T) : null;
 };
 
 const readRequiredString = (value: unknown, fieldName: string): string => {
@@ -246,74 +262,35 @@ const readRequiredString = (value: unknown, fieldName: string): string => {
 
 const parseConversationSummary = (
   value: unknown,
-): SupportConversationSummary => {
+): SupportConversationSummary | null => {
   if (!value || typeof value !== "object") {
-    throw new ApiError({
-      status: 0,
-      code: "INVALID_RESPONSE",
-      message: "Support inbox list item is invalid.",
-    });
+    return null;
   }
 
   const record = value as Record<string, unknown>;
-  const status = readRequiredString(record.status, "status");
-  const type = readRequiredString(record.type, "type");
-  const lastMessageAuthor = readRequiredString(
-    record.lastMessageAuthor,
-    "lastMessageAuthor",
-  );
-  const lastEmailStatus =
-    record.lastEmailStatus === null || record.lastEmailStatus === undefined
-      ? null
-      : readRequiredString(record.lastEmailStatus, "lastEmailStatus");
-
-  if (!isSupportConversationStatus(status)) {
-    throw new ApiError({
-      status: 0,
-      code: "INVALID_RESPONSE",
-      message: "Support inbox list item has an unknown status.",
-    });
-  }
-
-  if (!isSupportFeedbackType(type)) {
-    throw new ApiError({
-      status: 0,
-      code: "INVALID_RESPONSE",
-      message: "Support inbox list item has an unknown type.",
-    });
-  }
-
-  if (!isSupportMessageAuthor(lastMessageAuthor)) {
-    throw new ApiError({
-      status: 0,
-      code: "INVALID_RESPONSE",
-      message: "Support inbox list item has an unknown author.",
-    });
-  }
-
-  if (lastEmailStatus !== null && !isSupportEmailStatus(lastEmailStatus)) {
-    throw new ApiError({
-      status: 0,
-      code: "INVALID_RESPONSE",
-      message: "Support inbox list item has an unknown email status.",
-    });
+  const conversationId = readDisplayString(record.conversationId);
+  const status = readOptionalEnum(record.status, SUPPORT_CONVERSATION_STATUSES);
+  if (!conversationId || !status) {
+    return null;
   }
 
   return {
-    conversationId: readRequiredString(record.conversationId, "conversationId"),
+    conversationId,
     status,
-    type,
-    email: readRequiredString(record.email, "email"),
-    platform: readRequiredString(record.platform, "platform"),
+    type: readOptionalEnum(record.type, SUPPORT_FEEDBACK_TYPES) ?? "query",
+    email: readDisplayString(record.email),
+    platform: readDisplayString(record.platform),
     uid: readOptionalString(record.uid),
-    createdAt: readRequiredString(record.createdAt, "createdAt"),
-    lastMessageAt: readRequiredString(record.lastMessageAt, "lastMessageAt"),
-    lastMessagePreview: readRequiredString(
-      record.lastMessagePreview,
-      "lastMessagePreview",
+    createdAt: readDisplayString(record.createdAt),
+    lastMessageAt: readDisplayString(record.lastMessageAt),
+    lastMessagePreview: readDisplayString(record.lastMessagePreview),
+    lastMessageAuthor:
+      readOptionalEnum(record.lastMessageAuthor, SUPPORT_MESSAGE_AUTHORS) ??
+      "user",
+    lastEmailStatus: readOptionalEnum(
+      record.lastEmailStatus,
+      SUPPORT_EMAIL_STATUSES,
     ),
-    lastMessageAuthor,
-    lastEmailStatus,
   };
 };
 
@@ -329,28 +306,30 @@ const parseConversationDetail = (
   }
 
   const record = value as Record<string, unknown>;
+  const conversationId = readRequiredString(
+    record.conversationId,
+    "conversationId",
+  );
   const status = readRequiredString(record.status, "status");
-  const type = readRequiredString(record.type, "type");
-
-  if (!isSupportConversationStatus(status) || !isSupportFeedbackType(type)) {
+  if (!isSupportConversationStatus(status)) {
     throw new ApiError({
       status: 0,
       code: "INVALID_RESPONSE",
-      message: "Support inbox conversation has an unknown status or type.",
+      message: "Support inbox conversation has an unknown status.",
     });
   }
 
   return {
-    conversationId: readRequiredString(record.conversationId, "conversationId"),
+    conversationId,
     status,
-    type,
-    email: readRequiredString(record.email, "email"),
-    platform: readRequiredString(record.platform, "platform"),
+    type: readOptionalEnum(record.type, SUPPORT_FEEDBACK_TYPES) ?? "query",
+    email: readDisplayString(record.email),
+    platform: readDisplayString(record.platform),
     uid: readOptionalString(record.uid),
     appVersion: readOptionalString(record.appVersion),
     device: readOptionalString(record.device),
-    createdAt: readRequiredString(record.createdAt, "createdAt"),
-    lastMessageAt: readRequiredString(record.lastMessageAt, "lastMessageAt"),
+    createdAt: readDisplayString(record.createdAt),
+    lastMessageAt: readDisplayString(record.lastMessageAt),
   };
 };
 
@@ -417,7 +396,17 @@ export const parseConversationListResponse = (
   }
 
   return {
-    items: record.items.map(parseConversationSummary),
+    items: record.items.flatMap((item) => {
+      const parsed = parseConversationSummary(item);
+      if (!parsed) {
+        console.warn(
+          "Skipping support conversation list item without conversationId or status.",
+        );
+        return [];
+      }
+
+      return [parsed];
+    }),
     nextCursor: readOptionalString(record.nextCursor),
   };
 };

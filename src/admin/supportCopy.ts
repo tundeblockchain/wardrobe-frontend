@@ -52,6 +52,7 @@ export const supportCopy = {
   metadataDevice: "Device",
   metadataCreated: "Created",
   metadataMissing: "Not provided",
+  noPreview: "No preview",
   fromUser: "Customer",
   fromAdmin: "Support",
   emailSent: "Email sent",

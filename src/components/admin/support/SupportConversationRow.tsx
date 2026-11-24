@@ -30,6 +30,8 @@ export const SupportConversationRow = ({
     conversation.lastMessageAuthor === "admin"
       ? supportCopy.fromAdmin
       : supportCopy.fromUser;
+  const preview = conversation.lastMessagePreview;
+  const emailLabel = conversation.email || supportCopy.metadataMissing;
 
   const handleClick = () => {
     onSelect(conversation.conversationId);
@@ -50,7 +52,7 @@ export const SupportConversationRow = ({
       onClick={handleClick}
       onKeyDown={handleKeyDown}
       tabIndex={0}
-      aria-label={`${typeLabel} from ${conversation.email}`}
+      aria-label={`${typeLabel} from ${emailLabel}`}
       sx={{ alignItems: "flex-start", py: 1.5 }}
     >
       <ListItemText
@@ -62,11 +64,13 @@ export const SupportConversationRow = ({
           >
             <Chip size="small" label={typeLabel} aria-label={typeLabel} />
             <Typography variant="subtitle2" component="span">
-              {conversation.email}
+              {emailLabel}
             </Typography>
-            <Typography variant="caption" color="text.secondary">
-              {conversation.platform}
-            </Typography>
+            {conversation.platform ? (
+              <Typography variant="caption" color="text.secondary">
+                {conversation.platform}
+              </Typography>
+            ) : null}
           </Stack>
         }
         slotProps={{
@@ -75,8 +79,12 @@ export const SupportConversationRow = ({
         }}
         secondary={
           <Box>
-            <Typography variant="body2" color="text.secondary">
-              {authorLabel}: {conversation.lastMessagePreview}
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={preview ? undefined : { fontStyle: "italic" }}
+            >
+              {preview ? `${authorLabel}: ${preview}` : supportCopy.noPreview}
             </Typography>
             <Stack
               direction="row"
