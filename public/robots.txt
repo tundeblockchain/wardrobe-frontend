@@ -1,11 +1,19 @@
 User-agent: *
 Allow: /
+Disallow: /admin
+Disallow: /admin/
 
 User-agent: GPTBot
 Allow: /
+Disallow: /admin
+Disallow: /admin/
 
 User-agent: Google-Extended
 Allow: /
+Disallow: /admin
+Disallow: /admin/
 
 User-agent: PerplexityBot
 Allow: /
+Disallow: /admin
+Disallow: /admin/

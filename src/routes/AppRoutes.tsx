@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import { AppShell } from "../layout/AppShell";
 import { ContactPage } from "../pages/ContactPage";
 import { HomePage } from "../pages/HomePage";
@@ -109,6 +109,16 @@ const PricingPage = lazy(async () => {
   return { default: module.PricingPage };
 });
 
+const AdminArea = lazy(async () => {
+  const module = await import("../pages/admin/AdminArea");
+  return { default: module.AdminArea };
+});
+
+const AdminSupportPage = lazy(async () => {
+  const module = await import("../pages/admin/AdminSupportPage");
+  return { default: module.AdminSupportPage };
+});
+
 export const AppRoutes = () => {
   return (
     <Routes>
@@ -190,6 +200,32 @@ export const AppRoutes = () => {
         <Route path="billing/success" element={<BillingSuccessPage />} />
         <Route path="billing/cancel" element={<BillingCancelPage />} />
         <Route path="*" element={<AppHomePage />} />
+      </Route>
+      <Route
+        path={appPaths.admin}
+        element={
+          <Suspense fallback={<RouteFallback />}>
+            <AdminArea />
+          </Suspense>
+        }
+      >
+        <Route index element={<Navigate to="support" replace />} />
+        <Route
+          path="support"
+          element={
+            <Suspense fallback={<RouteFallback />}>
+              <AdminSupportPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="support/:conversationId"
+          element={
+            <Suspense fallback={<RouteFallback />}>
+              <AdminSupportPage />
+            </Suspense>
+          }
+        />
       </Route>
     </Routes>
   );

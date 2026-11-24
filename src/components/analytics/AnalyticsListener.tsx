@@ -7,6 +7,7 @@ import {
 } from "../../config/tracking";
 import { trackSpaPageView } from "../../config/trackingEvents";
 import { useConsent } from "../../hooks/useConsent";
+import { isAdminPath } from "../../routes/paths";
 
 export type AnalyticsListenerProps = {
   gaMeasurementId: string | undefined;
@@ -24,9 +25,10 @@ export const AnalyticsListener = ({
   const analyticsOk = consent?.analytics === true;
   const marketingOk = consent?.marketing === true;
   const shouldTrack =
-    (analyticsOk && canTrackGoogleAnalytics(gaMeasurementId)) ||
-    (marketingOk &&
-      (canTrackMetaPixel(metaPixelId) || canTrackTikTokPixel(tiktokPixelId)));
+    !isAdminPath(location.pathname) &&
+    ((analyticsOk && canTrackGoogleAnalytics(gaMeasurementId)) ||
+      (marketingOk &&
+        (canTrackMetaPixel(metaPixelId) || canTrackTikTokPixel(tiktokPixelId))));
   const lastTrackedPath = useRef<string | undefined>(undefined);
   const pageKey = `${location.pathname}${location.search}`;
 

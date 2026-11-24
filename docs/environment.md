@@ -14,7 +14,7 @@ Never commit secrets, tokens, or private keys.
 | `VITE_APP_STORE_URL` | No (defaults to the live App Store listing) | Public App Store URL for landing download CTAs. Empty or unset values use `https://apps.apple.com/gb/app/my-pocket-closet/id6809181010`. A Netlify value overrides this default and must be updated to the live URL if the key is set. | `https://apps.apple.com/gb/app/my-pocket-closet/id6809181010` |
 | `VITE_PLAY_STORE_URL` | No | Public Play Store URL for landing download CTAs. Empty values render a disabled button. | `https://play.google.com/store/apps/details?id=com.example.wardrobe` |
 | `VITE_PUBLIC_SITE_URL` | No | Public origin for canonical, Open Graph, and Twitter URLs (no trailing slash). When unset, the current origin is used in the browser. | `https://example.com` |
-| `VITE_API_BASE_URL` | No | Public backend API origin (no trailing slash) for public routes (`GET /public/shares/{token}`, `POST /support/upload-url`, `POST /support/feedback`, `GET /billing/plans`) and signed-in app calls (including `GET /me`). Empty values keep public pages rendering with a clear unavailable state. | `https://api.example.com` |
+| `VITE_API_BASE_URL` | No | Public backend API origin (no trailing slash) for public routes (`GET /public/shares/{token}`, `POST /support/upload-url`, `POST /support/feedback`, `GET /billing/plans`), signed-in app calls (including `GET /me`), and the operator support inbox (`/admin/support`). Empty values keep public pages rendering with a clear unavailable state. | `https://api.example.com` |
 | `VITE_GA_MEASUREMENT_ID` | No | Google Analytics 4 measurement ID. Scripts are injected only when this value is a `G-` ID. | `G-XXXXXXXXXX` |
 | `VITE_META_PIXEL_ID` | No | Meta Pixel ID. The pixel is injected only when this value is a numeric ID. Sends PageView on route changes plus in-app/website action events. | `000000000000000` |
 | `VITE_TIKTOK_PIXEL_ID` | No | TikTok Pixel ID. The pixel is injected only when this value is an alphanumeric ID (`ttq.load(id)` + `ttq.page()`). Never commit a real ID. | `CXXXXXXXXXXXXXXXXX` |
@@ -23,12 +23,12 @@ Never commit secrets, tokens, or private keys.
 | `VITE_TIKTOK_TEST_EVENT_CODE` | No | Optional TikTok Test Events code. Env only; never commit a value; leave blank in production. | |
 | `VITE_LEGAL_CONTACT_EMAIL` | No | Public operator contact email shown on Terms of Service and Privacy Policy. Empty values show a store-listing contact fallback. | `legal@example.com` |
 | `VITE_LEGAL_CONTACT_URL` | No | Optional public operator contact page shown on Terms of Service and Privacy Policy. | `https://example.com/contact` |
-| `VITE_FIREBASE_API_KEY` | For `/login` and `/app` sign-in | Public Firebase web API key for the same project as the mobile app | |
-| `VITE_FIREBASE_AUTH_DOMAIN` | For `/login` and `/app` sign-in | Public Firebase Auth domain | `example.firebaseapp.com` |
-| `VITE_FIREBASE_PROJECT_ID` | For `/login` and `/app` sign-in | Firebase project ID | `example` |
+| `VITE_FIREBASE_API_KEY` | For `/login`, `/app`, and `/admin/support` | Public Firebase web API key for the same project as the mobile app | |
+| `VITE_FIREBASE_AUTH_DOMAIN` | For `/login`, `/app`, and `/admin/support` | Public Firebase Auth domain | `example.firebaseapp.com` |
+| `VITE_FIREBASE_PROJECT_ID` | For `/login`, `/app`, and `/admin/support` | Firebase project ID | `example` |
 | `VITE_FIREBASE_STORAGE_BUCKET` | For `/login` and `/app` sign-in | Firebase storage bucket | `example.appspot.com` |
 | `VITE_FIREBASE_MESSAGING_SENDER_ID` | For `/login` and `/app` sign-in | Firebase messaging sender ID | `000000000000` |
-| `VITE_FIREBASE_APP_ID` | For `/login` and `/app` sign-in | Firebase web app ID | `1:000000000000:web:example` |
+| `VITE_FIREBASE_APP_ID` | For `/login`, `/app`, and `/admin/support` | Firebase web app ID | `1:000000000000:web:example` |
 | `VITE_USE_MOCK_API` | No (defaults to `false`) | When `true` or `1`, signed-in app calls should use mock API responses instead of the live backend. Parsed by `isMockApi()` in `src/config/mockApi.ts`. | `false` |
 
 Empty or whitespace-only values are treated as unset by `getPublicAppEnv()`.
@@ -101,11 +101,15 @@ Use the same Firebase project as the mobile app so a user who signed up there si
 - Add the Netlify site domain and any custom domain to Authentication > Settings > Authorized domains
 - Set the `VITE_FIREBASE_*` env vars in Netlify
 
-The landing header resolves auth lazily after mount so a signed-in visitor sees Dashboard instead of Log in and Sign up. Firebase stays out of the landing entry chunk. The SDK loads from a later async chunk when auth is resolved, and from the `/login` and `/app` route chunks.
+The landing header resolves auth lazily after mount so a signed-in visitor sees Dashboard instead of Log in and Sign up. Firebase stays out of the landing entry chunk. The SDK loads from a later async chunk when auth is resolved, and from the `/login`, `/app`, and `/admin/support` route chunks.
+
+The operator support inbox (`/admin/support`) is not linked from the public site. It uses the same public Firebase web config. If `VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_AUTH_DOMAIN`, `VITE_FIREBASE_PROJECT_ID`, or `VITE_FIREBASE_APP_ID` is missing, that page shows an admin-not-configured state instead of crashing. The `admin: true` custom claim is a cosmetic gate only; the API still enforces access. Screenshot URLs from thread detail expire after 900 seconds: the inbox records when each thread was fetched and refreshes the detail before opening a screenshot that is 900s or older.
 
 ## Authenticated API
 
 Signed-in `/app` requests use `VITE_API_BASE_URL` with `Authorization: Bearer <Firebase ID token>`. The token comes from the same public Firebase web config used at `/login`. These are public client values; never put Admin keys, service-account files, or other secrets in Netlify frontend env vars.
+
+The operator inbox uses the same origin and bearer token for `/admin/support/conversations` routes. A 401 is treated as signed out; a 403 `{error:"forbidden"}` is treated as not authorised.
 
 If `VITE_API_BASE_URL` is unset, authenticated calls fail closed as misconfigured.
 
@@ -121,3 +125,4 @@ Read it with `isMockApi()` from `src/config/mockApi.ts`. Keep the flag `false` i
 - Publish directory: `dist`
 - Node: `22`
 - SPA redirects: `/*` → `/index.html` (`200`)
+- `/admin` and `/admin/*` send `X-Robots-Tag: noindex, nofollow`

@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
   DEFAULT_APP_STORE_URL,
+  getAdminFirebaseWebConfig,
   getFirebaseWebConfig,
   getPublicAppEnv,
+  hasAdminFirebaseWebConfig,
   hasFirebaseWebConfig,
+  MISSING_ADMIN_FIREBASE_WEB_CONFIG_MESSAGE,
   MISSING_FIREBASE_WEB_CONFIG_MESSAGE,
   resolveAppStoreUrl,
 } from "./env";
@@ -189,5 +192,40 @@ describe("getFirebaseWebConfig", () => {
       }),
     ).toThrow(MISSING_FIREBASE_WEB_CONFIG_MESSAGE);
     expect(hasFirebaseWebConfig({})).toBe(false);
+  });
+});
+
+describe("getAdminFirebaseWebConfig", () => {
+  it("accepts the four public keys required for the support inbox", () => {
+    expect(
+      getAdminFirebaseWebConfig({
+        VITE_FIREBASE_API_KEY: " test-api-key ",
+        VITE_FIREBASE_AUTH_DOMAIN: "test.firebaseapp.com",
+        VITE_FIREBASE_PROJECT_ID: "test-project",
+        VITE_FIREBASE_APP_ID: "1:123456789:web:abc",
+      }),
+    ).toEqual({
+      apiKey: "test-api-key",
+      authDomain: "test.firebaseapp.com",
+      projectId: "test-project",
+      appId: "1:123456789:web:abc",
+      storageBucket: undefined,
+      messagingSenderId: undefined,
+    });
+    expect(
+      hasAdminFirebaseWebConfig({
+        VITE_FIREBASE_API_KEY: "test-api-key",
+        VITE_FIREBASE_AUTH_DOMAIN: "test.firebaseapp.com",
+        VITE_FIREBASE_PROJECT_ID: "test-project",
+        VITE_FIREBASE_APP_ID: "1:123456789:web:abc",
+      }),
+    ).toBe(true);
+  });
+
+  it("treats missing admin Firebase keys as not configured", () => {
+    expect(() => getAdminFirebaseWebConfig({})).toThrow(
+      MISSING_ADMIN_FIREBASE_WEB_CONFIG_MESSAGE,
+    );
+    expect(hasAdminFirebaseWebConfig({})).toBe(false);
   });
 });

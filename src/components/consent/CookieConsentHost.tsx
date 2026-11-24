@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { ThemeProvider, useMediaQuery } from "@mui/material";
+import { useLocation } from "react-router-dom";
+import { isAdminPath } from "../../routes/paths";
 import {
   subscribeCookiePreferences,
   type ConsentFlags,
@@ -21,9 +23,10 @@ const DEFAULT_FLAGS: ConsentFlags = {
 };
 
 export const CookieConsentHost = () => {
+  const { pathname } = useLocation();
   const choice = useConsent();
   const [preferencesOpen, setPreferencesOpen] = useState(false);
-  const showBanner = choice === null;
+  const showBanner = choice === null && !isAdminPath(pathname);
   const prefersDark = useMediaQuery("(prefers-color-scheme: dark)");
   const theme = useMemo(() => {
     return createDashboardTheme(

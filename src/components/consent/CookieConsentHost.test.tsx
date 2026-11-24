@@ -76,6 +76,14 @@ describe("CookieConsentHost", () => {
     ).toBeVisible();
   });
 
+  it("does not show the banner on the operator inbox", () => {
+    renderWithProviders(<CookieConsentHost />, { route: "/admin/support" });
+
+    expect(
+      screen.queryByRole("dialog", { name: "Cookies on Pocket Closet" }),
+    ).not.toBeInTheDocument();
+  });
+
   it("does not show the banner when a current-version choice is stored", () => {
     window.localStorage.setItem(
       CONSENT_STORAGE_KEY,

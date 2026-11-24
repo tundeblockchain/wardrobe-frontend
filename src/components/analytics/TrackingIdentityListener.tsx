@@ -1,5 +1,7 @@
 import { useEffect, useRef } from "react";
+import { useLocation } from "react-router-dom";
 import { useAuth } from "../../auth/useAuth";
+import { isAdminPath } from "../../routes/paths";
 import {
   applyTrackingExternalId,
   clearTrackingExternalId,
@@ -18,9 +20,10 @@ export const TrackingIdentityListener = ({
 }: TrackingIdentityListenerProps) => {
   const { user } = useAuth();
   const consent = useConsent();
+  const { pathname } = useLocation();
   const appliedHash = useRef<string | undefined>(undefined);
   const uid = user?.id?.trim();
-  const marketingOk = consent?.marketing === true;
+  const marketingOk = consent?.marketing === true && !isAdminPath(pathname);
 
   useEffect(() => {
     const ids = { metaPixelId, tiktokPixelId };

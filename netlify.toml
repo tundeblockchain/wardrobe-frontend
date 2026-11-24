@@ -5,8 +5,19 @@
 [build.environment]
   NODE_VERSION = "22"
 
+# Operator inbox is not for search engines.
+[[headers]]
+  for = "/admin"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+
+[[headers]]
+  for = "/admin/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+
 # SPA fallback so client-side routes resolve on refresh and deep links
-# (public pages, /login, and /app/*).
+# (public pages, /login, /admin/*, and /app/*).
 [[redirects]]
   from = "/*"
   to = "/index.html"

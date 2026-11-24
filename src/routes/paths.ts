@@ -1,4 +1,5 @@
 export const APP_BASE_PATH = "/app";
+export const ADMIN_BASE_PATH = "/admin";
 
 export const appPaths = {
   home: "/",
@@ -31,6 +32,9 @@ export const appPaths = {
   appSettingsPlan: `${APP_BASE_PATH}/settings#plan`,
   appBillingSuccess: `${APP_BASE_PATH}/billing/success`,
   appBillingCancel: `${APP_BASE_PATH}/billing/cancel`,
+  admin: ADMIN_BASE_PATH,
+  adminSupport: `${ADMIN_BASE_PATH}/support`,
+  adminSupportConversation: `${ADMIN_BASE_PATH}/support/:conversationId`,
 } as const;
 
 export const SETTINGS_PLAN_HASH = "plan";
@@ -204,6 +208,24 @@ export const isAppPath = (pathname: string): boolean => {
     normalizedPath === appPaths.app ||
     normalizedPath.startsWith(`${appPaths.app}/`)
   );
+};
+
+export const isAdminPath = (pathname: string): boolean => {
+  const normalizedPath = stripTrailingSlash(pathname);
+  return (
+    normalizedPath === appPaths.admin ||
+    normalizedPath.startsWith(`${appPaths.admin}/`)
+  );
+};
+
+export const getAdminSupportPath = (): string => {
+  return appPaths.adminSupport;
+};
+
+export const getAdminSupportConversationPath = (
+  conversationId: string,
+): string => {
+  return `${appPaths.adminSupport}/${encodeURIComponent(conversationId)}`;
 };
 
 export const getPricingPath = (pathname = ""): string => {

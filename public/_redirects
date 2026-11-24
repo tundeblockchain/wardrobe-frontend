@@ -1,3 +1,3 @@
 # SPA fallback: client-side routes should serve index.html.
-# Covers public pages, /login, and /app/*.
+# Covers public pages, /login, /admin/*, and /app/*.
 /*    /index.html   200

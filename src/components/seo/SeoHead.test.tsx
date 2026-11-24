@@ -30,6 +30,24 @@ describe("SeoHead", () => {
     );
   });
 
+  it("replaces the static robots tag instead of adding a second one", () => {
+    const existing = document.createElement("meta");
+    existing.setAttribute("name", "robots");
+    existing.setAttribute("content", "index,follow");
+    document.head.appendChild(existing);
+
+    const pageSeo = getPageSeo({
+      pathname: "/admin/support",
+      env: getPublicAppEnv({}),
+    });
+
+    renderWithProviders(<SeoHead pageSeo={pageSeo} />);
+
+    const robotsTags = document.head.querySelectorAll('meta[name="robots"]');
+    expect(robotsTags).toHaveLength(1);
+    expect(robotsTags[0]?.getAttribute("content")).toBe("noindex,nofollow");
+  });
+
   it("switches JSON-LD to a WebPage document on legal routes", () => {
     const pageSeo = getPageSeo({
       pathname: "/terms",

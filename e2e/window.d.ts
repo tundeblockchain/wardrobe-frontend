@@ -22,5 +22,10 @@ declare global {
       fbq: unknown[][];
       ttq: unknown[][];
     };
+    __E2E_ADMIN_SESSION__?: {
+      user: { id: string; email?: string | null };
+      admin: boolean;
+      idToken: string;
+    } | null;
   }
 }
