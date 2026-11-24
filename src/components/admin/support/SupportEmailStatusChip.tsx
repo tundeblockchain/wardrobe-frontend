@@ -6,13 +6,20 @@ export type SupportEmailStatusChipProps = {
   status: SupportEmailStatus | null | undefined;
 };
 
-const STATUS_COPY: Record<
-  SupportEmailStatus,
-  { label: string; color: "success" | "error" | "default" }
-> = {
-  sent: { label: supportCopy.emailSent, color: "success" },
-  failed: { label: supportCopy.emailFailed, color: "error" },
-  skipped: { label: supportCopy.emailSkipped, color: "default" },
+const getEmailStatusPresentation = (status: SupportEmailStatus) => {
+  if (status === "sent") {
+    return { label: supportCopy.emailSent, color: "success" as const };
+  }
+
+  if (status === "failed") {
+    return { label: supportCopy.emailFailed, color: "error" as const };
+  }
+
+  if (status === "skipped") {
+    return { label: supportCopy.emailSkipped, color: "default" as const };
+  }
+
+  return { label: supportCopy.emailPending, color: "default" as const };
 };
 
 export const SupportEmailStatusChip = ({
@@ -22,13 +29,17 @@ export const SupportEmailStatusChip = ({
     return null;
   }
 
-  const copy = STATUS_COPY[status];
+  const copy = getEmailStatusPresentation(status);
+  const isPending = copy.label === supportCopy.emailPending;
+
   return (
     <Chip
       size="small"
       color={copy.color}
+      variant={isPending ? "outlined" : "filled"}
       label={copy.label}
       aria-label={copy.label}
+      sx={isPending ? { color: "text.secondary" } : undefined}
     />
   );
 };

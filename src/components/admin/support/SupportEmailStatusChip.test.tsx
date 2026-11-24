@@ -17,4 +17,14 @@ describe("SupportEmailStatusChip", () => {
     expect(screen.queryByLabelText("Email sent")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Email failed")).not.toBeInTheDocument();
   });
+
+  it("renders a muted Pending chip for sending and unknown statuses", () => {
+    const { rerender } = render(<SupportEmailStatusChip status="sending" />);
+    expect(screen.getByLabelText("Pending")).toBeInTheDocument();
+    expect(screen.getByText("Pending")).toBeInTheDocument();
+
+    rerender(<SupportEmailStatusChip status="queued" />);
+    expect(screen.getByLabelText("Pending")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Email failed")).not.toBeInTheDocument();
+  });
 });

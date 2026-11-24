@@ -58,6 +58,7 @@ export const supportCopy = {
   emailSent: "Email sent",
   emailFailed: "Email failed",
   emailSkipped: "Email skipped",
+  emailPending: "Pending",
   retryEmail: "Retry email",
   retryingEmail: "Retrying email…",
   notRetryable:

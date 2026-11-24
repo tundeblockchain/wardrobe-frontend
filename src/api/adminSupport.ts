@@ -22,13 +22,19 @@ export const SUPPORT_CONVERSATION_STATUSES = [
 ] as const;
 export const SUPPORT_FEEDBACK_TYPES = ["bug", "query"] as const;
 export const SUPPORT_MESSAGE_AUTHORS = ["user", "admin"] as const;
-export const SUPPORT_EMAIL_STATUSES = ["sent", "failed", "skipped"] as const;
+export const SUPPORT_EMAIL_STATUSES = [
+  "sent",
+  "failed",
+  "skipped",
+  "sending",
+] as const;
 
 export type SupportConversationStatus =
   (typeof SUPPORT_CONVERSATION_STATUSES)[number];
 export type SupportFeedbackType = (typeof SUPPORT_FEEDBACK_TYPES)[number];
 export type SupportMessageAuthor = (typeof SUPPORT_MESSAGE_AUTHORS)[number];
-export type SupportEmailStatus = (typeof SUPPORT_EMAIL_STATUSES)[number];
+export type KnownSupportEmailStatus = (typeof SUPPORT_EMAIL_STATUSES)[number];
+export type SupportEmailStatus = KnownSupportEmailStatus | (string & {});
 
 export type SupportConversationSummary = {
   conversationId: string;
@@ -78,7 +84,7 @@ export type SupportConversationDetailResponse = {
 
 export type SupportReplyResponse = {
   messageId: string;
-  emailStatus: "sent" | "failed";
+  emailStatus: SupportEmailStatus;
 };
 
 export type SupportCloseResponse = {
@@ -147,8 +153,8 @@ export const isSupportMessageAuthor = (
 
 export const isSupportEmailStatus = (
   value: string,
-): value is SupportEmailStatus => {
-  return SUPPORT_EMAIL_STATUSES.includes(value as SupportEmailStatus);
+): value is KnownSupportEmailStatus => {
+  return SUPPORT_EMAIL_STATUSES.includes(value as KnownSupportEmailStatus);
 };
 
 export const clampConversationLimit = (limit?: number): number => {
@@ -287,10 +293,7 @@ const parseConversationSummary = (
     lastMessageAuthor:
       readOptionalEnum(record.lastMessageAuthor, SUPPORT_MESSAGE_AUTHORS) ??
       "user",
-    lastEmailStatus: readOptionalEnum(
-      record.lastEmailStatus,
-      SUPPORT_EMAIL_STATUSES,
-    ),
+    lastEmailStatus: readOptionalString(record.lastEmailStatus),
   };
 };
 
@@ -344,10 +347,6 @@ const parseMessage = (value: unknown): SupportMessage => {
 
   const record = value as Record<string, unknown>;
   const author = readRequiredString(record.author, "author");
-  const emailStatus =
-    record.emailStatus === null || record.emailStatus === undefined
-      ? null
-      : readRequiredString(record.emailStatus, "emailStatus");
 
   if (!isSupportMessageAuthor(author)) {
     throw new ApiError({
@@ -357,21 +356,13 @@ const parseMessage = (value: unknown): SupportMessage => {
     });
   }
 
-  if (emailStatus !== null && !isSupportEmailStatus(emailStatus)) {
-    throw new ApiError({
-      status: 0,
-      code: "INVALID_RESPONSE",
-      message: "Support inbox message has an unknown email status.",
-    });
-  }
-
   return {
     messageId: readRequiredString(record.messageId, "messageId"),
     author,
     body: readRequiredString(record.body, "body"),
     createdAt: readRequiredString(record.createdAt, "createdAt"),
     screenshotUrl: readOptionalString(record.screenshotUrl),
-    emailStatus,
+    emailStatus: readOptionalString(record.emailStatus),
   };
 };
 
@@ -447,12 +438,12 @@ export const parseReplyResponse = (value: unknown): SupportReplyResponse => {
   }
 
   const record = value as { messageId?: unknown; emailStatus?: unknown };
-  const emailStatus = readRequiredString(record.emailStatus, "emailStatus");
-  if (emailStatus !== "sent" && emailStatus !== "failed") {
+  const emailStatus = readOptionalString(record.emailStatus);
+  if (!emailStatus) {
     throw new ApiError({
       status: 0,
       code: "INVALID_RESPONSE",
-      message: "Support inbox reply response has an unknown email status.",
+      message: "Support inbox reply response is missing emailStatus.",
     });
   }
 
@@ -499,12 +490,12 @@ export const parseRetryEmailResponse = (
   }
 
   const record = value as { messageId?: unknown; emailStatus?: unknown };
-  const emailStatus = readRequiredString(record.emailStatus, "emailStatus");
-  if (!isSupportEmailStatus(emailStatus)) {
+  const emailStatus = readOptionalString(record.emailStatus);
+  if (!emailStatus) {
     throw new ApiError({
       status: 0,
       code: "INVALID_RESPONSE",
-      message: "Support inbox retry-email response has an unknown email status.",
+      message: "Support inbox retry-email response is missing emailStatus.",
     });
   }
 

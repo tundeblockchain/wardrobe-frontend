@@ -175,6 +175,20 @@ describe("parseConversationListResponse", () => {
     ]);
   });
 
+  it("keeps sending and unknown lastEmailStatus values without failing the list", () => {
+    const sending = parseConversationListResponse({
+      items: [{ ...listItem, lastEmailStatus: "sending" }],
+      nextCursor: null,
+    });
+    const unknown = parseConversationListResponse({
+      items: [{ ...listItem, lastEmailStatus: "queued" }],
+      nextCursor: null,
+    });
+
+    expect(sending.items[0]?.lastEmailStatus).toBe("sending");
+    expect(unknown.items[0]?.lastEmailStatus).toBe("queued");
+  });
+
   it("skips a row missing conversationId or status without failing siblings", () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
 
@@ -209,6 +223,20 @@ describe("parseConversationDetailResponse", () => {
     expect(parsed.conversation.uid).toBeNull();
     expect(parsed.conversation.appVersion).toBeNull();
     expect(parsed.conversation.device).toBeNull();
+  });
+
+  it("keeps sending and unknown message emailStatus values without failing the thread", () => {
+    const sending = parseConversationDetailResponse({
+      conversation: threadBody.conversation,
+      messages: [{ ...threadBody.messages[0], emailStatus: "sending" }],
+    });
+    const unknown = parseConversationDetailResponse({
+      conversation: threadBody.conversation,
+      messages: [{ ...threadBody.messages[0], emailStatus: "queued" }],
+    });
+
+    expect(sending.messages[0]?.emailStatus).toBe("sending");
+    expect(unknown.messages[0]?.emailStatus).toBe("queued");
   });
 });
 

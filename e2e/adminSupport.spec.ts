@@ -133,6 +133,52 @@ test.describe("Admin support inbox", () => {
     await expect(page.getByRole("button", { name: "Send reply" })).toHaveCount(0);
   });
 
+  test("shows Pending and hides retry when a message emailStatus is sending", async ({
+    page,
+  }) => {
+    await openInbox(page, {
+      threadById: {
+        conv_1: {
+          conversation: {
+            conversationId: "conv_1",
+            status: "open",
+            type: "bug",
+            email: "user@example.com",
+            platform: "ios",
+            uid: "user-1",
+            appVersion: "1.2.3",
+            device: "iPhone",
+            createdAt: "2026-11-24T10:00:00.000Z",
+            lastMessageAt: "2026-11-24T11:10:00.000Z",
+          },
+          messages: [
+            {
+              messageId: "msg_user",
+              author: "user",
+              body: "The upload failed",
+              createdAt: "2026-11-24T11:00:00.000Z",
+              screenshotUrl: "https://cdn.pocketcloset.test/shot-v1.png",
+              emailStatus: null,
+            },
+            {
+              messageId: "msg_admin",
+              author: "admin",
+              body: "Thanks, we are looking into this.",
+              createdAt: "2026-11-24T11:10:00.000Z",
+              screenshotUrl: null,
+              emailStatus: "sending",
+            },
+          ],
+        },
+      },
+    });
+
+    await page.getByRole("button", { name: "Bug from user@example.com" }).click();
+    await expect(page.getByText("Thanks, we are looking into this.")).toBeVisible();
+    await expect(page.getByLabel("Pending")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Retry email" })).toHaveCount(0);
+  });
+
   test("treats API 401 as signed out and 403 as not authorised", async ({
     page,
   }) => {
