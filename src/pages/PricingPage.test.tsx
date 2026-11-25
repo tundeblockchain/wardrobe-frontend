@@ -642,4 +642,60 @@ describe("PricingPage", () => {
       screen.queryByRole("button", { name: "Upgrade to Premium" }),
     ).not.toBeInTheDocument();
   });
+
+  it("marks complimentary Premium as current and hides checkout, portal, and store copy", async () => {
+    renderPricing({
+      user: { id: "user-1" },
+      getMe: vi.fn().mockResolvedValue({
+        store: "COMP",
+        paidTier: { tier: "premium", source: "comp" },
+      }),
+    });
+
+    expect(
+      await screen.findByRole("heading", { level: 2, name: "Premium" }),
+    ).toBeInTheDocument();
+    expect(getPlanCard("Premium")).toHaveAttribute("aria-current", "true");
+    expect(
+      within(getPlanCard("Premium")).getByText("Premium · Complimentary"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("This account has complimentary Premium."),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Choose plan" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Upgrade to Basic" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Upgrade to Premium" }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText(/App Store|Google Play/i)).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Manage subscription" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("treats a COMP store without a paidTier source as complimentary Premium", async () => {
+    renderPricing({
+      user: { id: "user-1" },
+      getMe: vi.fn().mockResolvedValue({
+        store: "COMP",
+        paidTier: { tier: "premium" },
+      }),
+    });
+
+    expect(
+      await screen.findByRole("heading", { level: 2, name: "Premium" }),
+    ).toBeInTheDocument();
+    expect(getPlanCard("Premium")).toHaveAttribute("aria-current", "true");
+    expect(
+      screen.queryByRole("button", { name: "Choose plan" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Upgrade to Premium" }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText(/App Store|Google Play/i)).not.toBeInTheDocument();
+  });
 });

@@ -17,6 +17,8 @@ import {
   getPaidTierSourceLabel,
   isAlreadySubscribedError,
   isBillingPriceNotFoundError,
+  isCompPaidTier,
+  isCompStore,
   isNotStripePlanError,
   isStoreManagedPaidTier,
   isStripeBasicPaidTier,
@@ -295,6 +297,8 @@ describe("already subscribed and paid-tier helpers", () => {
     expect(getPaidTierSourceLabel("ios")).toBe("App Store");
     expect(getPaidTierSourceLabel("android")).toBe("Google Play");
     expect(getPaidTierSourceLabel("stripe")).toBe("web/Stripe");
+    expect(getPaidTierSourceLabel("comp")).toBe("complimentary");
+    expect(getPaidTierSourceLabel("COMP")).toBe("complimentary");
     expect(getPaidTierSourceLabel(undefined)).toBe("App Store / Google Play");
     expect(getAlreadySubscribedMessage("ios")).toBe(
       "You already have a plan from the App Store.",
@@ -307,6 +311,41 @@ describe("already subscribed and paid-tier helpers", () => {
     );
     expect(normalizePaidTierSource("APP_STORE")).toBe("ios");
     expect(normalizePaidTierSource("play_store")).toBe("android");
+    expect(normalizePaidTierSource("comp")).toBe("comp");
+    expect(normalizePaidTierSource("COMP")).toBe("comp");
+    expect(getAlreadySubscribedMessage("comp")).toBe(
+      "This account already has complimentary Premium.",
+    );
+    expect(getAlreadySubscribedMessage("COMP")).toBe(
+      "This account already has complimentary Premium.",
+    );
+  });
+
+  it("treats a comp source, COMP store, or either one alone as complimentary", () => {
+    expect(isCompStore("COMP")).toBe(true);
+    expect(isCompStore("comp")).toBe(true);
+    expect(isCompStore("STRIPE")).toBe(false);
+    expect(isCompPaidTier({ tier: "premium", source: "comp" })).toBe(true);
+    expect(isCompPaidTier({ tier: "premium" }, "COMP")).toBe(true);
+    expect(isCompPaidTier(null, "COMP")).toBe(true);
+    expect(isCompPaidTier({ tier: "premium", source: "comp" }, "STRIPE")).toBe(
+      true,
+    );
+    expect(isCompPaidTier({ tier: "premium", source: "stripe" })).toBe(false);
+    expect(isCompPaidTier(null)).toBe(false);
+    expect(
+      isStoreManagedPaidTier({ tier: "premium", source: "comp" }),
+    ).toBe(false);
+    expect(isStoreManagedPaidTier({ tier: "premium" }, "COMP")).toBe(false);
+    expect(canStartWebCheckout({ tier: "premium", source: "comp" })).toBe(
+      false,
+    );
+    expect(canStartWebCheckout({ tier: "premium" }, "COMP")).toBe(false);
+    expect(canStartWebCheckout(null, "COMP")).toBe(false);
+    expect(canStartWebCheckout(null)).toBe(true);
+    expect(
+      canStartWebCheckout({ tier: "premium", source: "stripe" }),
+    ).toBe(true);
   });
 
   it("treats ios, android, and a missing source as store-managed plans", () => {

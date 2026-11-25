@@ -34,4 +34,19 @@ describe("dashboard plan copy", () => {
     expect(copy).not.toMatch(/\bAI\b/);
     expect(copy).not.toMatch(SUGGESTION_CAP_COPY_PATTERN);
   });
+
+  it("describes complimentary Premium without store or AI copy", () => {
+    expect(dashboardCopy.billing.compNotice).toBe(
+      "This account has complimentary Premium.",
+    );
+    expect(dashboardCopy.billing.compPlanNote).toBe(
+      "This Premium plan is complimentary and does not renew.",
+    );
+    const copy = [
+      dashboardCopy.billing.compNotice,
+      dashboardCopy.billing.compPlanNote,
+    ].join("\n");
+    expect(copy).not.toMatch(/App Store|Google Play|Stripe/i);
+    expect(copy).not.toMatch(/\bAI\b/);
+  });
 });

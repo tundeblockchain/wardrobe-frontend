@@ -159,7 +159,7 @@ const expectSettingsPlanCardLayout = async (
   expect(planSection.textContent).not.toMatch(
     /up to\s+\d+|\d+\s+per\s+(day|week|month)|suggestion cap/i,
   );
-  if (planName === "Basic" || planName === "Premium") {
+  if (planName === "Basic" || planName.startsWith("Premium")) {
     expect(planIncludes).toMatch(/outfit suggestions/i);
     expect(planIncludes).toMatch(/unlimited/i);
   }
@@ -446,6 +446,71 @@ describe("SettingsPage", () => {
     expect(screen.queryByText(/Stripe/i)).not.toBeInTheDocument();
   });
 
+  it("shows complimentary Premium without manage, store, or renewal copy", async () => {
+    renderSettings(
+      createMockResourceApi(
+        {},
+        {
+          entitlement: entitlement({
+            tier: "PREMIUM",
+            status: "ACTIVE",
+            store: "COMP",
+            paidTier: {
+              tier: "premium",
+              source: "comp",
+            },
+          }),
+        },
+      ),
+    );
+
+    expect(
+      await screen.findByText("Premium · Complimentary"),
+    ).toBeInTheDocument();
+    await expectSettingsPlanCardLayout(
+      "Premium · Complimentary",
+      pricingCopy.premiumSummary,
+    );
+    expect(
+      screen.getByText(
+        "This Premium plan is complimentary and does not renew.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Renews or ends")).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Manage subscription" }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText(/App Store|Google Play/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Stripe/i)).not.toBeInTheDocument();
+  });
+
+  it("treats a COMP store without a paidTier source as complimentary Premium", async () => {
+    renderSettings(
+      createMockResourceApi(
+        {},
+        {
+          entitlement: entitlement({
+            tier: "PREMIUM",
+            status: "ACTIVE",
+            store: "COMP",
+            paidTier: {
+              tier: "premium",
+            },
+          }),
+        },
+      ),
+    );
+
+    expect(
+      await screen.findByText("Premium · Complimentary"),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Manage subscription" }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText(/App Store|Google Play/i)).not.toBeInTheDocument();
+    expect(screen.queryByText("Renews or ends")).not.toBeInTheDocument();
+  });
+
   it("shows generic store text when paidTier source is missing", async () => {
     renderSettings(
       createMockResourceApi(
@@ -454,6 +519,7 @@ describe("SettingsPage", () => {
           entitlement: entitlement({
             tier: "PREMIUM",
             status: "ACTIVE",
+            store: undefined,
             paidTier: {
               tier: "premium",
               expiresAt: "2026-11-01T00:00:00.000Z",

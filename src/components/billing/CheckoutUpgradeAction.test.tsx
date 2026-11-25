@@ -7,7 +7,10 @@ import {
   PLANS_UNAVAILABLE_CODE,
   PLANS_UNAVAILABLE_MESSAGE,
 } from "../../api/billingPlans";
-import { mockFreeAtLimitEntitlement } from "../../api/mockResourceApi";
+import {
+  mockCompPremiumEntitlement,
+  mockFreeAtLimitEntitlement,
+} from "../../api/mockResourceApi";
 import { getUpgradePriceLabel } from "../../content/upgradePriceLabel";
 import {
   ALREADY_SUBSCRIBED_CODE,
@@ -438,6 +441,34 @@ describe("CheckoutUpgradeAction", () => {
       "Unsupported plan.",
     );
     expect(assignLocation).not.toHaveBeenCalled();
+  });
+
+  it("hides checkout and store copy for complimentary Premium", () => {
+    const startCheckout = vi.fn();
+
+    renderWithProviders(
+      <ForbiddenUpgradePrompt
+        kind="premium"
+        entitlement={mockCompPremiumEntitlement}
+        startCheckout={startCheckout}
+      />,
+      { auth: { user: { id: "user-1" } } },
+    );
+
+    expect(
+      screen.getByText("This account has complimentary Premium."),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /Upgrade to Premium/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("group", { name: "Billing interval" }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText(/App Store|Google Play/i)).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Manage subscription" }),
+    ).not.toBeInTheDocument();
+    expect(startCheckout).not.toHaveBeenCalled();
   });
 
   it("hides the Stripe checkout button for store-plan users", () => {

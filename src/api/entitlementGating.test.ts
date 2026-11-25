@@ -10,6 +10,7 @@ import {
   isForbiddenStatusError,
 } from "./entitlementGating";
 import { ApiError } from "./httpClient";
+import { mockCompPremiumEntitlement } from "./mockResourceApi";
 import type { Entitlement } from "./resourceTypes";
 
 const entitlement = (
@@ -100,6 +101,18 @@ describe("entitlement gating", () => {
         tier: "PREMIUM",
       }),
     ).toBe(true);
+  });
+
+  it("unlocks Premium features for complimentary Premium the same as any Premium user", () => {
+    expect(canUseAiTryOn(mockCompPremiumEntitlement)).toBe(true);
+    expect(canUseOtherAi(mockCompPremiumEntitlement)).toBe(true);
+    expect(canUseOutfitSuggestions(mockCompPremiumEntitlement)).toBe(true);
+    expect(mockCompPremiumEntitlement.tier).toBe("PREMIUM");
+    expect(mockCompPremiumEntitlement.store).toBe("COMP");
+    expect(mockCompPremiumEntitlement.paidTier).toEqual({
+      tier: "premium",
+      source: "comp",
+    });
   });
 });
 

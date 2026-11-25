@@ -4,6 +4,7 @@ import { Link as RouterLink } from "react-router-dom";
 import {
   canStartWebCheckout,
   DEFAULT_BILLING_INTERVAL,
+  isCompPaidTier,
   isStoreManagedPaidTier,
   isStripeBasicPaidTier,
   type BillingInterval,
@@ -63,6 +64,17 @@ export const CheckoutUpgradeAction = ({
   };
 
   const resolvedPaidTier = existingPaidTier ?? paidTier ?? null;
+
+  if (isCompPaidTier(resolvedPaidTier)) {
+    return (
+      <Stack spacing={2}>
+        <AlreadySubscribedBanner message={alreadySubscribedMessage} />
+        <Typography variant="body2" color="text.secondary">
+          {copy.compNotice}
+        </Typography>
+      </Stack>
+    );
+  }
 
   if (isStoreManagedPaidTier(resolvedPaidTier)) {
     return (

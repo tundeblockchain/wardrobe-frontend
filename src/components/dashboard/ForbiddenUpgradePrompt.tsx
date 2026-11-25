@@ -10,6 +10,7 @@ import type { ForbiddenUpgradeKind } from "../../api/entitlementGating";
 import type { FetchBillingPlansFn } from "../../api/billingPlans";
 import type { CheckoutGetMeFn, StartCheckoutFn } from "../../hooks/useCheckoutAction";
 import { useTrackOnce } from "../../config/useTrackOnce";
+import { getPaidTier } from "../../content/planDisplay";
 import { dashboardCopy } from "../../content/dashboardCopy";
 import { appPaths } from "../../routes/paths";
 import { StatusCard } from "../StatusCard";
@@ -80,7 +81,7 @@ export const ForbiddenUpgradePrompt = ({
         <StatusCard title={basicTitle} description={basicDescription} />
         <CheckoutUpgradeAction
           checkoutTier="basic"
-          paidTier={entitlement?.paidTier}
+          paidTier={entitlement ? getPaidTier(entitlement) : null}
           actionLabel={dashboardCopy.upgrade.basic.actionLabel}
           actionAriaLabel={basicActionAriaLabel}
           startCheckout={startCheckout}
@@ -109,7 +110,7 @@ export const ForbiddenUpgradePrompt = ({
       <StatusCard title={premiumTitle} description={premiumDescription} />
       <CheckoutUpgradeAction
         checkoutTier="premium"
-        paidTier={entitlement?.paidTier}
+        paidTier={entitlement ? getPaidTier(entitlement) : null}
         actionLabel={dashboardCopy.upgrade.premium.actionLabel}
         actionAriaLabel={premiumActionAriaLabel}
         startCheckout={startCheckout}

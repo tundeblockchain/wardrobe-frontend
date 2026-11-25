@@ -2,6 +2,7 @@ export const alreadySubscribedCopy = {
   ios: "You already have a plan from the App Store.",
   android: "You already have a plan from Google Play.",
   unknown: "You already have a plan from the App Store / Google Play.",
+  comp: "This account already has complimentary Premium.",
   stripeBeforeLink: "You already have a plan. Go to ",
   stripeLink: "Manage subscription in Settings",
   stripeAfterLink: " to change it.",

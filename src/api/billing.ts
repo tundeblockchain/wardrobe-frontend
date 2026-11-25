@@ -144,14 +144,41 @@ export const normalizePaidTierSource = (
   if (normalized === "stripe" || normalized === "web") {
     return "stripe";
   }
+  if (normalized === "comp") {
+    return "comp";
+  }
 
   return undefined;
 };
 
+export const isCompStore = (store: string | undefined | null): boolean => {
+  if (!store) {
+    return false;
+  }
+
+  return store.trim().toUpperCase() === "COMP";
+};
+
+export const isCompPaidTier = (
+  paidTier: PaidTier | undefined,
+  store?: string | null,
+): boolean => {
+  if (normalizePaidTierSource(paidTier?.source) === "comp") {
+    return true;
+  }
+
+  return isCompStore(store);
+};
+
 export const isStoreManagedPaidTier = (
   paidTier: PaidTier | undefined,
+  store?: string | null,
 ): boolean => {
   if (!paidTier) {
+    return false;
+  }
+
+  if (isCompPaidTier(paidTier, store)) {
     return false;
   }
 
@@ -178,8 +205,13 @@ export const isStripeBasicPaidTier = (
 
 export const canStartWebCheckout = (
   paidTier: PaidTier | undefined,
+  store?: string | null,
 ): boolean => {
-  return !isStoreManagedPaidTier(paidTier);
+  if (isCompPaidTier(paidTier, store)) {
+    return false;
+  }
+
+  return !isStoreManagedPaidTier(paidTier, store);
 };
 
 export const getPaidTierSourceLabel = (
@@ -194,6 +226,9 @@ export const getPaidTierSourceLabel = (
   }
   if (normalized === "stripe") {
     return "web/Stripe";
+  }
+  if (normalized === "comp") {
+    return "complimentary";
   }
 
   return "App Store / Google Play";
@@ -211,6 +246,9 @@ export const getAlreadySubscribedMessage = (
   }
   if (normalized === "stripe") {
     return getStripeAlreadySubscribedMessage();
+  }
+  if (normalized === "comp") {
+    return alreadySubscribedCopy.comp;
   }
 
   return alreadySubscribedCopy.unknown;
