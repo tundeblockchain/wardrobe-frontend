@@ -52,7 +52,8 @@ export const getPricingPlanActionKind = ({
     if (
       currentTier === "premium" &&
       planTier === "basic" &&
-      !isStoreManaged
+      !isStoreManaged &&
+      canCheckout
     ) {
       return "portal";
     }

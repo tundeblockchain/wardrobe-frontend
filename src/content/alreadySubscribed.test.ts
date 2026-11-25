@@ -16,5 +16,10 @@ describe("alreadySubscribed copy", () => {
     expect(
       isStripeAlreadySubscribedMessage(alreadySubscribedCopy.ios),
     ).toBe(false);
+    expect(alreadySubscribedCopy.comp).toBe(
+      "This account already has complimentary Premium.",
+    );
+    expect(alreadySubscribedCopy.comp).not.toMatch(/App Store|Google Play|Stripe/i);
+    expect(alreadySubscribedCopy.comp).not.toMatch(/\bAI\b/);
   });
 });

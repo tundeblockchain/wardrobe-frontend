@@ -192,9 +192,19 @@ export const ENTITLEMENT_STORES = [
   "APP_STORE",
   "PLAY_STORE",
   "STRIPE",
+  "COMP",
   "UNKNOWN",
 ] as const;
 export type EntitlementStore = (typeof ENTITLEMENT_STORES)[number];
+
+export const isEntitlementStore = (
+  value: unknown,
+): value is EntitlementStore => {
+  return (
+    typeof value === "string" &&
+    (ENTITLEMENT_STORES as readonly string[]).includes(value)
+  );
+};
 
 export const ENTITLEMENT_PERIODS = ["MONTHLY", "YEARLY", "UNKNOWN"] as const;
 export type EntitlementPeriod = (typeof ENTITLEMENT_PERIODS)[number];
@@ -224,12 +234,21 @@ export type EntitlementUsage = {
   outfits: number;
 };
 
-/** WARDROBE-188 paid-tier status. Soft-omitted `source` means a store plan. */
+/** WARDROBE-188 paid-tier status. Soft-omitted `source` means a store plan. `comp` is complimentary Premium. */
 export const PAID_PLAN_TIERS = ["basic", "premium"] as const;
 export type PaidPlanTier = (typeof PAID_PLAN_TIERS)[number];
 
-export const PAID_TIER_SOURCES = ["ios", "android", "stripe"] as const;
+export const PAID_TIER_SOURCES = ["ios", "android", "stripe", "comp"] as const;
 export type PaidTierSource = (typeof PAID_TIER_SOURCES)[number];
+
+export const isPaidTierSourceValue = (
+  value: unknown,
+): value is PaidTierSource => {
+  return (
+    typeof value === "string" &&
+    (PAID_TIER_SOURCES as readonly string[]).includes(value)
+  );
+};
 
 export type PaidTierStatus = {
   tier: PaidPlanTier;

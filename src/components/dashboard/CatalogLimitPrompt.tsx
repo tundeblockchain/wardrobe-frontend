@@ -8,6 +8,7 @@ import type { FetchBillingPlansFn } from "../../api/billingPlans";
 import type { CheckoutGetMeFn, StartCheckoutFn } from "../../hooks/useCheckoutAction";
 import { getCatalogLimitDescription } from "../../content/catalogLimitCopy";
 import { useTrackOnce } from "../../config/useTrackOnce";
+import { getPaidTier } from "../../content/planDisplay";
 import { dashboardCopy } from "../../content/dashboardCopy";
 import { StatusCard } from "../StatusCard";
 import { CheckoutUpgradeAction } from "../billing/CheckoutUpgradeAction";
@@ -49,7 +50,7 @@ export const CatalogLimitPrompt = ({
       />
       <CheckoutUpgradeAction
         checkoutTier="basic"
-        paidTier={entitlement?.paidTier}
+        paidTier={entitlement ? getPaidTier(entitlement) : null}
         actionLabel={copy.actionLabel}
         actionAriaLabel={copy.actionAriaLabel}
         startCheckout={startCheckout}

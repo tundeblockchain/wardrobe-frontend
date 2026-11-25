@@ -47,6 +47,29 @@ export const WEEKEND_WARDROBE_IMAGE_URL = "/screenshots/home-390.jpg";
 export const WORKWEAR_WARDROBE_COVER_IMAGE_URL =
   "/screenshots/item-detail-390.jpg";
 
+export const mockCompPremiumEntitlement: Entitlement = {
+  userId: "user-1",
+  tier: "PREMIUM",
+  status: "ACTIVE",
+  features: {
+    unlimitedCatalog: true,
+    aiTryOn: true,
+    otherAi: true,
+  },
+  limits: null,
+  usage: {
+    wardrobes: 0,
+    items: 0,
+    outfits: 0,
+  },
+  store: "COMP",
+  paidTier: {
+    tier: "premium",
+    source: "comp",
+  },
+  updatedAt: "2026-11-01T00:00:00.000Z",
+};
+
 export const mockEntitlement: Entitlement = {
   userId: "user-1",
   tier: "PREMIUM",

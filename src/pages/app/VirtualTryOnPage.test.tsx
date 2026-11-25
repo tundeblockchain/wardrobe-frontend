@@ -9,6 +9,7 @@ import {
   createErrorResourceApi,
   createMockResourceApi,
   createOtherAiOffResourceApi,
+  mockCompPremiumEntitlement,
 } from "../../api/mockResourceApi";
 import { dashboardCopy } from "../../content/dashboardCopy";
 import { getUpgradePriceLabel } from "../../content/upgradePriceLabel";
@@ -465,6 +466,25 @@ describe("VirtualTryOnPage", () => {
     ).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "Weekday look" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("unlocks Virtual Try On for complimentary Premium without an upgrade prompt", async () => {
+    renderPage(
+      createMockResourceApi(
+        {},
+        { entitlement: mockCompPremiumEntitlement },
+      ),
+    );
+
+    await expectFormInsideSharedCard("Start Virtual Try On");
+    expect(
+      screen.queryByRole("heading", {
+        name: "Virtual Try On is a Premium feature",
+      }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /Upgrade to Premium/i }),
     ).not.toBeInTheDocument();
   });
 

@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import {
   canStartWebCheckout,
   DEFAULT_BILLING_INTERVAL,
+  isCompPaidTier,
   isStoreManagedPaidTier,
   type BillingInterval,
   type CheckoutTier,
@@ -28,7 +29,7 @@ import { StatusCard } from "../components/StatusCard";
 import { SectionSurface } from "../components/surfaces/SectionSurface";
 import { getPublicAppEnv } from "../config/env";
 import { useTrackOnce } from "../config/useTrackOnce";
-import { getPaidTier } from "../content/planDisplay";
+import { COMPLIMENTARY_PREMIUM_LABEL, getPaidTier } from "../content/planDisplay";
 import { DashboardThemeProvider } from "../theme/DashboardThemeProvider";
 import {
   getBasicPlanFeatureLines,
@@ -65,7 +66,7 @@ export type PricingPageProps = {
 };
 
 type PricingEntitlement = Pick<Entitlement, "paidTier"> &
-  Partial<Pick<Entitlement, "limits" | "tier">>;
+  Partial<Pick<Entitlement, "limits" | "tier" | "store">>;
 
 const copy = pricingCopy;
 
@@ -92,7 +93,10 @@ const getPaidTierFromEntitlement = (
   }
 
   if ("paidTier" in entitlement) {
-    return entitlement.paidTier ?? null;
+    return getPaidTier({
+      ...(entitlement as Entitlement),
+      paidTier: entitlement.paidTier,
+    });
   }
 
   return getPaidTier(entitlement as Entitlement);
@@ -181,8 +185,11 @@ export const PricingPage = ({
     entitlementQuery.status === "ready" ? entitlementQuery.data : undefined;
   const currentTier = getCurrentPricingTier(user?.id, entitlement);
   const paidTier = existingPaidTier ?? getPaidTierFromEntitlement(entitlement);
-  const storeManaged = isStoreManagedPaidTier(paidTier);
-  const canCheckout = canStartWebCheckout(paidTier);
+  const entitlementStore =
+    entitlement && "store" in entitlement ? entitlement.store : undefined;
+  const storeManaged = isStoreManagedPaidTier(paidTier, entitlementStore);
+  const isComp = isCompPaidTier(paidTier, entitlementStore);
+  const canCheckout = canStartWebCheckout(paidTier, entitlementStore);
   const plans = plansQuery.status === "ready" ? plansQuery.data.plans : [];
   const basicPlan = findBillingPlan(plans, "basic", billingInterval);
   const premiumPlan = findBillingPlan(plans, "premium", billingInterval);
@@ -324,6 +331,11 @@ export const PricingPage = ({
               {dashboardCopy.billing.storeManage}
             </Alert>
           ) : null}
+          {isComp ? (
+            <Alert severity="info" role="status" aria-live="polite">
+              {dashboardCopy.billing.compNotice}
+            </Alert>
+          ) : null}
           <Stack spacing={1.5}>
             <Typography variant="body2" color="text.secondary">
               {copy.intervalHint}
@@ -381,7 +393,9 @@ export const PricingPage = ({
               summary={copy.premiumSummary}
               features={getPremiumPlanFeatureLines()}
               isCurrent={currentTier === "premium"}
-              currentPlanLabel={copy.currentPlanLabel}
+              currentPlanLabel={
+                isComp ? COMPLIMENTARY_PREMIUM_LABEL : copy.currentPlanLabel
+              }
               currentPlanAriaLabel={copy.currentPlanAriaLabel}
               action={getPaidCardAction("premium")}
             />

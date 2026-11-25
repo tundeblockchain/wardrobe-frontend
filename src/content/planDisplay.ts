@@ -1,31 +1,24 @@
-import type {
-  Entitlement,
-  EntitlementStore,
-  PaidPlanTier,
-  PaidTier,
-  PaidTierSource,
-  PaidTierStatus,
-  SubscriptionTier,
+import {
+  isCompPaidTier,
+  normalizePaidTierSource,
+} from "../api/billing";
+import {
+  isPaidTierSourceValue,
+  type Entitlement,
+  type EntitlementStore,
+  type PaidPlanTier,
+  type PaidTier,
+  type PaidTierSource,
+  type PaidTierStatus,
+  type SubscriptionTier,
 } from "../api/resourceTypes";
 
-export const isPaidTierSource = (value: unknown): value is PaidTierSource => {
-  return value === "ios" || value === "android" || value === "stripe";
-};
+export const isPaidTierSource = isPaidTierSourceValue;
 
 const getSourceFromStore = (
   store: EntitlementStore | undefined,
 ): PaidTierSource | undefined => {
-  if (store === "APP_STORE") {
-    return "ios";
-  }
-  if (store === "PLAY_STORE") {
-    return "android";
-  }
-  if (store === "STRIPE") {
-    return "stripe";
-  }
-
-  return undefined;
+  return normalizePaidTierSource(store);
 };
 
 const getPaidPlanTierFromEntitlement = (
@@ -61,15 +54,39 @@ const derivePaidTier = (entitlement: Entitlement): PaidTier => {
 
 export const getPaidTier = (entitlement: Entitlement): PaidTier => {
   if ("paidTier" in entitlement) {
-    return entitlement.paidTier ?? null;
+    const paidTier = entitlement.paidTier ?? null;
+    if (!paidTier) {
+      return null;
+    }
+    if (paidTier.source) {
+      return paidTier;
+    }
+
+    const source = getSourceFromStore(entitlement.store);
+    if (!source) {
+      return paidTier;
+    }
+
+    return { ...paidTier, source };
   }
 
   return derivePaidTier(entitlement);
 };
 
-export const getPaidPlanLabel = (paidTier: PaidTier): string => {
+export const COMPLIMENTARY_PREMIUM_LABEL = "Premium · Complimentary";
+export const COMPLIMENTARY_BASIC_LABEL = "Basic · Complimentary";
+
+export const getPaidPlanLabel = (
+  paidTier: PaidTier,
+  store?: EntitlementStore,
+): string => {
   if (!paidTier) {
     return "Free";
+  }
+  if (isCompPaidTier(paidTier, store)) {
+    return paidTier.tier === "basic"
+      ? COMPLIMENTARY_BASIC_LABEL
+      : COMPLIMENTARY_PREMIUM_LABEL;
   }
   if (paidTier.tier === "basic") {
     return "Basic";

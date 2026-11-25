@@ -7,6 +7,7 @@ import {
   getAlreadySubscribedMessage,
   getBillingCheckoutErrorMessage,
   isAlreadySubscribedError,
+  normalizePaidTierSource,
   readBillingSessionUrl,
   resolvePaidTierSource,
   type BillingInterval,
@@ -25,7 +26,9 @@ export type StartCheckoutFn = (
 
 export type StartPortalFn = () => Promise<BillingSession>;
 
-export type CheckoutGetMeFn = () => Promise<Pick<Entitlement, "paidTier">>;
+export type CheckoutGetMeFn = () => Promise<
+  Pick<Entitlement, "paidTier" | "store">
+>;
 
 export type UseCheckoutActionOptions = {
   startCheckout?: StartCheckoutFn;
@@ -99,6 +102,12 @@ export const useCheckoutAction = (
         try {
           const me = await getMe();
           paidTier = me.paidTier ?? null;
+          if (paidTier && !paidTier.source) {
+            const sourceFromStore = normalizePaidTierSource(me.store);
+            if (sourceFromStore) {
+              paidTier = { ...paidTier, source: sourceFromStore };
+            }
+          }
         } catch {
           // Keep the 409 source when /me cannot be refreshed.
         }

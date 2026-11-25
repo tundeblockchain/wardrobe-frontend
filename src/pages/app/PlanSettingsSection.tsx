@@ -13,6 +13,7 @@ import { Link as RouterLink, useLocation } from "react-router-dom";
 import {
   assignBillingUrl as defaultAssignBillingUrl,
   getBillingCheckoutErrorMessage,
+  isCompPaidTier,
   isNotStripePlanError,
   readBillingSessionUrl,
 } from "../../api/billing";
@@ -98,8 +99,11 @@ export const PlanSettingsSection = ({
 
   const paidTier =
     planQuery.status === "ready" ? getPaidTier(planQuery.data) : null;
+  const isComp =
+    planQuery.status === "ready" &&
+    isCompPaidTier(paidTier, planQuery.data.store);
   const expiresLabel =
-    planQuery.status === "ready"
+    planQuery.status === "ready" && !isComp
       ? getPlanExpiresLabel(paidTier?.expiresAt ?? planQuery.data.expiresAt)
       : undefined;
 
@@ -129,7 +133,7 @@ export const PlanSettingsSection = ({
             <ListItem disableGutters>
               <ListItemText
                 primary={copy.planTierLabel}
-                secondary={getPaidPlanLabel(paidTier)}
+                secondary={getPaidPlanLabel(paidTier, planQuery.data.store)}
               />
             </ListItem>
             <ListItem disableGutters>
@@ -176,7 +180,11 @@ export const PlanSettingsSection = ({
                 {billingError}
               </Alert>
             ) : null}
-            {isStripePaidTier(paidTier) ? (
+            {isComp ? (
+              <Typography variant="body2" color="text.secondary">
+                {dashboardCopy.billing.compPlanNote}
+              </Typography>
+            ) : isStripePaidTier(paidTier) ? (
               <Button
                 type="button"
                 variant="contained"

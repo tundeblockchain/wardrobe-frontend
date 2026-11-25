@@ -58,6 +58,9 @@ describe("planDisplay", () => {
     expect(
       getPaidTier(entitlement({ tier: "PREMIUM", store: "PLAY_STORE" })),
     ).toEqual({ tier: "premium", source: "android" });
+    expect(
+      getPaidTier(entitlement({ tier: "PREMIUM", store: "COMP" })),
+    ).toEqual({ tier: "premium", source: "comp" });
     expect(getPaidTier(entitlement({ tier: "PREMIUM" }))).toEqual({
       tier: "premium",
     });
@@ -70,6 +73,15 @@ describe("planDisplay", () => {
     expect(getPaidPlanLabel(null)).toBe("Free");
     expect(getPaidPlanLabel({ tier: "basic", source: "stripe" })).toBe("Basic");
     expect(getPaidPlanLabel({ tier: "premium", source: "ios" })).toBe("Premium");
+    expect(getPaidPlanLabel({ tier: "premium", source: "comp" })).toBe(
+      "Premium · Complimentary",
+    );
+    expect(getPaidPlanLabel({ tier: "premium" }, "COMP")).toBe(
+      "Premium · Complimentary",
+    );
+    expect(getPaidPlanLabel({ tier: "basic", source: "comp" })).toBe(
+      "Basic · Complimentary",
+    );
     expect(getPlanExpiresLabel()).toBeUndefined();
     expect(getPlanExpiresLabel("2026-11-01T00:00:00.000Z")).toBe(
       "1 November 2026",
@@ -94,7 +106,38 @@ describe("planDisplay", () => {
     expect(isPaidTierSource("ios")).toBe(true);
     expect(isPaidTierSource("android")).toBe(true);
     expect(isPaidTierSource("stripe")).toBe(true);
+    expect(isPaidTierSource("comp")).toBe(true);
     expect(isPaidTierSource(null)).toBe(false);
     expect(isPaidTierSource("APP_STORE")).toBe(false);
+    expect(isPaidTierSource("COMP")).toBe(false);
+  });
+
+  it("keeps complimentary paidTier from GET /me and fills source from COMP store", () => {
+    expect(
+      getPaidTier(
+        entitlement({
+          tier: "PREMIUM",
+          store: "COMP",
+          paidTier: { tier: "premium", source: "comp" },
+        }),
+      ),
+    ).toEqual({ tier: "premium", source: "comp" });
+    expect(
+      getPaidTier(
+        entitlement({
+          tier: "PREMIUM",
+          store: "COMP",
+          paidTier: { tier: "premium" },
+        }),
+      ),
+    ).toEqual({ tier: "premium", source: "comp" });
+    expect(
+      getPaidTier(
+        entitlement({
+          tier: "PREMIUM",
+          paidTier: { tier: "premium", source: "comp" },
+        }),
+      ),
+    ).toEqual({ tier: "premium", source: "comp" });
   });
 });

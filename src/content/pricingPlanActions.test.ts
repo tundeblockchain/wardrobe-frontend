@@ -65,6 +65,18 @@ describe("getPricingPlanActionKind", () => {
     ).toBeUndefined();
   });
 
+  it("does not open the portal when web checkout is blocked for Premium", () => {
+    expect(
+      getAction("basic", { currentTier: "premium", canCheckout: false }),
+    ).toBeUndefined();
+    expect(
+      getAction("premium", {
+        currentTier: "premium",
+        canCheckout: false,
+      }),
+    ).toBeUndefined();
+  });
+
   it("marks a missing or blocked paid catalog row unavailable", () => {
     expect(
       getAction("premium", { currentTier: "free", hasSelectedPlan: false }),

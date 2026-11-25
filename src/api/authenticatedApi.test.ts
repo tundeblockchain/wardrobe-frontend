@@ -2,7 +2,9 @@ import { describe, expect, it, vi } from "vitest";
 import {
   ACCOUNT_DELETE_TIMEOUT_MS,
   createAuthenticatedApi,
+  ME_STORES,
 } from "./authenticatedApi";
+import { ENTITLEMENT_STORES, PAID_TIER_SOURCES } from "./resourceTypes";
 import { isApiError } from "./httpClient";
 
 const API_BASE_URL = "https://api.example.com";
@@ -77,6 +79,35 @@ const readAuthorization = (init: RequestInit | undefined): string | undefined =>
 };
 
 describe("createAuthenticatedApi", () => {
+  it("accepts COMP on GET /me store and comp on paidTier.source", async () => {
+    const compBody = {
+      userId: "user-1",
+      tier: "PREMIUM",
+      status: "ACTIVE",
+      features: {
+        unlimitedCatalog: true,
+        aiTryOn: true,
+        otherAi: true,
+      },
+      limits: null,
+      usage: { wardrobes: 0, items: 0, outfits: 0 },
+      store: "COMP",
+      updatedAt: "2026-11-01T00:00:00.000Z",
+      paidTier: { tier: "premium", source: "comp" },
+    };
+    const fetchImpl = vi.fn().mockResolvedValue(
+      createJsonResponse({ status: 200, body: compBody }),
+    );
+    const { api } = createApi({
+      fetchImpl: fetchImpl as typeof fetch,
+    });
+
+    await expect(api.getMe()).resolves.toEqual(compBody);
+    expect(ME_STORES).toBe(ENTITLEMENT_STORES);
+    expect(ME_STORES).toContain("COMP");
+    expect(PAID_TIER_SOURCES).toContain("comp");
+  });
+
   it("attaches a Bearer Firebase ID token", async () => {
     const fetchImpl = vi.fn().mockResolvedValue(
       createJsonResponse({ status: 200, body: meBody }),

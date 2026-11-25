@@ -436,6 +436,8 @@ export const dashboardCopy = {
     intervalYearlyAriaLabel: "Bill yearly",
     storeManage:
       "Manage this plan in the App Store / Google Play.",
+    compNotice: "This account has complimentary Premium.",
+    compPlanNote: "This Premium plan is complimentary and does not renew.",
     stripeBasicManageLabel: "Manage plan",
     stripeBasicManageAriaLabel: "Manage this plan in Settings",
     successProcessingTitle: "Setting up your plan",
